@@ -1,0 +1,196 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f2f4f7;
+    color: #222;
+}
+
+header {
+    background: #17365d;
+    color: white;
+    text-align: center;
+    padding: 25px 15px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 25px;
+}
+
+header p {
+    margin-top: 8px;
+}
+
+main {
+    width: 95%;
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+    margin-top: 0;
+}
+
+button {
+    background: #17365d;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    margin: 8px 5px 8px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+select {
+    padding: 11px;
+    min-width: 250px;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    margin: 8px;
+}
+
+#fileStatus {
+    font-weight: bold;
+}
+
+.report {
+    background: white;
+    padding: 25px;
+    margin: 30px auto;
+    max-width: 900px;
+    border: 1px solid #ccc;
+}
+
+.school-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.school-header h1 {
+    margin: 0;
+    font-size: 25px;
+}
+
+.school-header h2 {
+    margin: 8px 0;
+}
+
+.student-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.student-info div {
+    padding: 6px;
+}
+
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.result-table th,
+.result-table td {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: center;
+}
+
+.result-table th {
+    font-weight: bold;
+}
+
+.summary {
+    margin-top: 20px;
+    border: 1px solid #000;
+    padding: 12px;
+}
+
+.comments {
+    margin-top: 25px;
+}
+
+.comment-box {
+    border-bottom: 1px solid #000;
+    min-height: 45px;
+    margin-top: 8px;
+}
+
+@media print {
+
+    body {
+        background: white;
+    }
+
+    header,
+    footer,
+    .card {
+        display: none !important;
+    }
+
+    main {
+        width: 100%;
+        margin: 0;
+    }
+
+    .report {
+        border: none;
+        margin: 0;
+        max-width: none;
+        page-break-after: always;
+    }
+
+    .report:last-child {
+        page-break-after: auto;
+    }
+}
+
+@media(max-width:600px) {
+
+    header h1 {
+        font-size: 20px;
+    }
+
+    .student-info {
+        grid-template-columns: 1fr;
+    }
+
+    select {
+        width: 100%;
+        margin: 8px 0;
+    }
+
+    button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
