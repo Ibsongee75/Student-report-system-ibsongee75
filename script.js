@@ -742,6 +742,38 @@ document.getElementById("generateAll")
 
 });
 
+/* =========================================
+   SUBSCRIPTION PLAN SELECTION
+========================================= */
+
+document.querySelectorAll(".subscribe-button")
+.forEach(function(button) {
+
+    button.addEventListener("click", function() {
+
+        const plan =
+            button.dataset.plan;
+
+        const price =
+            button.dataset.price;
+
+        const duration =
+            button.dataset.duration;
+
+        alert(
+            "Selected Plan: " +
+            plan.toUpperCase() +
+            "\n\nPrice: ₦" +
+            Number(price).toLocaleString() +
+            "\nDuration: " +
+            duration +
+            "\n\nPayment will be connected next."
+        );
+
+    });
+
+});
+
 
 /* =========================================
    CREATE REPORT
