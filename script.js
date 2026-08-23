@@ -232,33 +232,103 @@ logoutButton.addEventListener("click", async function() {
 
 
 /* =========================================
-   CHECK EXISTING LOGIN
+   CHECK EXISTING LOGIN + SUBSCRIPTION
 ========================================= */
 
 async function checkLogin() {
 
-    const { data } =
+    const { data, error } =
         await supabaseClient.auth.getSession();
 
+    if (error) {
 
-    if (data.session) {
+        console.error(
+            "Session check failed:",
+            error
+        );
+
+        showLogin();
+
+        return;
+    }
+
+
+    if (!data.session) {
+
+        showLogin();
+
+        return;
+    }
+
+
+    const user =
+        data.session.user;
+
+
+    console.log(
+        "Existing session found:",
+        user.email
+    );
+
+
+    /* =========================================
+       CHECK USER SUBSCRIPTION
+    ========================================= */
+
+    const { data: subscription, error: subscriptionError } =
+        await supabaseClient
+            .from("subscriptions")
+            .select("status, expires_at")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+
+    if (subscriptionError) {
+
+        console.error(
+            "Subscription check failed:",
+            subscriptionError
+        );
+
+        alert(
+            "Unable to verify your subscription. Please try again."
+        );
+
+        return;
+    }
+
+
+    /* =========================================
+       CHECK PAID STATUS AND EXPIRY
+    ========================================= */
+
+    if (
+        subscription &&
+        subscription.status === "paid" &&
+        new Date(subscription.expires_at) > new Date()
+    ) {
 
         console.log(
-            "Existing session found:",
-            data.session.user.email
+            "Paid subscription confirmed."
         );
 
         showApp();
 
     } else {
 
+        console.log(
+            "User does not have an active subscription."
+        );
+
         showLogin();
+
+        alert(
+            "Your account does not have an active subscription."
+        );
 
     }
 
 }
-
-
 /* =========================================
    AUTH STATE CHANGES
 ========================================= */
