@@ -746,34 +746,201 @@ document.getElementById("generateAll")
    SUBSCRIPTION PLAN SELECTION
 ========================================= */
 
+/* =========================================
+   PAYSTACK SUBSCRIPTION PAYMENT
+========================================= */
+
+const PAYSTACK_PUBLIC_KEY = "YOUR_PAYSTACK_PUBLIC_KEY";
+
+
 document.querySelectorAll(".subscribe-button")
 .forEach(function(button) {
 
-    button.addEventListener("click", function() {
+    button.addEventListener("click", async function() {
+
+        /* ================================
+           CHECK LOGIN
+        ================================= */
+
+        const {
+            data: sessionData,
+            error: sessionError
+        } =
+            await supabaseClient.auth.getSession();
+
+
+        if (
+            sessionError ||
+            !sessionData.session
+        ) {
+
+            alert(
+                "Please log in before subscribing."
+            );
+
+            return;
+        }
+
+
+        const user =
+            sessionData.session.user;
+
+
+        /* ================================
+           GET SELECTED PLAN
+        ================================= */
 
         const plan =
             button.dataset.plan;
 
         const price =
-            button.dataset.price;
+            Number(button.dataset.price);
 
-        const duration =
-            button.dataset.duration;
 
-        alert(
-            "Selected Plan: " +
-            plan.toUpperCase() +
-            "\n\nPrice: ₦" +
-            Number(price).toLocaleString() +
-            "\nDuration: " +
-            duration +
-            "\n\nPayment will be connected next."
-        );
+        if (!plan || !price) {
+
+            alert(
+                "Invalid subscription plan."
+            );
+
+            return;
+        }
+
+
+        /* ================================
+           OPEN PAYSTACK
+        ================================= */
+
+        const handler =
+            PaystackPop.setup({
+
+                key:
+                    PAYSTACK_PUBLIC_KEY,
+
+                email:
+                    user.email,
+
+                amount:
+                    price * 100,
+
+                currency:
+                    "NGN",
+
+                metadata: {
+
+                    user_id:
+                        user.id,
+
+                    plan:
+                        plan
+
+                },
+
+                callback:
+                async function(response) {
+
+                    console.log(
+                        "Paystack reference:",
+                        response.reference
+                    );
+
+
+                    alert(
+                        "Payment received. Verifying payment..."
+                    );
+
+
+                    /* =========================
+                       CALL EDGE FUNCTION
+                    ========================== */
+
+                    const {
+                        data,
+                        error
+                    } =
+                        await supabaseClient.functions
+                        .invoke(
+                            "verify-paystack-payment",
+                            {
+
+                                body: {
+
+                                    reference:
+                                        response.reference,
+
+                                    plan:
+                                        plan
+
+                                }
+
+                            }
+                        );
+
+
+                    if (error) {
+
+                        console.error(
+                            "Verification error:",
+                            error
+                        );
+
+                        alert(
+                            "Payment verification failed. Please contact support."
+                        );
+
+                        return;
+                    }
+
+
+                    console.log(
+                        "Verification result:",
+                        data
+                    );
+
+
+                    if (data && data.success) {
+
+                        alert(
+                            "✅ Payment successful!\n\n" +
+                            "Your " +
+                            plan.toUpperCase() +
+                            " subscription is now active."
+                        );
+
+
+                        /* =====================
+                           REFRESH SUBSCRIPTION
+                        ====================== */
+
+                        await checkLogin();
+
+                    } else {
+
+                        alert(
+                            "Payment could not be verified."
+                        );
+
+                    }
+
+                },
+
+                onClose:
+                function() {
+
+                    console.log(
+                        "Paystack checkout closed."
+                    );
+
+                }
+
+            });
+
+
+        handler.openIframe();
 
     });
 
 });
-
 
 /* =========================================
    CREATE REPORT
