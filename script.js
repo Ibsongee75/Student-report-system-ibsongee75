@@ -750,7 +750,7 @@ document.getElementById("generateAll")
    PAYSTACK SUBSCRIPTION PAYMENT
 ========================================= */
 
-const PAYSTACK_PUBLIC_KEY = "YOUR_PAYSTACK_PUBLIC_KEY";
+const PAYSTACK_PUBLIC_KEY = "pk_test_255b1c6ede75477e3ed59e874ebb68d9e204f844";
 
 
 document.querySelectorAll(".subscribe-button")
