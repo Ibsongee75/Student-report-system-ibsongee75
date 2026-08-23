@@ -229,6 +229,42 @@ logoutButton.addEventListener("click", async function() {
         "You have been logged out.";
 
 });
+function displaySubscriptionStatus(subscription, user) {
+
+    const statusBox =
+        document.getElementById("subscriptionStatus");
+
+    if (!statusBox) return;
+
+    if (
+        subscription &&
+        subscription.status &&
+        subscription.status.toLowerCase() === "paid"
+    ) {
+
+        const expiryDate =
+            new Date(subscription.expires_at);
+
+        statusBox.innerHTML = `
+            <strong>Subscription Status:</strong>
+            <span style="color:green;">PAID</span>
+            <br>
+            <strong>Account:</strong>
+            ${escapeHTML(user.email)}
+            <br>
+            <strong>Expires:</strong>
+            ${expiryDate.toLocaleDateString()}
+        `;
+
+    } else {
+
+        statusBox.innerHTML = `
+            <strong>Subscription Status:</strong>
+            <span style="color:red;">UNPAID</span>
+        `;
+
+    }
+}
 
 
 /* =========================================
@@ -285,6 +321,10 @@ async function checkLogin() {
 console.log("CURRENT USER ID:", user.id);
 console.log("SUBSCRIPTION DATA:", subscription);
 console.log("SUBSCRIPTION ERROR:", subscriptionError);
+   displaySubscriptionStatus(
+    subscription,
+    user
+);
 
 
 
