@@ -1,5 +1,286 @@
+/* =========================================
+   SUPABASE CONNECTION
+========================================= */
+
+// IMPORTANT:
+// Replace these two values with your own
+// Supabase Project URL and Publishable/Anon Key.
+
+const SUPABASE_URL = "https://nzeddvcmabfodmvmgsyg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Iaro_sV4r31wPbLycRB4Eg_OCDBy2u3";
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+
+/* =========================================
+   GLOBAL VARIABLES
+========================================= */
+
 let students = [];
-let students = [];
+
+
+/* =========================================
+   AUTHENTICATION ELEMENTS
+========================================= */
+
+const authSection =
+    document.getElementById("authSection");
+
+const appSection =
+    document.getElementById("appSection");
+
+const emailInput =
+    document.getElementById("email");
+
+const passwordInput =
+    document.getElementById("password");
+
+const signUpButton =
+    document.getElementById("signUpButton");
+
+const signInButton =
+    document.getElementById("signInButton");
+
+const logoutButton =
+    document.getElementById("logoutButton");
+
+const authStatus =
+    document.getElementById("authStatus");
+
+
+/* =========================================
+   SHOW / HIDE APPLICATION
+========================================= */
+
+function showApp() {
+
+    authSection.style.display = "none";
+
+    appSection.style.display = "block";
+
+}
+
+
+function showLogin() {
+
+    authSection.style.display = "block";
+
+    appSection.style.display = "none";
+
+}
+
+
+/* =========================================
+   CREATE ACCOUNT
+========================================= */
+
+signUpButton.addEventListener("click", async function() {
+
+    const email =
+        emailInput.value.trim();
+
+    const password =
+        passwordInput.value;
+
+
+    if (!email || !password) {
+
+        authStatus.innerHTML =
+            "❌ Please enter your email and password.";
+
+        return;
+    }
+
+
+    if (password.length < 6) {
+
+        authStatus.innerHTML =
+            "❌ Password must contain at least 6 characters.";
+
+        return;
+    }
+
+
+    authStatus.innerHTML =
+        "Creating your account...";
+
+
+    const { data, error } =
+        await supabaseClient.auth.signUp({
+
+            email: email,
+
+            password: password
+
+        });
+
+
+    if (error) {
+
+        console.error(error);
+
+        authStatus.innerHTML =
+            "❌ " + error.message;
+
+        return;
+    }
+
+
+    if (data.user && !data.session) {
+
+        authStatus.innerHTML =
+            "✅ Account created. Please check your email and confirm your account before signing in.";
+
+        return;
+    }
+
+
+    authStatus.innerHTML =
+        "✅ Account created successfully.";
+
+});
+
+
+/* =========================================
+   SIGN IN
+========================================= */
+
+signInButton.addEventListener("click", async function() {
+
+    const email =
+        emailInput.value.trim();
+
+    const password =
+        passwordInput.value;
+
+
+    if (!email || !password) {
+
+        authStatus.innerHTML =
+            "❌ Please enter your email and password.";
+
+        return;
+    }
+
+
+    authStatus.innerHTML =
+        "Signing in...";
+
+
+    const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+
+            email: email,
+
+            password: password
+
+        });
+
+
+    if (error) {
+
+        console.error(error);
+
+        authStatus.innerHTML =
+            "❌ " + error.message;
+
+        return;
+    }
+
+
+    console.log("Logged in user:", data.user);
+
+    authStatus.innerHTML =
+        "✅ Login successful.";
+
+    showApp();
+
+});
+
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+logoutButton.addEventListener("click", async function() {
+
+    const { error } =
+        await supabaseClient.auth.signOut();
+
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+    }
+
+
+    showLogin();
+
+    authStatus.innerHTML =
+        "You have been logged out.";
+
+});
+
+
+/* =========================================
+   CHECK EXISTING LOGIN
+========================================= */
+
+async function checkLogin() {
+
+    const { data } =
+        await supabaseClient.auth.getSession();
+
+
+    if (data.session) {
+
+        console.log(
+            "Existing session found:",
+            data.session.user.email
+        );
+
+        showApp();
+
+    } else {
+
+        showLogin();
+
+    }
+
+}
+
+
+/* =========================================
+   AUTH STATE CHANGES
+========================================= */
+
+supabaseClient.auth.onAuthStateChange(
+    function(event, session) {
+
+        if (session) {
+
+            showApp();
+
+        } else {
+
+            showLogin();
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   START AUTHENTICATION
+========================================= */
+
+checkLogin();
 
 
 /* =========================================
@@ -10,6 +291,7 @@ document.getElementById("downloadTemplate")
 .addEventListener("click", function () {
 
     const scoresData = [
+
         [
             "Admission No",
             "Student Name",
@@ -39,10 +321,12 @@ document.getElementById("downloadTemplate")
             80,
             90
         ]
+
     ];
 
 
     const settingsData = [
+
         ["SETTING", "VALUE"],
 
         ["School Name", "YOUR SCHOOL NAME"],
@@ -52,19 +336,27 @@ document.getElementById("downloadTemplate")
         ["Maximum Score", 100],
 
         ["Grade A Minimum", 70],
+
         ["Grade B Minimum", 60],
+
         ["Grade C Minimum", 50],
+
         ["Grade D Minimum", 45],
+
         ["Grade E Minimum", 40],
+
         ["Grade F Minimum", 0]
+
     ];
 
 
-    const workbook = XLSX.utils.book_new();
+    const workbook =
+        XLSX.utils.book_new();
 
 
     const scoresSheet =
         XLSX.utils.aoa_to_sheet(scoresData);
+
 
     const settingsSheet =
         XLSX.utils.aoa_to_sheet(settingsData);
@@ -88,6 +380,7 @@ document.getElementById("downloadTemplate")
         workbook,
         "Student_Report_Template.xlsx"
     );
+
 });
 
 
@@ -98,33 +391,46 @@ document.getElementById("downloadTemplate")
 document.getElementById("excelFile")
 .addEventListener("change", function(event) {
 
-    const file = event.target.files[0];
+    const file =
+        event.target.files[0];
+
 
     if (!file) {
+
         return;
+
     }
 
 
-    const reader = new FileReader();
+    const reader =
+        new FileReader();
 
 
-    reader.onload = function(e) {
+    reader.onload =
+    function(e) {
 
         try {
 
-            const data = new Uint8Array(e.target.result);
+            const data =
+                new Uint8Array(
+                    e.target.result
+                );
 
-            const workbook = XLSX.read(data, {
-                type: "array"
-            });
+
+            const workbook =
+                XLSX.read(data, {
+                    type: "array"
+                });
 
 
             if (!workbook.Sheets["Scores"]) {
 
-                document.getElementById("fileStatus").innerHTML =
+                document.getElementById("fileStatus")
+                .innerHTML =
                     "❌ Error: The Excel file does not contain a 'Scores' sheet.";
 
                 return;
+
             }
 
 
@@ -143,17 +449,20 @@ document.getElementById("excelFile")
 
             if (rows.length === 0) {
 
-                document.getElementById("fileStatus").innerHTML =
+                document.getElementById("fileStatus")
+                .innerHTML =
                     "❌ The Scores sheet is empty.";
 
                 return;
+
             }
 
 
             students = rows;
 
 
-            document.getElementById("fileStatus").innerHTML =
+            document.getElementById("fileStatus")
+            .innerHTML =
                 "✅ Excel file successfully loaded. " +
                 students.length +
                 " student record(s) found.";
@@ -163,14 +472,16 @@ document.getElementById("excelFile")
 
 
             document.getElementById("reportSection")
-                .style.display = "block";
+            .style.display = "block";
 
 
         } catch (error) {
 
             console.error(error);
 
-            document.getElementById("fileStatus").innerHTML =
+
+            document.getElementById("fileStatus")
+            .innerHTML =
                 "❌ Unable to read this Excel file.";
 
         }
@@ -197,7 +508,8 @@ function loadStudents() {
         '<option value="">-- Select Student --</option>';
 
 
-    students.forEach(function(student, index) {
+    students.forEach(
+    function(student, index) {
 
         const option =
             document.createElement("option");
@@ -227,7 +539,8 @@ document.getElementById("generateReport")
 .addEventListener("click", function() {
 
     const index =
-        document.getElementById("studentSelect").value;
+        document.getElementById("studentSelect")
+        .value;
 
 
     if (index === "") {
@@ -235,6 +548,7 @@ document.getElementById("generateReport")
         alert("Please select a student.");
 
         return;
+
     }
 
 
@@ -247,13 +561,18 @@ document.getElementById("generateReport")
 
 
     document.getElementById("reportContainer")
-        .innerHTML = report;
+    .innerHTML = report;
 
 
     window.scrollTo({
-        top: document.getElementById("reportContainer")
-            .offsetTop,
+
+        top:
+            document.getElementById(
+                "reportContainer"
+            ).offsetTop,
+
         behavior: "smooth"
+
     });
 
 });
@@ -271,27 +590,35 @@ document.getElementById("generateAll")
         alert("No student records found.");
 
         return;
+
     }
 
 
     let allReports = "";
 
 
-    students.forEach(function(student) {
+    students.forEach(
+    function(student) {
 
-        allReports += createReport(student);
+        allReports +=
+            createReport(student);
 
     });
 
 
     document.getElementById("reportContainer")
-        .innerHTML = allReports;
+    .innerHTML = allReports;
 
 
     window.scrollTo({
-        top: document.getElementById("reportContainer")
-            .offsetTop,
+
+        top:
+            document.getElementById(
+                "reportContainer"
+            ).offsetTop,
+
         behavior: "smooth"
+
     });
 
 });
@@ -309,16 +636,19 @@ function createReport(student) {
 
 
     const excludedColumns = [
+
         "Admission No",
         "Student Name",
         "Gender",
         "Class",
         "Term",
         "Session"
+
     ];
 
 
-    Object.keys(student).forEach(function(key) {
+    Object.keys(student)
+    .forEach(function(key) {
 
         if (!excludedColumns.includes(key)) {
 
@@ -327,12 +657,16 @@ function createReport(student) {
 
 
             subjects.push({
+
                 name: key,
+
                 score: score
+
             });
 
 
             total += score;
+
         }
 
     });
@@ -355,15 +689,29 @@ function createReport(student) {
     let subjectRows = "";
 
 
-    subjects.forEach(function(subject, index) {
+    subjects.forEach(
+    function(subject, index) {
 
         subjectRows += `
+
             <tr>
+
                 <td>${index + 1}</td>
-                <td>${escapeHTML(subject.name)}</td>
-                <td>${subject.score}</td>
-                <td>${getGrade(subject.score)}</td>
+
+                <td>
+                    ${escapeHTML(subject.name)}
+                </td>
+
+                <td>
+                    ${subject.score}
+                </td>
+
+                <td>
+                    ${getGrade(subject.score)}
+                </td>
+
             </tr>
+
         `;
 
     });
@@ -387,33 +735,68 @@ function createReport(student) {
             <div class="student-info">
 
                 <div>
+
                     <strong>Admission No:</strong>
-                    ${escapeHTML(student["Admission No"])}
+
+                    ${escapeHTML(
+                        student["Admission No"]
+                    )}
+
                 </div>
 
+
                 <div>
+
                     <strong>Student Name:</strong>
-                    ${escapeHTML(student["Student Name"])}
+
+                    ${escapeHTML(
+                        student["Student Name"]
+                    )}
+
                 </div>
 
+
                 <div>
+
                     <strong>Gender:</strong>
-                    ${escapeHTML(student["Gender"])}
+
+                    ${escapeHTML(
+                        student["Gender"]
+                    )}
+
                 </div>
 
+
                 <div>
+
                     <strong>Class:</strong>
-                    ${escapeHTML(student["Class"])}
+
+                    ${escapeHTML(
+                        student["Class"]
+                    )}
+
                 </div>
 
+
                 <div>
+
                     <strong>Term:</strong>
-                    ${escapeHTML(student["Term"])}
+
+                    ${escapeHTML(
+                        student["Term"]
+                    )}
+
                 </div>
 
+
                 <div>
+
                     <strong>Session:</strong>
-                    ${escapeHTML(student["Session"])}
+
+                    ${escapeHTML(
+                        student["Session"]
+                    )}
+
                 </div>
 
             </div>
@@ -424,13 +807,19 @@ function createReport(student) {
                 <thead>
 
                     <tr>
+
                         <th>No.</th>
+
                         <th>Subject</th>
+
                         <th>Score</th>
+
                         <th>Grade</th>
+
                     </tr>
 
                 </thead>
+
 
                 <tbody>
 
@@ -444,18 +833,29 @@ function createReport(student) {
             <div class="summary">
 
                 <p>
+
                     <strong>Total Score:</strong>
+
                     ${total.toFixed(2)}
+
                 </p>
 
+
                 <p>
+
                     <strong>Average:</strong>
+
                     ${average.toFixed(2)}
+
                 </p>
 
+
                 <p>
+
                     <strong>Overall Grade:</strong>
+
                     ${grade}
+
                 </p>
 
             </div>
@@ -464,15 +864,25 @@ function createReport(student) {
             <div class="comments">
 
                 <p>
-                    <strong>Class Teacher's Comment:</strong>
+
+                    <strong>
+                        Class Teacher's Comment:
+                    </strong>
+
                 </p>
+
 
                 <div class="comment-box"></div>
 
 
                 <p>
-                    <strong>Principal's Comment:</strong>
+
+                    <strong>
+                        Principal's Comment:
+                    </strong>
+
                 </p>
+
 
                 <div class="comment-box"></div>
 
@@ -481,6 +891,7 @@ function createReport(student) {
         </div>
 
     `;
+
 }
 
 
@@ -501,6 +912,7 @@ function getGrade(score) {
     if (score >= 40) return "E";
 
     return "F";
+
 }
 
 
@@ -511,10 +923,15 @@ function getGrade(score) {
 function escapeHTML(value) {
 
     return String(value)
+
         .replace(/&/g, "&amp;")
+
         .replace(/</g, "&lt;")
+
         .replace(/>/g, "&gt;")
+
         .replace(/"/g, "&quot;")
+
         .replace(/'/g, "&#039;");
 
-}
+           }
