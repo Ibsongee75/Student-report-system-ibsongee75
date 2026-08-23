@@ -193,4 +193,87 @@ select {
         width: 100%;
         margin: 5px 0;
     }
+    /* =========================================
+   SUBSCRIPTION PLANS
+========================================= */
+
+.subscription-section {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.subscription-section h2 {
+    margin-bottom: 8px;
+}
+
+.subscription-intro {
+    margin-bottom: 25px;
+}
+
+.plans-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+}
+
+.plan-card {
+    width: 280px;
+    padding: 25px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    position: relative;
+    text-align: left;
+}
+
+.plan-card h3 {
+    text-align: center;
+    font-size: 24px;
+}
+
+.plan-price {
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.plan-price span {
+    display: block;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.plan-card p {
+    text-align: center;
+}
+
+.plan-card li {
+    margin: 10px 0;
+}
+
+.subscribe-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.popular-plan {
+    border: 3px solid #2563eb;
+}
+
+.popular-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
 }
