@@ -197,10 +197,10 @@ signInButton.addEventListener("click", async function() {
 
     console.log("Logged in user:", data.user);
 
-    authStatus.innerHTML =
-        "✅ Login successful.";
+authStatus.innerHTML =
+    "✅ Login successful.";
 
-    showApp();
+await checkLogin();
 
 });
 
@@ -286,13 +286,6 @@ console.log("CURRENT USER ID:", user.id);
 console.log("SUBSCRIPTION DATA:", subscription);
 console.log("SUBSCRIPTION ERROR:", subscriptionError);
 
-alert(
-    "User ID:\n" + user.id +
-    "\n\nSubscription:\n" +
-    JSON.stringify(subscription, null, 2) +
-    "\n\nError:\n" +
-    JSON.stringify(subscriptionError, null, 2)
-);
 
 
     if (subscriptionError) {
@@ -346,11 +339,11 @@ alert(
 ========================================= */
 
 supabaseClient.auth.onAuthStateChange(
-    function(event, session) {
+    async function(event, session) {
 
         if (session) {
 
-            showApp();
+            await checkLogin();
 
         } else {
 
