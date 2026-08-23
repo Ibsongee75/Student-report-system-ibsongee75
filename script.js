@@ -114,6 +114,10 @@ signUpButton.addEventListener("click", async function() {
             email: email,
 
             password: password
+           options: {
+    emailRedirectTo:
+        "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
+}
 
         });
 
