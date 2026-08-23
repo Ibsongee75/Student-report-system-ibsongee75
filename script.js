@@ -276,11 +276,23 @@ async function checkLogin() {
     ========================================= */
 
     const { data: subscription, error: subscriptionError } =
-        await supabaseClient
-            .from("subscriptions")
-            .select("status, expires_at")
-            .eq("user_id", user.id)
-            .maybeSingle();
+    await supabaseClient
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+console.log("CURRENT USER ID:", user.id);
+console.log("SUBSCRIPTION DATA:", subscription);
+console.log("SUBSCRIPTION ERROR:", subscriptionError);
+
+alert(
+    "User ID:\n" + user.id +
+    "\n\nSubscription:\n" +
+    JSON.stringify(subscription, null, 2) +
+    "\n\nError:\n" +
+    JSON.stringify(subscriptionError, null, 2)
+);
 
 
     if (subscriptionError) {
