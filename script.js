@@ -1493,11 +1493,333 @@ function createReport(student) {
 
 
                 <p>
+/* =========================================
+   CREATE REPORT
+========================================= */
 
-                    <strong>Overall Grade:</strong>
+function createReport(student) {
+
+    const subjects = [];
+
+    let overallTotal = 0;
+
+
+    const excludedColumns = [
+
+        "Admission No",
+        "Student Name",
+        "Gender",
+        "Class",
+        "Term",
+        "Session"
+
+    ];
+
+
+    /* =========================================
+       FIND SUBJECTS AUTOMATICALLY
+    ========================================= */
+
+    const keys =
+        Object.keys(student);
+
+
+    const subjectNames = [];
+
+
+    keys.forEach(function(key) {
+
+        const match =
+            key.match(/^(.+)\s+(CA|Exams)$/i);
+
+
+        if (!match) {
+            return;
+        }
+
+
+        const subjectName =
+            match[1].trim();
+
+
+        if (!subjectNames.includes(subjectName)) {
+
+            subjectNames.push(subjectName);
+
+        }
+
+    });
+
+
+    /* =========================================
+       CALCULATE SUBJECT TOTALS
+    ========================================= */
+
+    subjectNames.forEach(function(subjectName) {
+
+        const caKey =
+            subjectName + " CA";
+
+        const examsKey =
+            subjectName + " Exams";
+
+
+        const ca =
+            Number(student[caKey]) || 0;
+
+
+        const exams =
+            Number(student[examsKey]) || 0;
+
+
+        const total =
+            ca + exams;
+
+
+        overallTotal += total;
+
+
+        subjects.push({
+
+            name:
+                subjectName,
+
+            ca:
+                ca,
+
+            exams:
+                exams,
+
+            total:
+                total
+
+        });
+
+    });
+
+
+    /* =========================================
+       CALCULATE AVERAGE
+    ========================================= */
+
+    const numberOfSubjects =
+        subjects.length;
+
+
+    const average =
+        numberOfSubjects > 0
+        ? overallTotal / numberOfSubjects
+        : 0;
+
+
+    const grade =
+        getGrade(average);
+
+
+    /* =========================================
+       CALCULATE POSITION
+    ========================================= */
+
+    const position =
+        calculatePosition(
+            student,
+            students
+        );
+
+
+    /* =========================================
+       SUBJECT TABLE
+    ========================================= */
+
+    let subjectRows = "";
+
+
+    subjects.forEach(
+    function(subject, index) {
+
+        subjectRows += `
+
+            <tr>
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${escapeHTML(subject.name)}
+                </td>
+
+                <td>
+                    ${subject.ca}
+                </td>
+
+                <td>
+                    ${subject.exams}
+                </td>
+
+                <td>
+                    ${subject.total}
+                </td>
+
+                <td>
+                    ${getGrade(subject.total)}
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+
+    /* =========================================
+       RETURN REPORT
+    ========================================= */
+
+    return `
+
+        <div class="report">
+
+            <div class="school-header">
+
+                <h1>
+                    ${escapeHTML(
+                        reportSettings.schoolName
+                    )}
+                </h1>
+
+                <p>
+                    ${escapeHTML(
+                        reportSettings.schoolAddress
+                    )}
+                </p>
+
+                <h2>
+                    STUDENT REPORT SHEET
+                </h2>
+
+            </div>
+
+
+            <div class="student-info">
+
+                <div>
+                    <strong>Admission No:</strong>
+                    ${escapeHTML(
+                        student["Admission No"]
+                    )}
+                </div>
+
+
+                <div>
+                    <strong>Student Name:</strong>
+                    ${escapeHTML(
+                        student["Student Name"]
+                    )}
+                </div>
+
+
+                <div>
+                    <strong>Gender:</strong>
+                    ${escapeHTML(
+                        student["Gender"]
+                    )}
+                </div>
+
+
+                <div>
+                    <strong>Class:</strong>
+                    ${escapeHTML(
+                        student["Class"]
+                    )}
+                </div>
+
+
+                <div>
+                    <strong>Term:</strong>
+                    ${escapeHTML(
+                        student["Term"]
+                    )}
+                </div>
+
+
+                <div>
+                    <strong>Session:</strong>
+                    ${escapeHTML(
+                        student["Session"]
+                    )}
+                </div>
+
+            </div>
+
+
+            <table class="result-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>No.</th>
+
+                        <th>Subject</th>
+
+                        <th>CA</th>
+
+                        <th>Exams</th>
+
+                        <th>Total</th>
+
+                        <th>Grade</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    ${subjectRows}
+
+                </tbody>
+
+            </table>
+
+
+            <div class="summary">
+
+                <p>
+                    <strong>
+                        Overall Total:
+                    </strong>
+
+                    ${overallTotal.toFixed(2)}
+                </p>
+
+
+                <p>
+                    <strong>
+                        Average:
+                    </strong>
+
+                    ${average.toFixed(2)}%
+                </p>
+
+
+                <p>
+                    <strong>
+                        Position:
+                    </strong>
+
+                    ${formatPosition(position)}
+                </p>
+
+
+                <p>
+                    <strong>
+                        Overall Grade:
+                    </strong>
 
                     ${grade}
-
                 </p>
 
             </div>
@@ -1506,11 +1828,9 @@ function createReport(student) {
             <div class="comments">
 
                 <p>
-
                     <strong>
                         Class Teacher's Comment:
                     </strong>
-
                 </p>
 
 
@@ -1518,11 +1838,9 @@ function createReport(student) {
 
 
                 <p>
-
                     <strong>
                         Principal's Comment:
                     </strong>
-
                 </p>
 
 
@@ -1536,27 +1854,140 @@ function createReport(student) {
 
 }
 
-
 /* =========================================
    GRADING SYSTEM
 ========================================= */
 
 function getGrade(score) {
 
-    if (score >= 70) return "A";
+    if (score >= reportSettings.gradeA)
+        return "A";
 
-    if (score >= 60) return "B";
+    if (score >= reportSettings.gradeB)
+        return "B";
 
-    if (score >= 50) return "C";
+    if (score >= reportSettings.gradeC)
+        return "C";
 
-    if (score >= 45) return "D";
+    if (score >= reportSettings.gradeD)
+        return "D";
 
-    if (score >= 40) return "E";
+    if (score >= reportSettings.gradeE)
+        return "E";
 
     return "F";
 
 }
 
+/* =========================================
+   CALCULATE CLASS POSITION
+========================================= */
+
+function calculatePosition(
+    currentStudent,
+    allStudents
+) {
+
+    const currentTotal =
+        calculateStudentTotal(
+            currentStudent
+        );
+
+
+    let position = 1;
+
+
+    allStudents.forEach(function(student) {
+
+        const studentTotal =
+            calculateStudentTotal(
+                student
+            );
+
+
+        if (studentTotal > currentTotal) {
+
+            position++;
+
+        }
+
+    });
+
+
+    return position;
+
+}
+
+
+/* =========================================
+   CALCULATE STUDENT TOTAL
+========================================= */
+
+function calculateStudentTotal(student) {
+
+    let total = 0;
+
+
+    Object.keys(student)
+    .forEach(function(key) {
+
+        const match =
+            key.match(/^(.+)\s+(CA|Exams)$/i);
+
+
+        if (!match) {
+            return;
+        }
+
+
+        total +=
+            Number(student[key]) || 0;
+
+    });
+
+
+    return total;
+
+}
+
+
+/* =========================================
+   FORMAT POSITION
+========================================= */
+
+function formatPosition(position) {
+
+    const lastTwo =
+        position % 100;
+
+
+    if (
+        lastTwo >= 11 &&
+        lastTwo <= 13
+    ) {
+
+        return position + "th";
+
+    }
+
+
+    switch (position % 10) {
+
+        case 1:
+            return position + "st";
+
+        case 2:
+            return position + "nd";
+
+        case 3:
+            return position + "rd";
+
+        default:
+            return position + "th";
+
+    }
+
+}
 
 /* =========================================
    SECURITY / HTML ESCAPING
