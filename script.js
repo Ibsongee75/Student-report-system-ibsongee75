@@ -458,6 +458,10 @@ async function checkLogin() {
         await supabaseClient.auth.getSession();
 
 
+    /* =====================================
+       SESSION ERROR
+    ===================================== */
+
     if (error) {
 
         console.error(
@@ -465,13 +469,16 @@ async function checkLogin() {
             error
         );
 
-
         showLogin();
 
         return;
 
     }
 
+
+    /* =====================================
+       NO LOGIN SESSION
+    ===================================== */
 
     if (!data.session) {
 
@@ -482,14 +489,136 @@ async function checkLogin() {
     }
 
 
+    /* =====================================
+       GET CURRENT USER
+    ===================================== */
+
     const user =
         data.session.user;
 
 
     console.log(
-        "Existing session found:",
+        "Logged in user:",
         user.email
     );
+
+
+    /* =====================================
+       GET SUBSCRIPTION
+    ===================================== */
+
+    const {
+        data: subscription,
+        error: subscriptionError
+    } =
+        await supabaseClient
+            .from("subscriptions")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+
+    console.log(
+        "CURRENT USER ID:",
+        user.id
+    );
+
+
+    console.log(
+        "SUBSCRIPTION DATA:",
+        subscription
+    );
+
+
+    console.log(
+        "SUBSCRIPTION ERROR:",
+        subscriptionError
+    );
+
+
+    /* =====================================
+       SUBSCRIPTION DATABASE ERROR
+    ===================================== */
+
+    if (subscriptionError) {
+
+        console.error(
+            "Subscription check failed:",
+            subscriptionError
+        );
+
+
+        alert(
+            "Unable to verify your subscription. Please try again."
+        );
+
+        return;
+
+    }
+
+
+    /* =====================================
+       DISPLAY STATUS
+    ===================================== */
+
+    displaySubscriptionStatus(
+        subscription,
+        user
+    );
+
+
+    /* =====================================
+       CHECK ACTIVE SUBSCRIPTION
+    ===================================== */
+
+    const isPaid =
+        subscription &&
+        subscription.status &&
+        subscription.status.toLowerCase() === "paid";
+
+
+    const isNotExpired =
+        subscription &&
+        subscription.expires_at &&
+        new Date(
+            subscription.expires_at
+        ) > new Date();
+
+
+    /* =====================================
+       ACTIVE SUBSCRIPTION
+    ===================================== */
+
+    if (
+        isPaid &&
+        isNotExpired
+    ) {
+
+        console.log(
+            "Paid subscription confirmed."
+        );
+
+
+        showApp();
+
+
+        return;
+
+    }
+
+
+    /* =====================================
+       UNPAID / EXPIRED
+    ===================================== */
+
+    console.log(
+        "User does not have an active subscription."
+    );
+
+
+    showSubscriptionPlans();
+
+}
 
 
     /* =====================================
