@@ -543,76 +543,135 @@ document.getElementById("excelFile")
 
 
             if (!workbook.Sheets["Scores"]) {
+/* =========================================
+   DOWNLOAD EXCEL TEMPLATE
+========================================= */
 
-                document.getElementById("fileStatus")
-                .innerHTML =
-                    "❌ Error: The Excel file does not contain a 'Scores' sheet.";
+document.getElementById("downloadTemplate")
+.addEventListener("click", function () {
 
-                return;
+    const scoresData = [
 
-            }
+        [
+            "Admission No",
+            "Student Name",
+            "Gender",
+            "Class",
+            "Term",
+            "Session",
 
+            "Mathematics CA",
+            "Mathematics Exams",
 
-            const worksheet =
-                workbook.Sheets["Scores"];
+            "English CA",
+            "English Exams",
 
+            "Biology CA",
+            "Biology Exams",
 
-            const rows =
-                XLSX.utils.sheet_to_json(
-                    worksheet,
-                    {
-                        defval: ""
-                    }
-                );
+            "Physics CA",
+            "Physics Exams",
 
+            "Chemistry CA",
+            "Chemistry Exams",
 
-            if (rows.length === 0) {
+            "Computer Science CA",
+            "Computer Science Exams"
+        ],
 
-                document.getElementById("fileStatus")
-                .innerHTML =
-                    "❌ The Scores sheet is empty.";
+        [
+            "001",
+            "Example Student",
+            "Male",
+            "SS2",
+            "First Term",
+            "2025/2026",
 
-                return;
+            35,
+            55,
 
-            }
+            32,
+            52,
 
+            30,
+            58,
 
-            students = rows;
+            28,
+            60,
 
+            34,
+            50,
 
-            document.getElementById("fileStatus")
-            .innerHTML =
-                "✅ Excel file successfully loaded. " +
-                students.length +
-                " student record(s) found.";
+            36,
+            57
+        ]
 
-
-            loadStudents();
-
-
-            document.getElementById("reportSection")
-            .style.display = "block";
-
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            document.getElementById("fileStatus")
-            .innerHTML =
-                "❌ Unable to read this Excel file.";
-
-        }
-
-    };
+    ];
 
 
-    reader.readAsArrayBuffer(file);
+    /* =========================================
+       SETTINGS
+    ========================================= */
+
+    const settingsData = [
+
+        ["SETTING", "VALUE"],
+
+        ["School Name", "YOUR SCHOOL NAME"],
+
+        ["School Address", "YOUR SCHOOL ADDRESS"],
+
+        ["CA Maximum", 40],
+
+        ["Exams Maximum", 60],
+
+        ["Grade A Minimum", 70],
+
+        ["Grade B Minimum", 60],
+
+        ["Grade C Minimum", 50],
+
+        ["Grade D Minimum", 45],
+
+        ["Grade E Minimum", 40],
+
+        ["Grade F Minimum", 0]
+
+    ];
+
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    const scoresSheet =
+        XLSX.utils.aoa_to_sheet(scoresData);
+
+
+    const settingsSheet =
+        XLSX.utils.aoa_to_sheet(settingsData);
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        scoresSheet,
+        "Scores"
+    );
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        settingsSheet,
+        "Settings"
+    );
+
+
+    XLSX.writeFile(
+        workbook,
+        "Student_Report_Template.xlsx"
+    );
 
 });
-
-
 /* =========================================
    LOAD STUDENTS INTO DROPDOWN
 ========================================= */
