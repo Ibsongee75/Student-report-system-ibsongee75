@@ -19,7 +19,20 @@ const supabaseClient = supabase.createClient(
    GLOBAL VARIABLES
 ========================================= */
 
-let students = [];
+let studenlet students = [];
+
+let reportSettings = {
+    schoolName: "YOUR SCHOOL NAME",
+    schoolAddress: "YOUR SCHOOL ADDRESS",
+    caMaximum: 40,
+    examsMaximum: 60,
+    gradeA: 70,
+    gradeB: 60,
+    gradeC: 50,
+    gradeD: 45,
+    gradeE: 40,
+    gradeF: 0
+};ts = [];
 
 
 /* =========================================
