@@ -358,6 +358,7 @@ logoutButton.addEventListener(
             console.error(error);
 
             return;
+
         }
 
 
