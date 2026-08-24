@@ -35,229 +35,80 @@ const PAYSTACK_PUBLIC_KEY =
 
 let students = [];
 
-let schoolSubjects = [
-    "Mathematics",
-    "English",
-    "Biology",
-    "Physics",
-    "Chemistry",
-    "Computer Science"
-];
+let isCheckingLogin = false;
 
+
+/* =========================================================
+   REPORT SETTINGS
+   ========================================================= */
 
 let reportSettings = {
 
-    schoolName:
-        "YOUR SCHOOL NAME",
+    schoolName: "YOUR SCHOOL NAME",
 
-    schoolAddress:
-        "YOUR SCHOOL ADDRESS",
+    schoolAddress: "YOUR SCHOOL ADDRESS",
 
-    caMaximum:
-        40,
+    caMaximum: 40,
 
-    examsMaximum:
-        60,
+    examsMaximum: 60,
 
-    gradeA:
-        70,
+    gradeA: 70,
 
-    gradeB:
-        60,
+    gradeB: 60,
 
-    gradeC:
-        50,
+    gradeC: 50,
 
-    gradeD:
-        45,
+    gradeD: 45,
 
-    gradeE:
-        40,
+    gradeE: 40,
 
-    gradeF:
-        0
+    gradeF: 0
 
 };
-
-
-/* =========================================================
-   DOM ELEMENTS
-   ========================================================= */
-
-let authSection;
-let appSection;
-let subscriptionPlans;
-let subscriptionStatus;
-
-let emailInput;
-let passwordInput;
-
-let signUpButton;
-let signInButton;
-let logoutButton;
-
-let authStatus;
-
-let downloadTemplateButton;
-let excelFileInput;
-
-let fileStatus;
-
-let reportSection;
-let studentSelect;
-let generateReportButton;
-let generateAllButton;
-let reportContainer;
-
-
-/* =========================================================
-   INITIALIZE APPLICATION
-   ========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        initializeElements();
-
-        attachAuthenticationEvents();
-
-        attachApplicationEvents();
-
-        createSubjectManager();
-
-        checkLogin();
-
-    }
-);
 
 
 /* =========================================================
    GET HTML ELEMENTS
    ========================================================= */
 
-function initializeElements() {
+const authSection =
+    document.getElementById("authSection");
 
-    authSection =
-        document.getElementById(
-            "authSection"
-        );
+const appSection =
+    document.getElementById("appSection");
 
+const subscriptionPlans =
+    document.getElementById("subscriptionPlans");
 
-    appSection =
-        document.getElementById(
-            "appSection"
-        );
+const subscriptionStatus =
+    document.getElementById("subscriptionStatus");
 
+const emailInput =
+    document.getElementById("email");
 
-    subscriptionPlans =
-        document.getElementById(
-            "subscriptionPlans"
-        );
+const passwordInput =
+    document.getElementById("password");
 
+const signUpButton =
+    document.getElementById("signUpButton");
 
-    subscriptionStatus =
-        document.getElementById(
-            "subscriptionStatus"
-        );
+const signInButton =
+    document.getElementById("signInButton");
 
+const logoutButton =
+    document.getElementById("logoutButton");
 
-    emailInput =
-        document.getElementById(
-            "email"
-        );
-
-
-    passwordInput =
-        document.getElementById(
-            "password"
-        );
-
-
-    signUpButton =
-        document.getElementById(
-            "signUpButton"
-        );
-
-
-    signInButton =
-        document.getElementById(
-            "signInButton"
-        );
-
-
-    logoutButton =
-        document.getElementById(
-            "logoutButton"
-        );
-
-
-    authStatus =
-        document.getElementById(
-            "authStatus"
-        );
-
-
-    downloadTemplateButton =
-        document.getElementById(
-            "downloadTemplate"
-        );
-
-
-    excelFileInput =
-        document.getElementById(
-            "excelFile"
-        );
-
-
-    fileStatus =
-        document.getElementById(
-            "fileStatus"
-        );
-
-
-    reportSection =
-        document.getElementById(
-            "reportSection"
-        );
-
-
-    studentSelect =
-        document.getElementById(
-            "studentSelect"
-        );
-
-
-    generateReportButton =
-        document.getElementById(
-            "generateReport"
-        );
-
-
-    generateAllButton =
-        document.getElementById(
-            "generateAll"
-        );
-
-
-    reportContainer =
-        document.getElementById(
-            "reportContainer"
-        );
-
-}
+const authStatus =
+    document.getElementById("authStatus");
 
 
 /* =========================================================
-   SAFE ELEMENT CHECK
+   BASIC SAFETY CHECK
    ========================================================= */
 
-function elementExists(element) {
-
-    return element !== null &&
-           element !== undefined;
-
-}
+console.log(
+    "Student Report Generator JavaScript loaded."
+);
 
 
 /* =========================================================
@@ -266,34 +117,27 @@ function elementExists(element) {
 
 function showLogin() {
 
-    if (elementExists(authSection)) {
+    if (authSection) {
 
-        authSection.style.display =
-            "block";
-
-    }
-
-
-    if (elementExists(subscriptionPlans)) {
-
-        subscriptionPlans.style.display =
-            "none";
+        authSection.style.display = "block";
 
     }
 
+    if (appSection) {
 
-    if (elementExists(appSection)) {
-
-        appSection.style.display =
-            "none";
+        appSection.style.display = "none";
 
     }
 
+    if (subscriptionPlans) {
 
-    if (elementExists(subscriptionStatus)) {
+        subscriptionPlans.style.display = "none";
 
-        subscriptionStatus.style.display =
-            "none";
+    }
+
+    if (subscriptionStatus) {
+
+        subscriptionStatus.style.display = "none";
 
     }
 
@@ -301,39 +145,32 @@ function showLogin() {
 
 
 /* =========================================================
-   SHOW SUBSCRIPTION
+   SHOW SUBSCRIPTION PLANS
    ========================================================= */
 
-function showSubscription() {
+function showSubscriptionPlans() {
 
-    if (elementExists(authSection)) {
+    if (authSection) {
 
-        authSection.style.display =
-            "none";
-
-    }
-
-
-    if (elementExists(subscriptionPlans)) {
-
-        subscriptionPlans.style.display =
-            "block";
+        authSection.style.display = "none";
 
     }
 
+    if (appSection) {
 
-    if (elementExists(appSection)) {
-
-        appSection.style.display =
-            "none";
+        appSection.style.display = "none";
 
     }
 
+    if (subscriptionPlans) {
 
-    if (elementExists(subscriptionStatus)) {
+        subscriptionPlans.style.display = "block";
 
-        subscriptionStatus.style.display =
-            "block";
+    }
+
+    if (subscriptionStatus) {
+
+        subscriptionStatus.style.display = "block";
 
     }
 
@@ -346,34 +183,27 @@ function showSubscription() {
 
 function showApp() {
 
-    if (elementExists(authSection)) {
+    if (authSection) {
 
-        authSection.style.display =
-            "none";
-
-    }
-
-
-    if (elementExists(subscriptionPlans)) {
-
-        subscriptionPlans.style.display =
-            "none";
+        authSection.style.display = "none";
 
     }
 
+    if (subscriptionPlans) {
 
-    if (elementExists(appSection)) {
-
-        appSection.style.display =
-            "block";
+        subscriptionPlans.style.display = "none";
 
     }
 
+    if (subscriptionStatus) {
 
-    if (elementExists(subscriptionStatus)) {
+        subscriptionStatus.style.display = "block";
 
-        subscriptionStatus.style.display =
-            "block";
+    }
+
+    if (appSection) {
+
+        appSection.style.display = "block";
 
     }
 
@@ -381,161 +211,300 @@ function showApp() {
 
 
 /* =========================================================
-   AUTHENTICATION EVENTS
+   CREATE ACCOUNT
    ========================================================= */
 
-function attachAuthenticationEvents() {
+if (signUpButton) {
+
+    signUpButton.addEventListener(
+        "click",
+        async function () {
+
+            const email =
+                emailInput
+                    ? emailInput.value.trim()
+                    : "";
+
+            const password =
+                passwordInput
+                    ? passwordInput.value
+                    : "";
 
 
-    /* =====================================================
-       CREATE ACCOUNT
-       ===================================================== */
+            if (!email || !password) {
 
-    if (elementExists(signUpButton)) {
+                if (authStatus) {
 
-        signUpButton.addEventListener(
-            "click",
-            async function () {
+                    authStatus.innerHTML =
+                        "❌ Please enter your email and password.";
 
-                const email =
-                    emailInput.value.trim();
+                }
 
-                const password =
-                    passwordInput.value;
+                return;
+
+            }
 
 
-                if (!email || !password) {
+            if (password.length < 6) {
 
-                    setAuthStatus(
-                        "❌ Please enter your email and password."
+                if (authStatus) {
+
+                    authStatus.innerHTML =
+                        "❌ Password must contain at least 6 characters.";
+
+                }
+
+                return;
+
+            }
+
+
+            if (authStatus) {
+
+                authStatus.innerHTML =
+                    "Creating your account...";
+
+            }
+
+
+            try {
+
+                const { data, error } =
+                    await supabaseClient.auth.signUp({
+
+                        email: email,
+
+                        password: password,
+
+                        options: {
+
+                            emailRedirectTo:
+                                "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
+
+                        }
+
+                    });
+
+
+                if (error) {
+
+                    console.error(
+                        "SIGN UP ERROR:",
+                        error
                     );
+
+
+                    if (authStatus) {
+
+                        authStatus.innerHTML =
+                            "❌ " + error.message;
+
+                    }
 
                     return;
 
                 }
 
 
-                if (password.length < 6) {
-
-                    setAuthStatus(
-                        "❌ Password must contain at least 6 characters."
-                    );
-
-                    return;
-
-                }
-
-
-                setAuthStatus(
-                    "Creating your account..."
+                console.log(
+                    "SIGN UP RESULT:",
+                    data
                 );
 
 
-                try {
+                if (
+                    data.user &&
+                    !data.session
+                ) {
 
-                    const {
-                        data,
-                        error
-                    } =
-                        await supabaseClient
-                            .auth
-                            .signUp({
+                    if (authStatus) {
 
-                                email:
-                                    email,
-
-                                password:
-                                    password,
-
-                                options: {
-
-                                    emailRedirectTo:
-                                        "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
-
-                                }
-
-                            });
-
-
-                    if (error) {
-
-                        console.error(
-                            "Sign up error:",
-                            error
-                        );
-
-
-                        setAuthStatus(
-                            "❌ " +
-                            error.message
-                        );
-
-
-                        return;
+                        authStatus.innerHTML =
+                            "✅ Account created successfully. Please check your email and confirm your account before signing in.";
 
                     }
 
+                    return;
 
-                    if (
-                        data.user &&
-                        !data.session
-                    ) {
-
-                        setAuthStatus(
-                            "✅ Account created. Please check your email and confirm your account before signing in."
-                        );
+                }
 
 
-                        return;
+                if (authStatus) {
 
-                    }
-
-
-                    setAuthStatus(
-                        "✅ Account created successfully."
-                    );
-
-
-                } catch (error) {
-
-                    console.error(
-                        error
-                    );
-
-
-                    setAuthStatus(
-                        "❌ An unexpected error occurred while creating the account."
-                    );
+                    authStatus.innerHTML =
+                        "✅ Account created successfully.";
 
                 }
 
             }
-        );
 
-    }
+            catch (error) {
 
-
-    /* =====================================================
-       SIGN IN
-       ===================================================== */
-
-    if (elementExists(signInButton)) {
-
-        signInButton.addEventListener(
-            "click",
-            async function () {
-
-                const email =
-                    emailInput.value.trim();
-
-                const password =
-                    passwordInput.value;
+                console.error(
+                    "SIGN UP EXCEPTION:",
+                    error
+                );
 
 
-                if (!email || !password) {
+                if (authStatus) {
 
-                    setAuthStatus(
-                        "❌ Please enter your email and password."
+                    authStatus.innerHTML =
+                        "❌ Something went wrong while creating the account.";
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SIGN IN
+   ========================================================= */
+
+if (signInButton) {
+
+    signInButton.addEventListener(
+        "click",
+        async function () {
+
+            const email =
+                emailInput
+                    ? emailInput.value.trim()
+                    : "";
+
+            const password =
+                passwordInput
+                    ? passwordInput.value
+                    : "";
+
+
+            if (!email || !password) {
+
+                if (authStatus) {
+
+                    authStatus.innerHTML =
+                        "❌ Please enter your email and password.";
+
+                }
+
+                return;
+
+            }
+
+
+            if (authStatus) {
+
+                authStatus.innerHTML =
+                    "Signing in...";
+
+            }
+
+
+            try {
+
+                const { data, error } =
+                    await supabaseClient.auth.signInWithPassword({
+
+                        email: email,
+
+                        password: password
+
+                    });
+
+
+                if (error) {
+
+                    console.error(
+                        "SIGN IN ERROR:",
+                        error
+                    );
+
+
+                    if (authStatus) {
+
+                        authStatus.innerHTML =
+                            "❌ " + error.message;
+
+                    }
+
+                    return;
+
+                }
+
+
+                console.log(
+                    "LOGIN SUCCESS:",
+                    data.user
+                );
+
+
+                if (authStatus) {
+
+                    authStatus.innerHTML =
+                        "✅ Login successful. Checking subscription...";
+
+                }
+
+
+                /*
+                   Do NOT call checkLogin() here.
+                   Supabase's auth state listener will handle it.
+                */
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "SIGN IN EXCEPTION:",
+                    error
+                );
+
+
+                if (authStatus) {
+
+                    authStatus.innerHTML =
+                        "❌ Unable to sign in. Please try again.";
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+if (logoutButton) {
+
+    logoutButton.addEventListener(
+        "click",
+        async function () {
+
+            try {
+
+                const { error } =
+                    await supabaseClient.auth.signOut();
+
+
+                if (error) {
+
+                    console.error(
+                        "LOGOUT ERROR:",
+                        error
+                    );
+
+                    alert(
+                        "Unable to log out."
                     );
 
                     return;
@@ -543,353 +512,34 @@ function attachAuthenticationEvents() {
                 }
 
 
-                setAuthStatus(
-                    "Signing in..."
+                students = [];
+
+
+                showLogin();
+
+
+                if (authStatus) {
+
+                    authStatus.innerHTML =
+                        "You have been logged out.";
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "LOGOUT EXCEPTION:",
+                    error
                 );
 
-
-                try {
-
-                    const {
-                        data,
-                        error
-                    } =
-                        await supabaseClient
-                            .auth
-                            .signInWithPassword({
-
-                                email:
-                                    email,
-
-                                password:
-                                    password
-
-                            });
-
-
-                    if (error) {
-
-                        console.error(
-                            "Sign in error:",
-                            error
-                        );
-
-
-                        setAuthStatus(
-                            "❌ " +
-                            error.message
-                        );
-
-
-                        return;
-
-                    }
-
-
-                    console.log(
-                        "Login successful:",
-                        data.user
-                    );
-
-
-                    setAuthStatus(
-                        "✅ Login successful."
-                    );
-
-
-                    await checkLogin();
-
-
-                } catch (error) {
-
-                    console.error(
-                        error
-                    );
-
-
-                    setAuthStatus(
-                        "❌ Unable to sign in. Please try again."
-                    );
-
-                }
-
             }
-        );
-
-    }
-
-
-    /* =====================================================
-       LOGOUT
-       ===================================================== */
-
-    if (elementExists(logoutButton)) {
-
-        logoutButton.addEventListener(
-            "click",
-            async function () {
-
-                try {
-
-                    const {
-                        error
-                    } =
-                        await supabaseClient
-                            .auth
-                            .signOut();
-
-
-                    if (error) {
-
-                        console.error(
-                            error
-                        );
-
-                        return;
-
-                    }
-
-
-                    students = [];
-
-
-                    showLogin();
-
-
-                    setAuthStatus(
-                        "You have been logged out."
-                    );
-
-
-                } catch (error) {
-
-                    console.error(
-                        error
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   AUTH STATUS MESSAGE
-   ========================================================= */
-
-function setAuthStatus(message) {
-
-    if (elementExists(authStatus)) {
-
-        authStatus.innerHTML =
-            message;
-
-    }
-
-}
-
-
-/* =========================================================
-   CHECK LOGIN
-   ========================================================= */
-
-async function checkLogin() {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .auth
-                .getSession();
-
-
-        if (error) {
-
-            console.error(
-                "Session error:",
-                error
-            );
-
-
-            showLogin();
-
-            return;
 
         }
-
-
-        if (!data.session) {
-
-            showLogin();
-
-            return;
-
-        }
-
-
-        const user =
-            data.session.user;
-
-
-        console.log(
-            "Logged in user:",
-            user.email
-        );
-
-
-        await checkSubscription(
-            user
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "checkLogin error:",
-            error
-        );
-
-
-        showLogin();
-
-    }
+    );
 
 }
-
-
-/* =========================================================
-   CHECK SUBSCRIPTION
-   ========================================================= */
-
-async function checkSubscription(user) {
-
-    try {
-
-        const {
-            data: subscription,
-            error
-        } =
-            await supabaseClient
-                .from("subscriptions")
-                .select("*")
-                .eq(
-                    "user_id",
-                    user.id
-                )
-                .maybeSingle();
-
-
-        console.log(
-            "Subscription:",
-            subscription
-        );
-
-
-        if (error) {
-
-            console.error(
-                "Subscription error:",
-                error
-            );
-
-
-            showSubscription();
-
-
-            displaySubscriptionStatus(
-                null,
-                user
-            );
-
-
-            return;
-
-        }
-
-
-        displaySubscriptionStatus(
-            subscription,
-            user
-        );
-
-
-        if (
-
-            subscription &&
-
-            String(
-                subscription.status
-            ).toLowerCase() ===
-            "paid" &&
-
-            subscription.expires_at &&
-
-            new Date(
-                subscription.expires_at
-            ) > new Date()
-
-        ) {
-
-            showApp();
-
-        } else {
-
-            showSubscription();
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            error
-        );
-
-
-        showSubscription();
-
-    }
-
-}
-
-
-/* =========================================================
-   AUTH STATE CHANGE
-   ========================================================= */
-
-supabaseClient.auth.onAuthStateChange(
-    function (event, session) {
-
-        console.log(
-            "Auth event:",
-            event
-        );
-
-
-        /*
-           Do not await checkLogin directly inside
-           onAuthStateChange. This prevents Supabase
-           authentication lock problems.
-        */
-
-        setTimeout(
-            function () {
-
-                checkLogin();
-
-            },
-            0
-        );
-
-    }
-);
 
 
 /* =========================================================
@@ -901,11 +551,7 @@ function displaySubscriptionStatus(
     user
 ) {
 
-    if (
-        !elementExists(
-            subscriptionStatus
-        )
-    ) {
+    if (!subscriptionStatus) {
 
         return;
 
@@ -917,32 +563,33 @@ function displaySubscriptionStatus(
 
 
     if (
-
         subscription &&
-
-        String(
-            subscription.status
-        ).toLowerCase() ===
-        "paid"
-
+        subscription.status &&
+        subscription.status.toLowerCase() === "paid"
     ) {
 
         let expiryText =
             "Unknown";
 
 
-        if (
-            subscription.expires_at
-        ) {
+        if (subscription.expires_at) {
 
-            const expiry =
+            const expiryDate =
                 new Date(
                     subscription.expires_at
                 );
 
 
-            expiryText =
-                expiry.toLocaleDateString();
+            if (
+                !isNaN(
+                    expiryDate.getTime()
+                )
+            ) {
+
+                expiryText =
+                    expiryDate.toLocaleDateString();
+
+            }
 
         }
 
@@ -964,7 +611,7 @@ function displaySubscriptionStatus(
             </strong>
 
             ${escapeHTML(
-                user.email
+                user.email || ""
             )}
 
             <br>
@@ -979,7 +626,9 @@ function displaySubscriptionStatus(
 
         `;
 
-    } else {
+    }
+
+    else {
 
         subscriptionStatus.innerHTML = `
 
@@ -993,9 +642,7 @@ function displaySubscriptionStatus(
 
             <br>
 
-            <span>
-                Please choose a subscription plan below.
-            </span>
+            Please choose a subscription plan below.
 
         `;
 
@@ -1005,126 +652,500 @@ function displaySubscriptionStatus(
 
 
 /* =========================================================
-   APPLICATION EVENTS
+   CHECK LOGIN AND SUBSCRIPTION
    ========================================================= */
 
-function attachApplicationEvents() {
+async function checkLogin() {
 
+    /*
+       Prevent multiple simultaneous checks.
+    */
 
-    /* =====================================================
-       DOWNLOAD TEMPLATE
-       ===================================================== */
-
-    if (
-        elementExists(
-            downloadTemplateButton
-        )
-    ) {
-
-        downloadTemplateButton.addEventListener(
-            "click",
-            function () {
-
-                downloadExcelTemplate();
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       EXCEL UPLOAD
-       ===================================================== */
-
-    if (
-        elementExists(
-            excelFileInput
-        )
-    ) {
-
-        excelFileInput.addEventListener(
-            "change",
-            function (event) {
-
-                handleExcelUpload(
-                    event
-                );
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       GENERATE ONE REPORT
-       ===================================================== */
-
-    if (
-        elementExists(
-            generateReportButton
-        )
-    ) {
-
-        generateReportButton.addEventListener(
-            "click",
-            function () {
-
-                generateSingleReport();
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       GENERATE ALL
-       ===================================================== */
-
-    if (
-        elementExists(
-            generateAllButton
-        )
-    ) {
-
-        generateAllButton.addEventListener(
-            "click",
-            function () {
-
-                generateAllReports();
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       PAYSTACK BUTTONS
-       ===================================================== */
-
-    attachPaystackButtons();
-
-}
-
-
-/* =========================================================
-   CREATE SUBJECT MANAGER
-   ========================================================= */
-
-function createSubjectManager() {
-
-    if (
-        !elementExists(appSection)
-    ) {
+    if (isCheckingLogin) {
 
         return;
 
     }
 
 
-    /*
-       We create this section automatically.
-       Therefore you do NOT have to manu
+    isCheckingLogin = true;
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient.auth.getSession();
+
+
+        if (error) {
+
+            console.error(
+                "SESSION ERROR:",
+                error
+            );
+
+
+            showLogin();
+
+            return;
+
+        }
+
+
+        if (
+            !data ||
+            !data.session
+        ) {
+
+            showLogin();
+
+            return;
+
+        }
+
+
+        const user =
+            data.session.user;
+
+
+        console.log(
+            "CURRENT USER:",
+            user.email
+        );
+
+
+        /*
+           Check subscription.
+        */
+
+        const {
+            data: subscription,
+            error: subscriptionError
+        } =
+            await supabaseClient
+                .from("subscriptions")
+                .select("*")
+                .eq("user_id", user.id)
+                .maybeSingle();
+
+
+        console.log(
+            "SUBSCRIPTION:",
+            subscription
+        );
+
+
+        console.log(
+            "SUBSCRIPTION ERROR:",
+            subscriptionError
+        );
+
+
+        /*
+           If the subscriptions table cannot be
+           accessed, don't silently open the app.
+        */
+
+        if (subscriptionError) {
+
+            console.error(
+                "SUBSCRIPTION CHECK ERROR:",
+                subscriptionError
+            );
+
+
+            showSubscriptionPlans();
+
+
+            if (subscriptionStatus) {
+
+                subscriptionStatus.innerHTML = `
+
+                    <strong>
+                        Subscription Status:
+                    </strong>
+
+                    <span style="color:red;">
+                        Unable to verify
+                    </span>
+
+                    <br>
+
+                    Please try again.
+
+                `;
+
+            }
+
+            return;
+
+        }
+
+
+        displaySubscriptionStatus(
+            subscription,
+            user
+        );
+
+
+        /*
+           Check paid status and expiry.
+        */
+
+        const isPaid =
+            subscription &&
+            String(
+                subscription.status || ""
+            ).toLowerCase() === "paid";
+
+
+        let isActive = false;
+
+
+        if (
+            isPaid &&
+            subscription.expires_at
+        ) {
+
+            const expiryDate =
+                new Date(
+                    subscription.expires_at
+                );
+
+
+            isActive =
+                !isNaN(
+                    expiryDate.getTime()
+                ) &&
+                expiryDate > new Date();
+
+        }
+
+
+        if (isActive) {
+
+            console.log(
+                "ACTIVE SUBSCRIPTION CONFIRMED."
+            );
+
+
+            showApp();
+
+        }
+
+        else {
+
+            console.log(
+                "NO ACTIVE SUBSCRIPTION."
+            );
+
+
+            showSubscriptionPlans();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "CHECK LOGIN EXCEPTION:",
+            error
+        );
+
+
+        showLogin();
+
+    }
+
+    finally {
+
+        isCheckingLogin = false;
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTH STATE LISTENER
+   ========================================================= */
+
+supabaseClient.auth.onAuthStateChange(
+    function (event, session) {
+
+        console.log(
+            "AUTH EVENT:",
+            event
+        );
+
+
+        /*
+           Don't perform heavy Supabase calls directly
+           inside the auth callback.
+        */
+
+        setTimeout(
+            function () {
+
+                if (session) {
+
+                    checkLogin();
+
+                }
+
+                else {
+
+                    showLogin();
+
+                }
+
+            },
+            0
+        );
+
+    }
+);
+
+
+/* =========================================================
+   INITIAL LOGIN CHECK
+   ========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        showLogin();
+
+        checkLogin();
+
+    }
+);
+
+
+/* =========================================================
+   DOWNLOAD EXCEL TEMPLATE
+   ========================================================= */
+
+const downloadTemplateButton =
+    document.getElementById(
+        "downloadTemplate"
+    );
+
+
+if (downloadTemplateButton) {
+
+    downloadTemplateButton.addEventListener(
+        "click",
+        function () {
+
+
+            /*
+               IMPORTANT:
+
+               Schools can replace these subjects
+               with their own subjects.
+
+               The program detects the subject names
+               automatically from:
+
+               Subject CA
+               Subject Exams
+            */
+
+            const scoresData = [
+
+                [
+
+                    "Admission No",
+
+                    "Student Name",
+
+                    "Gender",
+
+                    "Class",
+
+                    "Term",
+
+                    "Session",
+
+
+                    "Mathematics CA",
+
+                    "Mathematics Exams",
+
+
+                    "English CA",
+
+                    "English Exams",
+
+
+                    "Biology CA",
+
+                    "Biology Exams",
+
+
+                    "Physics CA",
+
+                    "Physics Exams",
+
+
+                    "Chemistry CA",
+
+                    "Chemistry Exams",
+
+
+                    "Computer Science CA",
+
+                    "Computer Science Exams"
+
+                ],
+
+
+                [
+
+                    "001",
+
+                    "Example Student",
+
+                    "Male",
+
+                    "SS2",
+
+                    "First Term",
+
+                    "2025/2026",
+
+
+                    35,
+
+                    55,
+
+
+                    32,
+
+                    52,
+
+
+                    30,
+
+                    58,
+
+
+                    28,
+
+                    60,
+
+
+                    34,
+
+                    50,
+
+
+                    36,
+
+                    57
+
+                ]
+
+            ];
+
+
+            const settingsData = [
+
+                [
+                    "SETTING",
+                    "VALUE"
+                ],
+
+
+                [
+                    "School Name",
+                    "YOUR SCHOOL NAME"
+                ],
+
+
+                [
+                    "School Address",
+                    "YOUR SCHOOL ADDRESS"
+                ],
+
+
+                [
+                    "CA Maximum",
+                    40
+                ],
+
+
+                [
+                    "Exams Maximum",
+                    60
+                ],
+
+
+                [
+                    "Grade A Minimum",
+                    70
+                ],
+
+
+                [
+                    "Grade B Minimum",
+                    60
+                ],
+
+
+                [
+                    "Grade C Minimum",
+                    50
+                ],
+
+
+                [
+                    "Grade D Minimum",
+                    45
+                ],
+
+
+                [
+                    "Grade E Minimum",
+                    40
+                ],
+
+
+                [
+                    "Grade F Minimum",
+                    0
+                ]
+
+            ];
+
+
+            const workbook =
+                XLSX.utils.book_new();
+
+
+            const scoresSheet =
+                XLSX.utils.aoa_to_sheet(
+                    scoresData
+                );
+
+
+            const settingsSheet =
+                XLSX.utils.aoa_to_sheet(
+                    settingsData
+                );
+
+
+            XLSX.utils.book_append_sheet(
+                workbook,
+                scoresSheet,
+                "Scores"
+            );
+
+
+ 
