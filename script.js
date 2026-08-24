@@ -1,954 +1,197 @@
-/* =========================================================
-   STUDENT REPORT GENERATOR
-   COMPLETE script.js
-   ========================================================= */
+console.log("SCRIPT.JS HAS LOADED");
 
+const SUPABASE_URL =
+    "https://nzeddvcmabfodmvmgsyg.supabase.co";
 
-/* =========================================================
-   WAIT UNTIL HTML IS FULLY LOADED
-   ========================================================= */
+const SUPABASE_KEY =
+    "sb_publishable_Iaro_sV4r31wPbLycRB4Eg_OCDBy2u3";
 
-document.addEventListener("DOMContentLoaded", function () {
+console.log("Supabase library:", typeof supabase);
 
-    console.log("Student Report System JavaScript started");
+const supabaseClient =
+    supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
 
+console.log("Supabase client created");
 
-    /* =====================================================
-       SUPABASE
-       ===================================================== */
 
-    const SUPABASE_URL =
-        "https://nzeddvcmabfodmvmgsyg.supabase.co";
+/* =========================================
+   GET HTML ELEMENTS
+========================================= */
 
-    const SUPABASE_KEY =
-        "sb_publishable_Iaro_sV4r31wPbLycRB4Eg_OCDBy2u3";
+const signUpButton =
+    document.getElementById("signUpButton");
 
-    const supabaseClient =
-        supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY
-        );
+const signInButton =
+    document.getElementById("signInButton");
 
+const emailInput =
+    document.getElementById("email");
 
-    /* =====================================================
-       GLOBAL VARIABLES
-       ===================================================== */
+const passwordInput =
+    document.getElementById("password");
 
-    let students = [];
+const authStatus =
+    document.getElementById("authStatus");
 
 
-    let reportSettings = {
+console.log("Sign Up button:", signUpButton);
+console.log("Sign In button:", signInButton);
 
-        schoolName: "YOUR SCHOOL NAME",
 
-        schoolAddress: "YOUR SCHOOL ADDRESS",
+/* =========================================
+   CREATE ACCOUNT
+========================================= */
 
-        caMaximum: 40,
+signUpButton.addEventListener(
+    "click",
+    async function () {
 
-        examsMaximum: 60,
+        console.log("CREATE ACCOUNT BUTTON CLICKED");
 
-        gradeA: 70,
+        const email =
+            emailInput.value.trim();
 
-        gradeB: 60,
+        const password =
+            passwordInput.value;
 
-        gradeC: 50,
 
-        gradeD: 45,
+        if (!email || !password) {
 
-        gradeE: 40,
+            authStatus.textContent =
+                "Please enter email and password.";
 
-        gradeF: 0
-
-    };
-
-
-    /* =====================================================
-       GET HTML ELEMENTS
-       ===================================================== */
-
-    const authSection =
-        document.getElementById("authSection");
-
-    const appSection =
-        document.getElementById("appSection");
-
-    const emailInput =
-        document.getElementById("email");
-
-    const passwordInput =
-        document.getElementById("password");
-
-    const signUpButton =
-        document.getElementById("signUpButton");
-
-    const signInButton =
-        document.getElementById("signInButton");
-
-    const logoutButton =
-        document.getElementById("logoutButton");
-
-    const authStatus =
-        document.getElementById("authStatus");
-
-    const subscriptionStatus =
-        document.getElementById("subscriptionStatus");
-
-    const subscriptionPlans =
-        document.getElementById("subscriptionPlans");
-
-    const downloadTemplate =
-        document.getElementById("downloadTemplate");
-
-    const excelFile =
-        document.getElementById("excelFile");
-
-    const fileStatus =
-        document.getElementById("fileStatus");
-
-    const reportSection =
-        document.getElementById("reportSection");
-
-    const studentSelect =
-        document.getElementById("studentSelect");
-
-    const generateReportButton =
-        document.getElementById("generateReport");
-
-    const generateAllButton =
-        document.getElementById("generateAll");
-
-    const reportContainer =
-        document.getElementById("reportContainer");
-
-
-    /* =====================================================
-       CHECK REQUIRED ELEMENTS
-       ===================================================== */
-
-    console.log("Checking HTML elements...");
-
-    if (!authSection) {
-        console.error("authSection was not found.");
-    }
-
-    if (!appSection) {
-        console.error("appSection was not found.");
-    }
-
-    if (!emailInput) {
-        console.error("email input was not found.");
-    }
-
-    if (!passwordInput) {
-        console.error("password input was not found.");
-    }
-
-    if (!signUpButton) {
-        console.error("signUpButton was not found.");
-    }
-
-    if (!signInButton) {
-        console.error("signInButton was not found.");
-    }
-
-
-    /* =====================================================
-       SHOW APPLICATION
-       ===================================================== */
-
-    function showApp() {
-
-        if (authSection) {
-            authSection.style.display = "none";
-        }
-
-        if (subscriptionPlans) {
-            subscriptionPlans.style.display = "none";
-        }
-
-        if (appSection) {
-            appSection.style.display = "block";
-        }
-
-    }
-
-
-    /* =====================================================
-       SHOW LOGIN / SUBSCRIPTION AREA
-       ===================================================== */
-
-    function showLogin() {
-
-        if (authSection) {
-            authSection.style.display = "block";
-        }
-
-        if (appSection) {
-            appSection.style.display = "none";
-        }
-
-        if (subscriptionPlans) {
-            subscriptionPlans.style.display = "block";
-        }
-
-    }
-
-
-    /* =====================================================
-       CREATE ACCOUNT
-       ===================================================== */
-
-    if (signUpButton) {
-
-        signUpButton.addEventListener(
-            "click",
-            async function () {
-
-                console.log("Create Account button clicked");
-
-                const email =
-                    emailInput.value.trim();
-
-                const password =
-                    passwordInput.value;
-
-
-                if (!email || !password) {
-
-                    authStatus.innerHTML =
-                        "❌ Please enter your email and password.";
-
-                    return;
-
-                }
-
-
-                if (password.length < 6) {
-
-                    authStatus.innerHTML =
-                        "❌ Password must contain at least 6 characters.";
-
-                    return;
-
-                }
-
-
-                authStatus.innerHTML =
-                    "Creating account...";
-
-
-                try {
-
-                    const result =
-                        await supabaseClient.auth.signUp({
-
-                            email: email,
-
-                            password: password,
-
-                            options: {
-
-                                emailRedirectTo:
-                                    "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
-
-                            }
-
-                        });
-
-
-                    const data =
-                        result.data;
-
-                    const error =
-                        result.error;
-
-
-                    if (error) {
-
-                        console.error(
-                            "SIGN UP ERROR:",
-                            error
-                        );
-
-                        authStatus.innerHTML =
-                            "❌ " +
-                            escapeHTML(
-                                error.message
-                            );
-
-                        return;
-
-                    }
-
-
-                    console.log(
-                        "Account created:",
-                        data
-                    );
-
-
-                    if (
-                        data.user &&
-                        !data.session
-                    ) {
-
-                        authStatus.innerHTML =
-                            "✅ Account created successfully. Please check your email and confirm your account before signing in.";
-
-                        return;
-
-                    }
-
-
-                    authStatus.innerHTML =
-                        "✅ Account created successfully.";
-
-                }
-
-                catch (error) {
-
-                    console.error(
-                        "SIGN UP EXCEPTION:",
-                        error
-                    );
-
-                    authStatus.innerHTML =
-                        "❌ Unable to create account.";
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       SIGN IN
-       ===================================================== */
-
-    if (signInButton) {
-
-        signInButton.addEventListener(
-            "click",
-            async function () {
-
-                console.log("Sign In button clicked");
-
-                const email =
-                    emailInput.value.trim();
-
-                const password =
-                    passwordInput.value;
-
-
-                if (!email || !password) {
-
-                    authStatus.innerHTML =
-                        "❌ Please enter your email and password.";
-
-                    return;
-
-                }
-
-
-                authStatus.innerHTML =
-                    "Signing in...";
-
-
-                try {
-
-                    const result =
-                        await supabaseClient.auth.signInWithPassword({
-
-                            email: email,
-
-                            password: password
-
-                        });
-
-
-                    const data =
-                        result.data;
-
-                    const error =
-                        result.error;
-
-
-                    if (error) {
-
-                        console.error(
-                            "SIGN IN ERROR:",
-                            error
-                        );
-
-                        authStatus.innerHTML =
-                            "❌ " +
-                            escapeHTML(
-                                error.message
-                            );
-
-                        return;
-
-                    }
-
-
-                    console.log(
-                        "Login successful:",
-                        data.user
-                    );
-
-
-                    authStatus.innerHTML =
-                        "✅ Login successful.";
-
-                    await checkLogin();
-
-                }
-
-                catch (error) {
-
-                    console.error(
-                        "SIGN IN EXCEPTION:",
-                        error
-                    );
-
-                    authStatus.innerHTML =
-                        "❌ Unable to sign in.";
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       LOGOUT
-       ===================================================== */
-
-    if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            async function () {
-
-                try {
-
-                    const { error } =
-                        await supabaseClient.auth.signOut();
-
-
-                    if (error) {
-
-                        console.error(
-                            "Logout error:",
-                            error
-                        );
-
-                        return;
-
-                    }
-
-
-                    showLogin();
-
-
-                    authStatus.innerHTML =
-                        "You have been logged out.";
-
-                }
-
-                catch (error) {
-
-                    console.error(
-                        "Logout exception:",
-                        error
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* =====================================================
-       DISPLAY SUBSCRIPTION STATUS
-       ===================================================== */
-
-    function displaySubscriptionStatus(
-        subscription,
-        user
-    ) {
-
-        if (!subscriptionStatus) {
             return;
         }
 
 
-        if (
-            subscription &&
-            subscription.status &&
-            subscription.status.toLowerCase() === "paid"
-        ) {
-
-            let expiryText =
-                "Unknown";
-
-
-            if (subscription.expires_at) {
-
-                const expiryDate =
-                    new Date(
-                        subscription.expires_at
-                    );
-
-
-                expiryText =
-                    expiryDate.toLocaleDateString();
-
-            }
-
-
-            subscriptionStatus.innerHTML = `
-
-                <strong>
-                    Subscription Status:
-                </strong>
-
-                <span style="color:green;">
-                    PAID
-                </span>
-
-                <br>
-
-                <strong>
-                    Account:
-                </strong>
-
-                ${escapeHTML(user.email)}
-
-                <br>
-
-                <strong>
-                    Expires:
-                </strong>
-
-                ${expiryText}
-
-            `;
-
-        }
-
-        else {
-
-            subscriptionStatus.innerHTML = `
-
-                <strong>
-                    Subscription Status:
-                </strong>
-
-                <span style="color:red;">
-                    UNPAID
-                </span>
-
-                <br>
-
-                <small>
-                    Please choose a subscription plan below.
-                </small>
-
-            `;
-
-        }
-
-    }
-
-
-    /* =====================================================
-       CHECK LOGIN AND SUBSCRIPTION
-       ===================================================== */
-
-    async function checkLogin() {
-
-        console.log(
-            "Checking login..."
-        );
+        authStatus.textContent =
+            "Creating account...";
 
 
         try {
 
-            const result =
-                await supabaseClient.auth.getSession();
+            const { data, error } =
+                await supabaseClient.auth.signUp({
+
+                    email: email,
+
+                    password: password
+
+                });
 
 
-            const data =
-                result.data;
-
-            const error =
-                result.error;
+            console.log(
+                "SIGN UP RESULT:",
+                data,
+                error
+            );
 
 
             if (error) {
 
-                console.error(
-                    "Session error:",
-                    error
-                );
-
-                showLogin();
+                authStatus.textContent =
+                    "❌ " + error.message;
 
                 return;
-
             }
 
 
-            if (
-                !data ||
-                !data.session
-            ) {
-
-                console.log(
-                    "No logged-in user."
-                );
-
-                showLogin();
-
-                return;
-
-            }
-
-
-            const user =
-                data.session.user;
-
-
-            console.log(
-                "Logged-in user:",
-                user.email
-            );
-
-
-            /* =============================================
-               CHECK SUBSCRIPTION
-               ============================================= */
-
-            const subscriptionResult =
-                await supabaseClient
-                    .from("subscriptions")
-                    .select("*")
-                    .eq("user_id", user.id)
-                    .maybeSingle();
-
-
-            const subscription =
-                subscriptionResult.data;
-
-            const subscriptionError =
-                subscriptionResult.error;
-
-
-            console.log(
-                "Subscription:",
-                subscription
-            );
-
-
-            if (subscriptionError) {
-
-                console.error(
-                    "Subscription error:",
-                    subscriptionError
-                );
-
-
-                if (subscriptionStatus) {
-
-                    subscriptionStatus.innerHTML =
-                        "⚠️ Unable to check subscription.";
-
-                }
-
-
-                showLogin();
-
-                return;
-
-            }
-
-
-            displaySubscriptionStatus(
-                subscription,
-                user
-            );
-
-
-            /* =============================================
-               ACTIVE SUBSCRIPTION
-               ============================================= */
-
-            const activeSubscription =
-
-                subscription &&
-
-                subscription.status &&
-                subscription.status.toLowerCase() === "paid" &&
-
-                subscription.expires_at &&
-
-                new Date(
-                    subscription.expires_at
-                ) > new Date();
-
-
-            if (activeSubscription) {
-
-                console.log(
-                    "Active subscription found."
-                );
-
-                showApp();
-
-            }
-
-            else {
-
-                console.log(
-                    "No active subscription."
-                );
-
-                showLogin();
-
-            }
+            authStatus.textContent =
+                "✅ Account created. Check your email.";
 
         }
 
         catch (error) {
 
-            console.error(
-                "CHECK LOGIN ERROR:",
-                error
-            );
+            console.error(error);
 
-            showLogin();
+            authStatus.textContent =
+                "❌ " + error.message;
 
         }
 
     }
+);
 
 
-    /* =====================================================
-       AUTH STATE CHANGE
-       ===================================================== */
+/* =========================================
+   SIGN IN
+========================================= */
 
-    supabaseClient.auth.onAuthStateChange(
-        function (event, session) {
+signInButton.addEventListener(
+    "click",
+    async function () {
+
+        console.log("SIGN IN BUTTON CLICKED");
+
+        const email =
+            emailInput.value.trim();
+
+        const password =
+            passwordInput.value;
+
+
+        if (!email || !password) {
+
+            authStatus.textContent =
+                "Please enter email and password.";
+
+            return;
+        }
+
+
+        authStatus.textContent =
+            "Signing in...";
+
+
+        try {
+
+            const { data, error } =
+                await supabaseClient.auth
+                .signInWithPassword({
+
+                    email: email,
+
+                    password: password
+
+                });
+
 
             console.log(
-                "Auth event:",
-                event
+                "SIGN IN RESULT:",
+                data,
+                error
             );
 
 
-            if (!session) {
+            if (error) {
 
-                showLogin();
+                authStatus.textContent =
+                    "❌ " + error.message;
 
+                return;
             }
 
+
+            authStatus.textContent =
+                "✅ Login successful.";
+
         }
-    );
 
+        catch (error) {
 
-    /* =====================================================
-       DOWNLOAD EXCEL TEMPLATE
-       ===================================================== */
+            console.error(error);
 
-    if (downloadTemplate) {
+            authStatus.textContent =
+                "❌ " + error.message;
 
-        downloadTemplate.addEventListener(
-            "click",
-            function () {
+        }
 
-                console.log(
-                    "Downloading Excel template..."
-                );
+    }
+);
 
 
-                /*
-                   The school can change/add subjects
-                   by changing the subject columns.
-
-                   Every subject must have:
-
-                   Subject CA
-                   Subject Exams
-
-                   Example:
-
-                   Mathematics CA
-                   Mathematics Exams
-
-                   English CA
-                   English Exams
-
-                   Agricultural Science CA
-                   Agricultural Science Exams
-                */
-
-
-                const scoresData = [
-
-                    [
-
-                        "Admission No",
-
-                        "Student Name",
-
-                        "Gender",
-
-                        "Class",
-
-                        "Term",
-
-                        "Session",
-
-                        "Mathematics CA",
-
-                        "Mathematics Exams",
-
-                        "English CA",
-
-                        "English Exams",
-
-                        "Biology CA",
-
-                        "Biology Exams",
-
-                        "Physics CA",
-
-                        "Physics Exams",
-
-                        "Chemistry CA",
-
-                        "Chemistry Exams",
-
-                        "Computer Science CA",
-
-                        "Computer Science Exams"
-
-                    ],
-
-                    [
-
-                        "001",
-
-                        "Example Student",
-
-                        "Male",
-
-                        "SS2",
-
-                        "First Term",
-
-                        "2025/2026",
-
-                        35,
-
-                        55,
-
-                        32,
-
-                        52,
-
-                        30,
-
-                        58,
-
-                        28,
-
-                        60,
-
-                        34,
-
-                        50,
-
-                        36,
-
-                        57
-
-                    ]
-
-                ];
-
-
-                const settingsData = [
-
-                    [
-                        "SETTING",
-                        "VALUE"
-                    ],
-
-                    [
-                        "School Name",
-                        "YOUR SCHOOL NAME"
-                    ],
-
-                    [
-                        "School Address",
-                        "YOUR SCHOOL ADDRESS"
-                    ],
-
-                    [
-                        "CA Maximum",
-                        40
-                    ],
-
-                    [
-                        "Exams Maximum",
-                        60
-                    ],
-
-                    [
-                        "Grade A Minimum",
-                        70
-                    ],
-
-                    [
-                        "Grade B Minimum",
-                        60
-                    ],
-
-                    [
-                        "Grade C Minimum",
-                        50
-                    ],
-
-                    [
-                        "Grade D Minimum",
-                        45
-                    ],
-
-                    [
-                        "Grade E Minimum",
-                        40
-                    ],
-
-                    [
-                        "Grade F Minimum",
-                        0
-                    ]
-
-                ];
-
-
-                const workbook =
-                    XLSX.utils.book_new();
-
-
-                const scoresSheet =
-                    XLSX.utils.aoa_to_sheet(
-                     
+console.log("AUTH BUTTONS READY");
