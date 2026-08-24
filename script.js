@@ -7,7 +7,7 @@
 /* =====================================================
    SUPABASE
 ===================================================== */
-
+alert("SCRIPT.JS IS LOADING");
 const SUPABASE_URL =
     "https://nzeddvcmabfodmvmgsyg.supabase.co";
 
