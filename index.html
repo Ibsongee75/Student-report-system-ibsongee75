@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -12,22 +11,13 @@
 
     <title>Student Report Generator</title>
 
-    <!-- YOUR CSS -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- =========================================
-         SHEETJS
-    ========================================== -->
-    <script
-        src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js">
-    </script>
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-    <!-- =========================================
-         PAYSTACK
-    ========================================== -->
-    <script
-        src="https://js.paystack.co/v2/inline.js">
-    </script>
+    <!-- Paystack -->
+    <script src="https://js.paystack.co/v2/inline.js"></script>
 
 </head>
 
@@ -36,7 +26,7 @@
 
 
 <!-- =====================================================
-     LOGIN / SIGN UP SECTION
+     LOGIN / CREATE ACCOUNT
 ===================================================== -->
 
 <section
@@ -44,13 +34,10 @@
     class="card"
 >
 
-    <h2>
-        Student Report Generator
-    </h2>
+    <h2>Student Report Generator</h2>
 
-
-    <p id="authMessage">
-        Please sign in or create an account to continue.
+    <p>
+        Sign in or create an account to continue.
     </p>
 
 
@@ -70,19 +57,21 @@
     >
 
 
-    <button
-        type="button"
-        id="signUpButton"
-    >
+    <button id="signUpButton">
         Create Account
     </button>
 
 
-    <button
-        type="button"
-        id="signInButton"
-    >
+    <button id="signInButton">
         Sign In
+    </button>
+
+
+    <button
+        id="forgotPasswordButton"
+        type="button"
+    >
+        Forgot Password?
     </button>
 
 
@@ -93,20 +82,64 @@
 
 
 <!-- =====================================================
-     SUBSCRIPTION STATUS
+     RESET PASSWORD
 ===================================================== -->
 
 <section
-    id="subscriptionArea"
+    id="resetSection"
     class="card"
     style="display:none;"
 >
+
+    <h2>Reset Your Password</h2>
+
+    <p>
+        Enter your new password below.
+    </p>
+
+
+    <input
+        type="password"
+        id="newPassword"
+        placeholder="New password"
+        autocomplete="new-password"
+    >
+
+
+    <input
+        type="password"
+        id="confirmPassword"
+        placeholder="Confirm new password"
+        autocomplete="new-password"
+    >
+
+
+    <button id="updatePasswordButton">
+        Update Password
+    </button>
+
+
+    <p id="resetStatus"></p>
+
+</section>
+
+
+
+<!-- =====================================================
+     SUBSCRIPTION AREA
+===================================================== -->
+
+<section
+    id="subscriptionSection"
+    style="display:none;"
+>
+
 
     <div
         id="subscriptionStatus"
         style="
             padding:12px;
-            margin-bottom:15px;
+            margin:10px;
             border-radius:8px;
             background:#f1f5f9;
         "
@@ -115,11 +148,8 @@
     </div>
 
 
-    <!-- =================================================
-         SUBSCRIPTION PLANS
-    ================================================== -->
 
-    <div
+    <section
         id="subscriptionPlans"
         class="subscription-section"
     >
@@ -137,62 +167,32 @@
         <div class="plans-container">
 
 
-            <!-- ================= BASIC ================= -->
+            <!-- BASIC -->
 
             <div class="plan-card">
 
-                <h3>
-                    🟢 Basic
-                </h3>
-
+                <h3>🟢 Basic</h3>
 
                 <div class="plan-price">
-
                     ₦1,500
-
-                    <span>
-                        / month
-                    </span>
-
+                    <span>/ month</span>
                 </div>
-
 
                 <p>
                     For individual teachers
                 </p>
 
-
                 <ul>
-
-                    <li>
-                        Up to 100 students
-                    </li>
-
-                    <li>
-                        Excel result upload
-                    </li>
-
-                    <li>
-                        Automatic grading
-                    </li>
-
-                    <li>
-                        Student report generation
-                    </li>
-
-                    <li>
-                        Printing / PDF
-                    </li>
-
-                    <li>
-                        1 account
-                    </li>
-
+                    <li>Up to 100 students</li>
+                    <li>Excel result upload</li>
+                    <li>Automatic grading</li>
+                    <li>Student report generation</li>
+                    <li>Printing / PDF</li>
+                    <li>1 account</li>
                 </ul>
 
 
                 <button
-                    type="button"
                     class="subscribe-button"
                     data-plan="basic"
                     data-price="1500"
@@ -205,7 +205,7 @@
 
 
 
-            <!-- ================= STANDARD ================= -->
+            <!-- STANDARD -->
 
             <div
                 class="plan-card popular-plan"
@@ -216,19 +216,12 @@
                 </div>
 
 
-                <h3>
-                    🔵 Standard
-                </h3>
+                <h3>🔵 Standard</h3>
 
 
                 <div class="plan-price">
-
                     ₦7,000
-
-                    <span>
-                        / 6 months
-                    </span>
-
+                    <span>/ 6 months</span>
                 </div>
 
 
@@ -238,36 +231,16 @@
 
 
                 <ul>
-
-                    <li>
-                        Up to 500 students
-                    </li>
-
-                    <li>
-                        Everything in Basic
-                    </li>
-
-                    <li>
-                        Generate all student reports
-                    </li>
-
-                    <li>
-                        School information
-                    </li>
-
-                    <li>
-                        Teacher/principal comments
-                    </li>
-
-                    <li>
-                        1 account
-                    </li>
-
+                    <li>Up to 500 students</li>
+                    <li>Everything in Basic</li>
+                    <li>Generate all student reports</li>
+                    <li>School information</li>
+                    <li>Teacher/principal comments</li>
+                    <li>1 account</li>
                 </ul>
 
 
                 <button
-                    type="button"
                     class="subscribe-button"
                     data-plan="standard"
                     data-price="7000"
@@ -280,23 +253,16 @@
 
 
 
-            <!-- ================= PREMIUM ================= -->
+            <!-- PREMIUM -->
 
             <div class="plan-card">
 
-                <h3>
-                    🟣 Premium
-                </h3>
+                <h3>🟣 Premium</h3>
 
 
                 <div class="plan-price">
-
                     ₦12,000
-
-                    <span>
-                        / year
-                    </span>
-
+                    <span>/ year</span>
                 </div>
 
 
@@ -306,36 +272,16 @@
 
 
                 <ul>
-
-                    <li>
-                        Up to 1,000 students
-                    </li>
-
-                    <li>
-                        Everything in Standard
-                    </li>
-
-                    <li>
-                        Multiple classes
-                    </li>
-
-                    <li>
-                        Unlimited report generation*
-                    </li>
-
-                    <li>
-                        Priority support
-                    </li>
-
-                    <li>
-                        1 account
-                    </li>
-
+                    <li>Up to 1,000 students</li>
+                    <li>Everything in Standard</li>
+                    <li>Multiple classes</li>
+                    <li>Unlimited report generation*</li>
+                    <li>Priority support</li>
+                    <li>1 account</li>
                 </ul>
 
 
                 <button
-                    type="button"
                     class="subscribe-button"
                     data-plan="premium"
                     data-price="12000"
@@ -349,23 +295,21 @@
 
         </div>
 
-    </div>
+    </section>
 
 </section>
 
 
 
 <!-- =====================================================
-     MAIN APPLICATION
+     REPORT GENERATOR APPLICATION
 ===================================================== -->
 
-<section
+<div
     id="appSection"
     style="display:none;"
 >
 
-
-    <!-- ================= HEADER ================= -->
 
     <header>
 
@@ -373,16 +317,12 @@
             STUDENT REPORT GENERATOR
         </h1>
 
-
         <p>
             Generate student report sheets from an Excel template
         </p>
 
 
-        <button
-            type="button"
-            id="logoutButton"
-        >
+        <button id="logoutButton">
             Logout
         </button>
 
@@ -393,9 +333,7 @@
     <main>
 
 
-        <!-- =================================================
-             STEP 1
-        ================================================== -->
+        <!-- STEP 1 -->
 
         <section class="card">
 
@@ -407,14 +345,11 @@
             <p>
                 Download the official Excel template,
                 enter your students' information and scores,
-                then upload the completed file below.
+                then upload the completed file.
             </p>
 
 
-            <button
-                type="button"
-                id="downloadTemplate"
-            >
+            <button id="downloadTemplate">
                 Download Excel Template
             </button>
 
@@ -422,9 +357,7 @@
 
 
 
-        <!-- =================================================
-             STEP 2
-        ================================================== -->
+        <!-- STEP 2 -->
 
         <section class="card">
 
@@ -446,9 +379,7 @@
 
 
 
-        <!-- =================================================
-             STEP 3
-        ================================================== -->
+        <!-- STEP 3 -->
 
         <section
             class="card"
@@ -464,16 +395,12 @@
             <div class="selection-area">
 
 
-                <label
-                    for="studentSelect"
-                >
+                <label for="studentSelect">
                     Select Student:
                 </label>
 
 
-                <select
-                    id="studentSelect"
-                >
+                <select id="studentSelect">
 
                     <option value="">
                         -- Select Student --
@@ -482,18 +409,12 @@
                 </select>
 
 
-                <button
-                    type="button"
-                    id="generateReport"
-                >
+                <button id="generateReport">
                     Generate Report
                 </button>
 
 
-                <button
-                    type="button"
-                    id="generateAll"
-                >
+                <button id="generateAll">
                     Generate All Reports
                 </button>
 
@@ -504,20 +425,14 @@
 
 
 
-        <!-- =================================================
-             REPORT OUTPUT
-        ================================================== -->
+        <!-- REPORT -->
 
-        <section
-            id="reportContainer"
-        ></section>
+        <section id="reportContainer"></section>
 
 
     </main>
 
 
-
-    <!-- ================= FOOTER ================= -->
 
     <footer>
 
@@ -528,32 +443,24 @@
     </footer>
 
 
-</section>
+</div>
 
 
 
 <!-- =====================================================
      SUPABASE
-     MUST LOAD BEFORE script.js
 ===================================================== -->
 
-<script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 
 <!-- =====================================================
-     YOUR JAVASCRIPT
+     APPLICATION SCRIPT
 ===================================================== -->
 
-
-
-<script src="./script.js"></script>
-
-
+<script src="script.js?v=10"></script>
 
 
 </body>
 
-    </html>
+                        </html>
