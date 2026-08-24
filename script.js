@@ -680,7 +680,259 @@ document.getElementById("downloadTemplate")
 
 
     XLSX.writeFile(
-        workbook,
+      /* =========================================
+   UPLOAD EXCEL FILE
+========================================= */
+
+document.getElementById("excelFile")
+.addEventListener("change", function(event) {
+
+    const file =
+        event.target.files[0];
+
+
+    if (!file) {
+        return;
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+    function(e) {
+
+        try {
+
+            const data =
+                new Uint8Array(
+                    e.target.result
+                );
+
+
+            const workbook =
+                XLSX.read(data, {
+                    type: "array"
+                });
+
+
+            /* =====================================
+               CHECK SCORES SHEET
+            ===================================== */
+
+            if (!workbook.Sheets["Scores"]) {
+
+                document.getElementById("fileStatus")
+                .innerHTML =
+                    "❌ Error: The Excel file does not contain a 'Scores' sheet.";
+
+                return;
+            }
+
+
+            /* =====================================
+               READ SETTINGS
+            ===================================== */
+
+            if (workbook.Sheets["Settings"]) {
+
+                const settingsSheet =
+                    workbook.Sheets["Settings"];
+
+
+                const settingsRows =
+                    XLSX.utils.sheet_to_json(
+                        settingsSheet,
+                        {
+                            header: 1,
+                            defval: ""
+                        }
+                    );
+
+
+                settingsRows.forEach(function(row) {
+
+                    const setting =
+                        String(row[0]).trim();
+
+                    const value =
+                        row[1];
+
+
+                    if (setting === "School Name") {
+
+                        reportSettings.schoolName =
+                            String(value);
+
+                    }
+
+
+                    if (setting === "School Address") {
+
+                        reportSettings.schoolAddress =
+                            String(value);
+
+                    }
+
+
+                    if (setting === "CA Maximum") {
+
+                        reportSettings.caMaximum =
+                            Number(value) || 40;
+
+                    }
+
+
+                    if (setting === "Exams Maximum") {
+
+                        reportSettings.examsMaximum =
+                            Number(value) || 60;
+
+                    }
+
+
+                    if (setting === "Grade A Minimum") {
+
+                        reportSettings.gradeA =
+                            Number(value);
+
+                    }
+
+
+                    if (setting === "Grade B Minimum") {
+
+                        reportSettings.gradeB =
+                            Number(value);
+
+                    }
+
+
+                    if (setting === "Grade C Minimum") {
+
+                        reportSettings.gradeC =
+                            Number(value);
+
+                    }
+
+
+                    if (setting === "Grade D Minimum") {
+
+                        reportSettings.gradeD =
+                            Number(value);
+
+                    }
+
+
+                    if (setting === "Grade E Minimum") {
+
+                        reportSettings.gradeE =
+                            Number(value);
+
+                    }
+
+
+                    if (setting === "Grade F Minimum") {
+
+                        reportSettings.gradeF =
+                            Number(value);
+
+                    }
+
+                });
+
+            }
+
+
+            /* =====================================
+               READ SCORES
+            ===================================== */
+
+            const worksheet =
+                workbook.Sheets["Scores"];
+
+
+            const rows =
+                XLSX.utils.sheet_to_json(
+                    worksheet,
+                    {
+                        defval: ""
+                    }
+                );
+
+
+            if (rows.length === 0) {
+
+                document.getElementById("fileStatus")
+                .innerHTML =
+                    "❌ The Scores sheet is empty.";
+
+                return;
+            }
+
+
+            /* =====================================
+               VALIDATE STUDENT NAMES
+            ===================================== */
+
+            const invalidStudents =
+                rows.filter(function(student) {
+
+                    return !String(
+                        student["Student Name"] || ""
+                    ).trim();
+
+                });
+
+
+            if (invalidStudents.length > 0) {
+
+                document.getElementById("fileStatus")
+                .innerHTML =
+                    "❌ One or more student records have no Student Name.";
+
+                return;
+            }
+
+
+            students = rows;
+
+
+            /* =====================================
+               SUCCESS
+            ===================================== */
+
+            document.getElementById("fileStatus")
+            .innerHTML =
+                "✅ Excel file successfully loaded. " +
+                students.length +
+                " student record(s) found.";
+
+
+            loadStudents();
+
+
+            document.getElementById("reportSection")
+            .style.display = "block";
+
+
+        } catch (error) {
+
+            console.error(error);
+
+
+            document.getElementById("fileStatus")
+            .innerHTML =
+                "❌ Unable to read this Excel file.";
+
+        }
+
+    };
+
+
+    reader.readAsArrayBuffer(file);
+
+});  workbook,
         "Student_Report_Template.xlsx"
     );
 
