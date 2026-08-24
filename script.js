@@ -102,9 +102,29 @@ const authStatus =
 
 function showApp() {
 
-    authSection.style.display = "none";
+    const subscriptionPlans =
+        document.getElementById("subscriptionPlans");
 
-    appSection.style.display = "block";
+    const appSection =
+        document.getElementById("appSection");
+
+    const authSection =
+        document.getElementById("authSection");
+
+    /* Hide login */
+    if (authSection) {
+        authSection.style.display = "none";
+    }
+
+    /* Hide subscription plans */
+    if (subscriptionPlans) {
+        subscriptionPlans.style.display = "none";
+    }
+
+    /* Show report application */
+    if (appSection) {
+        appSection.style.display = "block";
+    }
 
 }
 
@@ -115,9 +135,62 @@ function showApp() {
 
 function showLogin() {
 
-    authSection.style.display = "block";
+    const subscriptionPlans =
+        document.getElementById("subscriptionPlans");
 
-    appSection.style.display = "none";
+    const appSection =
+        document.getElementById("appSection");
+
+    const authSection =
+        document.getElementById("authSection");
+
+    /* Show login */
+    if (authSection) {
+        authSection.style.display = "block";
+    }
+
+    /* Hide report application */
+    if (appSection) {
+        appSection.style.display = "none";
+    }
+
+    /* Hide subscription plans initially */
+    if (subscriptionPlans) {
+        subscriptionPlans.style.display = "none";
+    }
+
+}
+
+
+/* =========================================
+   SHOW SUBSCRIPTION PLANS
+========================================= */
+
+function showSubscriptionPlans() {
+
+    const subscriptionPlans =
+        document.getElementById("subscriptionPlans");
+
+    const appSection =
+        document.getElementById("appSection");
+
+    const authSection =
+        document.getElementById("authSection");
+
+    /* Hide login */
+    if (authSection) {
+        authSection.style.display = "none";
+    }
+
+    /* Hide report application */
+    if (appSection) {
+        appSection.style.display = "none";
+    }
+
+    /* Show payment plans */
+    if (subscriptionPlans) {
+        subscriptionPlans.style.display = "block";
+    }
 
 }
 
