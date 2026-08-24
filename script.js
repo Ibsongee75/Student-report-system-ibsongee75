@@ -1,4 +1,4 @@
-console.log("SCRIPT.JS HAS LOADED");
+console.log("STEP 1: script.js started");
 
 const SUPABASE_URL =
     "https://nzeddvcmabfodmvmgsyg.supabase.co";
@@ -6,7 +6,7 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
     "sb_publishable_Iaro_sV4r31wPbLycRB4Eg_OCDBy2u3";
 
-console.log("Supabase library:", typeof supabase);
+console.log("STEP 2: About to create Supabase client");
 
 const supabaseClient =
     supabase.createClient(
@@ -14,12 +14,8 @@ const supabaseClient =
         SUPABASE_KEY
     );
 
-console.log("Supabase client created");
+console.log("STEP 3: Supabase client created");
 
-
-/* =========================================
-   GET HTML ELEMENTS
-========================================= */
 
 const signUpButton =
     document.getElementById("signUpButton");
@@ -37,43 +33,58 @@ const authStatus =
     document.getElementById("authStatus");
 
 
-console.log("Sign Up button:", signUpButton);
-console.log("Sign In button:", signInButton);
+console.log(
+    "STEP 4: Sign Up button =",
+    signUpButton
+);
+
+console.log(
+    "STEP 5: Sign In button =",
+    signInButton
+);
 
 
 /* =========================================
    CREATE ACCOUNT
 ========================================= */
 
-signUpButton.addEventListener(
-    "click",
-    async function () {
+if (signUpButton) {
 
-        console.log("CREATE ACCOUNT BUTTON CLICKED");
+    signUpButton.addEventListener(
+        "click",
+        async function () {
 
-        const email =
-            emailInput.value.trim();
+            console.log(
+                "STEP 6: CREATE ACCOUNT CLICKED"
+            );
 
-        const password =
-            passwordInput.value;
+            const email =
+                emailInput.value.trim();
+
+            const password =
+                passwordInput.value;
 
 
-        if (!email || !password) {
+            console.log(
+                "Email entered:",
+                email
+            );
+
+
+            if (!email || !password) {
+
+                authStatus.textContent =
+                    "Please enter your email and password.";
+
+                return;
+            }
+
 
             authStatus.textContent =
-                "Please enter email and password.";
-
-            return;
-        }
+                "Creating account...";
 
 
-        authStatus.textContent =
-            "Creating account...";
-
-
-        try {
-
-            const { data, error } =
+            const result =
                 await supabaseClient.auth.signUp({
 
                     email: email,
@@ -85,15 +96,15 @@ signUpButton.addEventListener(
 
             console.log(
                 "SIGN UP RESULT:",
-                data,
-                error
+                result
             );
 
 
-            if (error) {
+            if (result.error) {
 
                 authStatus.textContent =
-                    "❌ " + error.message;
+                    "❌ " +
+                    result.error.message;
 
                 return;
             }
@@ -103,53 +114,47 @@ signUpButton.addEventListener(
                 "✅ Account created. Check your email.";
 
         }
+    );
 
-        catch (error) {
-
-            console.error(error);
-
-            authStatus.textContent =
-                "❌ " + error.message;
-
-        }
-
-    }
-);
+}
 
 
 /* =========================================
    SIGN IN
 ========================================= */
 
-signInButton.addEventListener(
-    "click",
-    async function () {
+if (signInButton) {
 
-        console.log("SIGN IN BUTTON CLICKED");
+    signInButton.addEventListener(
+        "click",
+        async function () {
 
-        const email =
-            emailInput.value.trim();
-
-        const password =
-            passwordInput.value;
+            console.log(
+                "STEP 7: SIGN IN CLICKED"
+            );
 
 
-        if (!email || !password) {
+            const email =
+                emailInput.value.trim();
+
+            const password =
+                passwordInput.value;
+
+
+            if (!email || !password) {
+
+                authStatus.textContent =
+                    "Please enter your email and password.";
+
+                return;
+            }
+
 
             authStatus.textContent =
-                "Please enter email and password.";
-
-            return;
-        }
+                "Signing in...";
 
 
-        authStatus.textContent =
-            "Signing in...";
-
-
-        try {
-
-            const { data, error } =
+            const result =
                 await supabaseClient.auth
                 .signInWithPassword({
 
@@ -162,15 +167,15 @@ signInButton.addEventListener(
 
             console.log(
                 "SIGN IN RESULT:",
-                data,
-                error
+                result
             );
 
 
-            if (error) {
+            if (result.error) {
 
                 authStatus.textContent =
-                    "❌ " + error.message;
+                    "❌ " +
+                    result.error.message;
 
                 return;
             }
@@ -180,18 +185,11 @@ signInButton.addEventListener(
                 "✅ Login successful.";
 
         }
+    );
 
-        catch (error) {
+}
 
-            console.error(error);
 
-            authStatus.textContent =
-                "❌ " + error.message;
-
-        }
-
-    }
+console.log(
+    "STEP 8: Authentication buttons are ready"
 );
-
-
-console.log("AUTH BUTTONS READY");
