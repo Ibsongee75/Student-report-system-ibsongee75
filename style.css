@@ -276,4 +276,121 @@ select {
     font-weight: bold;
     margin-bottom: 10px;
 }
+/* =========================================================
+   STUDENT REPORT - SINGLE PAGE PRINT
+   ========================================================= */
+
+.report {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 10mm;
+    box-sizing: border-box;
+    background: white;
+}
+
+/* Print settings */
+@media print {
+
+    @page {
+        size: A4 portrait;
+        margin: 5mm;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    /* Hide everything except the report */
+    body * {
+        visibility: hidden;
+    }
+
+    .report,
+    .report * {
+        visibility: visible;
+    }
+
+    .report {
+        position: absolute;
+        left: 0;
+        top: 0;
+
+        width: 100%;
+        max-width: none;
+
+        margin: 0;
+        padding: 5mm;
+
+        box-sizing: border-box;
+
+        font-size: 10px;
+    }
+
+    .school-header h1 {
+        font-size: 18px;
+        margin: 2px 0;
+    }
+
+    .school-header h2 {
+        font-size: 14px;
+        margin: 2px 0;
+    }
+
+    .school-header p {
+        margin: 2px 0;
+    }
+
+    .student-info {
+        font-size: 9px;
+        margin-bottom: 5px;
+    }
+
+    .result-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9px;
+    }
+
+    .result-table th,
+    .result-table td {
+        padding: 3px;
+        border: 1px solid black;
+    }
+
+    .summary {
+        font-size: 9px;
+        margin-top: 5px;
+    }
+
+    .summary p {
+        margin: 2px 0;
+    }
+
+    .comments {
+        font-size: 9px;
+        margin-top: 5px;
+    }
+
+    .comment-box {
+        min-height: 25px;
+        border: 1px solid black;
+        margin-bottom: 5px;
+    }
+
+    /* Prevent sections from splitting */
+    .report,
+    .school-header,
+    .student-info,
+    .result-table,
+    .summary,
+    .comments {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+}
+
 }
