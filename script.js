@@ -1592,11 +1592,11 @@ function addSubject(
 
 
 /* =========================================================
+/* =========================================================
    DOWNLOAD EXCEL TEMPLATE
    ========================================================= */
 
 function downloadExcelTemplate() {
-
 
     if (
         typeof XLSX ===
@@ -1606,7 +1606,6 @@ function downloadExcelTemplate() {
         alert(
             "Excel library has not loaded yet. Please refresh the page and try again."
         );
-
 
         return;
 
@@ -1622,10 +1621,711 @@ function downloadExcelTemplate() {
             "Please add at least one subject."
         );
 
-
         return;
 
     }
+
+
+    /* =====================================================
+       CREATE WORKBOOK
+    ===================================================== */
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    /* =====================================================
+       CREATE SCORES SHEET
+    ===================================================== */
+
+    const scoresHeaders = [
+
+        "Admission No",
+
+        "Student Name",
+
+        "Gender",
+
+        "Class",
+
+        "Term",
+
+        "Session"
+
+    ];
+
+
+    /*
+       Add CA and Exams columns for every subject.
+    */
+
+    schoolSubjects.forEach(
+        function (subject) {
+
+            scoresHeaders.push(
+                subject + " CA"
+            );
+
+            scoresHeaders.push(
+                subject + " Exams"
+            );
+
+        }
+    );
+
+
+    /*
+       Example student row.
+    */
+
+    const exampleRow = [
+
+        "001",
+
+        "Example Student",
+
+        "Male",
+
+        "SS2",
+
+        "First Term",
+
+        "2025/2026"
+
+    ];
+
+
+    /*
+       Add empty cells for the subject
+       CA and Exams columns.
+
+       The formulas will be inserted below.
+    */
+
+    schoolSubjects.forEach(
+        function () {
+
+            exampleRow.push("");
+
+            exampleRow.push("");
+
+        }
+    );
+
+
+    const scoresData = [
+
+        scoresHeaders,
+
+        exampleRow
+
+    ];
+
+
+    const scoresSheet =
+        XLSX.utils.aoa_to_sheet(
+            scoresData
+        );
+
+
+    /* =====================================================
+       COLUMN NUMBERS
+    ===================================================== */
+
+    /*
+       Scores sheet structure:
+
+       A = Admission No
+       B = Student Name
+       C = Gender
+       D = Class
+       E = Term
+       F = Session
+
+       Subject columns start from G.
+    */
+
+
+    const subjectStartColumn =
+        7; // Column G
+
+
+    /*
+       Number of rows initially prepared
+       for student entry.
+
+       Users can add more rows in Excel/WPS,
+       but formulas will initially be prepared
+       for these rows.
+    */
+
+    const templateRows =
+        100;
+
+
+    /* =====================================================
+       CREATE SUBJECT SHEETS
+    ===================================================== */
+
+    schoolSubjects.forEach(
+        function (subject) {
+
+            /*
+               Each subject gets its own sheet.
+
+               Example:
+
+               Mathematics
+               English
+               Biology
+               etc.
+            */
+
+            const subjectData = [
+
+                [
+                    "Adm No",
+                    "Student Name",
+                    "C.A Scores",
+                    "Exams Scores"
+                ],
+
+                [
+                    "001",
+                    "Example Student",
+                    "",
+                    ""
+                ]
+
+            ];
+
+
+            const subjectSheet =
+                XLSX.utils.aoa_to_sheet(
+                    subjectData
+                );
+
+
+            /*
+               Make the subject sheet easier to use.
+            */
+
+            subjectSheet["!cols"] = [
+
+                {
+                    wch: 15
+                },
+
+                {
+                    wch: 30
+                },
+
+                {
+                    wch: 15
+                },
+
+                {
+                    wch: 15
+                }
+
+            ];
+
+
+            /*
+               Add the subject sheet to the workbook.
+            */
+
+            XLSX.utils.book_append_sheet(
+                workbook,
+                subjectSheet,
+                subject.substring(
+                    0,
+                    31
+                )
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       ADD VLOOKUP FORMULAS TO SCORES SHEET
+    ===================================================== */
+
+    /*
+       We prepare formulas for rows 2 to 101.
+
+       This means the user can enter up to
+       100 students initially.
+
+       The VLOOKUP searches the subject sheet
+       using Admission No in column A.
+
+       Subject sheet:
+
+       A = Adm No
+       B = Student Name
+       C = C.A Scores
+       D = Exams Scores
+
+       Therefore:
+
+       C.A = column 3
+       Exams = column 4
+    */
+
+
+    schoolSubjects.forEach(
+        function (
+            subject,
+            subjectIndex
+        ) {
+
+            /*
+               Scores sheet column positions.
+
+               Each subject has two columns:
+
+               CA
+               Exams
+            */
+
+            const caColumn =
+                subjectStartColumn +
+                (
+                    subjectIndex * 2
+                );
+
+
+            const examsColumn =
+                caColumn + 1;
+
+
+            /*
+               Convert column number to Excel
+               column letters.
+            */
+
+            const caLetter =
+                XLSX.utils.encode_col(
+                    caColumn - 1
+                );
+
+
+            const examsLetter =
+                XLSX.utils.encode_col(
+                    examsColumn - 1
+                );
+
+
+            /*
+               Excel sheet names can contain
+               special characters, so quote them.
+            */
+
+            const safeSheetName =
+                subject.replace(
+                    /'/g,
+                    "''"
+                );
+
+
+            /*
+/* =====================================================
+   ADD VLOOKUP FORMULAS TO SCORES SHEET
+   LOOKUP BASED ON STUDENT NAME
+===================================================== */
+
+schoolSubjects.forEach(
+    function (
+        subject,
+        subjectIndex
+    ) {
+
+        /*
+           Scores sheet structure:
+
+           A = Admission No
+           B = Student Name
+           C = Gender
+           D = Class
+           E = Term
+           F = Session
+
+           Subject columns start from G.
+        */
+
+
+        const caColumn =
+            subjectStartColumn +
+            (
+                subjectIndex * 2
+            );
+
+
+        const examsColumn =
+            caColumn + 1;
+
+
+        /*
+           Convert column numbers to Excel
+           column letters.
+        */
+
+        const caLetter =
+            XLSX.utils.encode_col(
+                caColumn - 1
+            );
+
+
+        const examsLetter =
+            XLSX.utils.encode_col(
+                examsColumn - 1
+            );
+
+
+        /*
+           Safely handle apostrophes in
+           subject names.
+        */
+
+        const safeSheetName =
+            subject.replace(
+                /'/g,
+                "''"
+            );
+
+
+        /*
+           Create formulas for rows 2 to 101.
+        */
+
+        for (
+            let row = 2;
+            row <= templateRows + 1;
+            row++
+        ) {
+
+            /* =========================================
+               C.A VLOOKUP
+            =========================================
+
+               Lookup value:
+               Student Name in column B
+
+               Subject sheet:
+               B:D
+
+               B = Student Name
+               C = C.A Scores
+               D = Exams Scores
+
+               Return column 2 = C.A Scores
+            */
+
+            scoresSheet[
+                caLetter + row
+            ] = {
+
+                t: "n",
+
+                f:
+                    `IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,2,FALSE),"")`
+
+            };
+
+
+            /* =========================================
+               EXAMS VLOOKUP
+            =========================================
+
+               Lookup value:
+               Student Name in column B
+
+               Subject sheet:
+               B:D
+
+               Return column 3 = Exams Scores
+            */
+
+            scoresSheet[
+                examsLetter + row
+            ] = {
+
+                t: "n",
+
+                f:
+                    `IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,3,FALSE),"")`
+
+            };
+
+        }
+
+    }
+);
+
+
+    /* =====================================================
+       ADD SAMPLE ADMISSION NUMBER
+    ===================================================== */
+
+    /*
+       The example row has Admission No 001.
+
+       The formulas will therefore look for
+       001 in each subject sheet.
+    */
+
+
+    /* =====================================================
+       SETTINGS SHEET
+    ===================================================== */
+
+    const settingsData = [
+
+        [
+            "SETTING",
+            "VALUE"
+        ],
+
+        [
+            "School Name",
+            reportSettings.schoolName
+        ],
+
+        [
+            "School Address",
+            reportSettings.schoolAddress
+        ],
+
+        [
+            "CA Maximum",
+            reportSettings.caMaximum
+        ],
+
+        [
+            "Exams Maximum",
+            reportSettings.examsMaximum
+        ],
+
+        [
+            "Grade A Minimum",
+            reportSettings.gradeA
+        ],
+
+        [
+            "Grade B Minimum",
+            reportSettings.gradeB
+        ],
+
+        [
+            "Grade C Minimum",
+            reportSettings.gradeC
+        ],
+
+        [
+            "Grade D Minimum",
+            reportSettings.gradeD
+        ],
+
+        [
+            "Grade E Minimum",
+            reportSettings.gradeE
+        ],
+
+        [
+            "Grade F Minimum",
+            reportSettings.gradeF
+        ],
+
+        [
+            "Subjects",
+            schoolSubjects.join(", ")
+        ]
+
+    ];
+
+
+    const settingsSheet =
+        XLSX.utils.aoa_to_sheet(
+            settingsData
+        );
+
+
+    /* =====================================================
+       ADD SCORES AND SETTINGS SHEETS
+    ===================================================== */
+
+    /*
+       Add Scores first so it appears first.
+    */
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        scoresSheet,
+        "Scores"
+    );
+
+
+    /*
+       Settings second.
+    */
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        settingsSheet,
+        "Settings"
+    );
+
+
+    /* =====================================================
+       FORMAT COLUMN WIDTHS
+    ===================================================== */
+
+    scoresSheet["!cols"] = [
+
+        {
+            wch: 15
+        },
+
+        {
+            wch: 30
+        },
+
+        {
+            wch: 12
+        },
+
+        {
+            wch: 12
+        },
+
+        {
+            wch: 15
+        },
+
+        {
+            wch: 15
+        }
+
+    ];
+
+
+    /*
+       Add widths for subject CA/Exam columns.
+    */
+
+    schoolSubjects.forEach(
+        function () {
+
+            scoresSheet["!cols"].push(
+                {
+                    wch: 15
+                }
+            );
+
+            scoresSheet["!cols"].push(
+                {
+                    wch: 15
+                }
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       FREEZE HEADER ROW
+    ===================================================== */
+
+    scoresSheet["!freeze"] = {
+        xSplit: 0,
+        ySplit: 1
+    };
+
+
+    /* =====================================================
+       WRITE EXCEL FILE
+    ===================================================== */
+
+    const excelData =
+        XLSX.write(
+            workbook,
+            {
+                bookType: "xlsx",
+
+                type: "array",
+
+                /*
+                   Ask Excel/WPS to recalculate
+                   formulas when the workbook opens.
+                */
+
+                cellFormula: true
+            }
+        );
+
+
+    const blob =
+        new Blob(
+            [excelData],
+            {
+                type:
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "Student_Report_Template.xlsx";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    /* =====================================================
+       SUCCESS MESSAGE
+    ===================================================== */
+
+    if (fileStatus) {
+
+        fileStatus.innerHTML =
+            "✅ Excel template downloaded successfully with Scores, Settings and individual subject sheets.";
+
+    }
+
+}
 
 
     /* =====================================================
