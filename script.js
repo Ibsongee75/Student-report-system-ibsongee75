@@ -1841,9 +1841,12 @@ function makeSafeSheetName(
 }
 
 
+/* =========================================================
+   DOWNLOAD EXCEL TEMPLATE
+   ========================================================= */
+
 function downloadExcelTemplate() {
   
-alert("NEW DOWNLOAD FUNCTION IS RUNNING");
     try {
 
         if (typeof XLSX === "undefined") {
