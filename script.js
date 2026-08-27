@@ -1,6 +1,27 @@
 /* =========================================================
    STUDENT REPORT GENERATOR
-   COMPLETE CORRECTED script.js
+   COMPLETE script.js
+   =========================================================
+   
+   FEATURES:
+   - Supabase authentication
+   - Subscription checking
+   - Paystack payment
+   - Excel template generation
+   - 1st CA + 2nd CA + Exams
+   - Adjustable CA/Exams maximums
+   - VLOOKUP by Student Name (Column B)
+   - Separate sheet for every subject
+   - Behavioral Traits rated 1-5
+   - Attendance
+   - Punctuality
+   - Neatness
+   - Obedience
+   - Class Participation
+   - Class Teacher's Comment
+   - Principal's Comment
+   - Comments and traits appear on report
+   - Position based on average of all subjects
    ========================================================= */
 
 
@@ -35,13 +56,16 @@ const PAYSTACK_PUBLIC_KEY =
 
 let students = [];
 
+
 let schoolSubjects = [
+
     "Mathematics",
     "English",
     "Biology",
     "Physics",
     "Chemistry",
     "Computer Science"
+
 ];
 
 
@@ -53,8 +77,11 @@ let reportSettings = {
     schoolAddress:
         "YOUR SCHOOL ADDRESS",
 
-    caMaximum:
-        40,
+    firstCAMaximum:
+        20,
+
+    secondCAMaximum:
+        20,
 
     examsMaximum:
         60,
@@ -80,12 +107,22 @@ let reportSettings = {
 };
 
 
-/*
-   Number of student rows prepared in the
-   downloaded Excel template.
-*/
-
 const TEMPLATE_STUDENT_ROWS = 100;
+
+
+/* =========================================================
+   BEHAVIORAL TRAITS
+   ========================================================= */
+
+const behavioralTraits = [
+
+    "Attendance",
+    "Punctuality",
+    "Neatness",
+    "Obedience",
+    "Class Participation"
+
+];
 
 
 /* =========================================================
@@ -151,102 +188,85 @@ function initializeElements() {
             "authSection"
         );
 
-
     appSection =
         document.getElementById(
             "appSection"
         );
-
 
     subscriptionPlans =
         document.getElementById(
             "subscriptionPlans"
         );
 
-
     subscriptionStatus =
         document.getElementById(
             "subscriptionStatus"
         );
-
 
     emailInput =
         document.getElementById(
             "email"
         );
 
-
     passwordInput =
         document.getElementById(
             "password"
         );
-
 
     signUpButton =
         document.getElementById(
             "signUpButton"
         );
 
-
     signInButton =
         document.getElementById(
             "signInButton"
         );
-
 
     logoutButton =
         document.getElementById(
             "logoutButton"
         );
 
-
     authStatus =
         document.getElementById(
             "authStatus"
         );
-
 
     downloadTemplateButton =
         document.getElementById(
             "downloadTemplate"
         );
 
-
     excelFileInput =
         document.getElementById(
             "excelFile"
         );
-
 
     fileStatus =
         document.getElementById(
             "fileStatus"
         );
 
-
     reportSection =
         document.getElementById(
             "reportSection"
         );
-
 
     studentSelect =
         document.getElementById(
             "studentSelect"
         );
 
-
     generateReportButton =
         document.getElementById(
             "generateReport"
         );
 
-
     generateAllButton =
         document.getElementById(
             "generateAll"
         );
-
 
     reportContainer =
         document.getElementById(
@@ -262,8 +282,10 @@ function initializeElements() {
 
 function elementExists(element) {
 
-    return element !== null &&
-           element !== undefined;
+    return (
+        element !== null &&
+        element !== undefined
+    );
 
 }
 
@@ -281,7 +303,6 @@ function showLogin() {
 
     }
 
-
     if (elementExists(subscriptionPlans)) {
 
         subscriptionPlans.style.display =
@@ -289,14 +310,12 @@ function showLogin() {
 
     }
 
-
     if (elementExists(appSection)) {
 
         appSection.style.display =
             "none";
 
     }
-
 
     if (elementExists(subscriptionStatus)) {
 
@@ -321,7 +340,6 @@ function showSubscription() {
 
     }
 
-
     if (elementExists(subscriptionPlans)) {
 
         subscriptionPlans.style.display =
@@ -329,14 +347,12 @@ function showSubscription() {
 
     }
 
-
     if (elementExists(appSection)) {
 
         appSection.style.display =
             "none";
 
     }
-
 
     if (elementExists(subscriptionStatus)) {
 
@@ -361,7 +377,6 @@ function showApp() {
 
     }
 
-
     if (elementExists(subscriptionPlans)) {
 
         subscriptionPlans.style.display =
@@ -369,14 +384,12 @@ function showApp() {
 
     }
 
-
     if (elementExists(appSection)) {
 
         appSection.style.display =
             "block";
 
     }
-
 
     if (elementExists(subscriptionStatus)) {
 
@@ -394,9 +407,8 @@ function showApp() {
 
 function attachAuthenticationEvents() {
 
-
     /* =====================================================
-       CREATE ACCOUNT
+       SIGN UP
        ===================================================== */
 
     if (elementExists(signUpButton)) {
@@ -411,7 +423,6 @@ function attachAuthenticationEvents() {
                 const password =
                     passwordInput.value;
 
-
                 if (!email || !password) {
 
                     setAuthStatus(
@@ -421,7 +432,6 @@ function attachAuthenticationEvents() {
                     return;
 
                 }
-
 
                 if (password.length < 6) {
 
@@ -433,11 +443,9 @@ function attachAuthenticationEvents() {
 
                 }
 
-
                 setAuthStatus(
                     "Creating your account..."
                 );
-
 
                 try {
 
@@ -464,7 +472,6 @@ function attachAuthenticationEvents() {
 
                             });
 
-
                     if (error) {
 
                         console.error(
@@ -472,17 +479,14 @@ function attachAuthenticationEvents() {
                             error
                         );
 
-
                         setAuthStatus(
                             "❌ " +
                             error.message
                         );
 
-
                         return;
 
                     }
-
 
                     if (
                         data.user &&
@@ -493,26 +497,20 @@ function attachAuthenticationEvents() {
                             "✅ Account created. Please check your email and confirm your account before signing in."
                         );
 
-
                         return;
 
                     }
-
 
                     setAuthStatus(
                         "✅ Account created successfully."
                     );
 
-
                 } catch (error) {
 
-                    console.error(
-                        error
-                    );
-
+                    console.error(error);
 
                     setAuthStatus(
-                        "❌ An unexpected error occurred while creating the account."
+                        "❌ An unexpected error occurred."
                     );
 
                 }
@@ -539,7 +537,6 @@ function attachAuthenticationEvents() {
                 const password =
                     passwordInput.value;
 
-
                 if (!email || !password) {
 
                     setAuthStatus(
@@ -550,11 +547,9 @@ function attachAuthenticationEvents() {
 
                 }
 
-
                 setAuthStatus(
                     "Signing in..."
                 );
-
 
                 try {
 
@@ -574,7 +569,6 @@ function attachAuthenticationEvents() {
 
                             });
 
-
                     if (error) {
 
                         console.error(
@@ -582,41 +576,27 @@ function attachAuthenticationEvents() {
                             error
                         );
 
-
                         setAuthStatus(
                             "❌ " +
                             error.message
                         );
 
-
                         return;
 
                     }
-
-
-                    console.log(
-                        "Login successful:",
-                        data.user
-                    );
-
 
                     setAuthStatus(
                         "✅ Login successful."
                     );
 
-
                     await checkLogin();
-
 
                 } catch (error) {
 
-                    console.error(
-                        error
-                    );
-
+                    console.error(error);
 
                     setAuthStatus(
-                        "❌ Unable to sign in. Please try again."
+                        "❌ Unable to sign in."
                     );
 
                 }
@@ -646,34 +626,25 @@ function attachAuthenticationEvents() {
                             .auth
                             .signOut();
 
-
                     if (error) {
 
-                        console.error(
-                            error
-                        );
+                        console.error(error);
 
                         return;
 
                     }
 
-
                     students = [];
 
-
                     showLogin();
-
 
                     setAuthStatus(
                         "You have been logged out."
                     );
 
-
                 } catch (error) {
 
-                    console.error(
-                        error
-                    );
+                    console.error(error);
 
                 }
 
@@ -696,17 +667,14 @@ async function forgotPassword() {
             "Enter the email address you used to create your account:"
         );
 
-
     if (!email) {
 
         return;
 
     }
 
-
     const cleanEmail =
         email.trim();
-
 
     if (!cleanEmail) {
 
@@ -717,7 +685,6 @@ async function forgotPassword() {
         return;
 
     }
-
 
     try {
 
@@ -736,37 +703,28 @@ async function forgotPassword() {
                     }
                 );
 
-
         if (error) {
 
             console.error(
-                "Password reset error:",
                 error
             );
-
 
             alert(
                 "❌ " +
                 error.message
             );
 
-
             return;
 
         }
 
-
         alert(
-            "✅ Password reset email sent. Please check your email."
+            "✅ Password reset email sent."
         );
-
 
     } catch (error) {
 
-        console.error(
-            error
-        );
-
+        console.error(error);
 
         alert(
             "❌ Unable to send password reset email."
@@ -788,12 +746,10 @@ async function updatePassword() {
             "newPassword"
         );
 
-
     const confirmPasswordElement =
         document.getElementById(
             "confirmNewPassword"
         );
-
 
     if (
         !newPasswordElement ||
@@ -808,14 +764,11 @@ async function updatePassword() {
 
     }
 
-
     const newPassword =
         newPasswordElement.value;
 
-
     const confirmPassword =
         confirmPasswordElement.value;
-
 
     if (!newPassword) {
 
@@ -827,8 +780,10 @@ async function updatePassword() {
 
     }
 
-
-    if (newPassword !== confirmPassword) {
+    if (
+        newPassword !==
+        confirmPassword
+    ) {
 
         alert(
             "❌ The passwords do not match."
@@ -838,8 +793,10 @@ async function updatePassword() {
 
     }
 
-
-    if (newPassword.length < 6) {
+    if (
+        newPassword.length <
+        6
+    ) {
 
         alert(
             "❌ Password must be at least 6 characters."
@@ -848,7 +805,6 @@ async function updatePassword() {
         return;
 
     }
-
 
     try {
 
@@ -864,36 +820,27 @@ async function updatePassword() {
 
                 });
 
-
         if (error) {
 
-            console.error(
-                "Password update error:",
-                error
-            );
-
+            console.error(error);
 
             alert(
                 "❌ " +
                 error.message
             );
 
-
             return;
 
         }
-
 
         alert(
             "✅ Password changed successfully."
         );
 
-
         const resetSection =
             document.getElementById(
                 "resetPasswordSection"
             );
-
 
         if (resetSection) {
 
@@ -902,21 +849,15 @@ async function updatePassword() {
 
         }
 
-
         newPasswordElement.value =
             "";
-
 
         confirmPasswordElement.value =
             "";
 
-
     } catch (error) {
 
-        console.error(
-            error
-        );
-
+        console.error(error);
 
         alert(
             "❌ Unable to change password."
@@ -928,7 +869,7 @@ async function updatePassword() {
 
 
 /* =========================================================
-   AUTH STATUS MESSAGE
+   AUTH STATUS
    ========================================================= */
 
 function setAuthStatus(message) {
@@ -959,21 +900,17 @@ async function checkLogin() {
                 .auth
                 .getSession();
 
-
         if (error) {
 
             console.error(
-                "Session error:",
                 error
             );
-
 
             showLogin();
 
             return;
 
         }
-
 
         if (!data.session) {
 
@@ -983,29 +920,18 @@ async function checkLogin() {
 
         }
 
-
         const user =
             data.session.user;
-
-
-        console.log(
-            "Logged in user:",
-            user.email
-        );
-
 
         await checkSubscription(
             user
         );
 
-
     } catch (error) {
 
         console.error(
-            "checkLogin error:",
             error
         );
-
 
         showLogin();
 
@@ -1035,40 +961,27 @@ async function checkSubscription(user) {
                 )
                 .maybeSingle();
 
-
-        console.log(
-            "Subscription:",
-            subscription
-        );
-
-
         if (error) {
 
             console.error(
-                "Subscription error:",
                 error
             );
 
-
             showSubscription();
-
 
             displaySubscriptionStatus(
                 null,
                 user
             );
 
-
             return;
 
         }
-
 
         displaySubscriptionStatus(
             subscription,
             user
         );
-
 
         if (
 
@@ -1095,13 +1008,9 @@ async function checkSubscription(user) {
 
         }
 
-
     } catch (error) {
 
-        console.error(
-            error
-        );
-
+        console.error(error);
 
         showSubscription();
 
@@ -1115,13 +1024,7 @@ async function checkSubscription(user) {
    ========================================================= */
 
 supabaseClient.auth.onAuthStateChange(
-    function (event, session) {
-
-        console.log(
-            "Auth event:",
-            event
-        );
-
+    function () {
 
         setTimeout(
             function () {
@@ -1141,7 +1044,9 @@ supabaseClient.auth.onAuthStateChange(
    ========================================================= */
 
 supabaseClient.auth.onAuthStateChange(
-    function (event, session) {
+    function (
+        event
+    ) {
 
         if (
             event ===
@@ -1152,7 +1057,6 @@ supabaseClient.auth.onAuthStateChange(
                 document.getElementById(
                     "resetPasswordSection"
                 );
-
 
             if (resetSection) {
 
@@ -1186,10 +1090,8 @@ function displaySubscriptionStatus(
 
     }
 
-
     subscriptionStatus.style.display =
         "block";
-
 
     if (
 
@@ -1205,22 +1107,16 @@ function displaySubscriptionStatus(
         let expiryText =
             "Unknown";
 
-
         if (
             subscription.expires_at
         ) {
 
-            const expiry =
+            expiryText =
                 new Date(
                     subscription.expires_at
-                );
-
-
-            expiryText =
-                expiry.toLocaleDateString();
+                ).toLocaleDateString();
 
         }
-
 
         subscriptionStatus.innerHTML = `
 
@@ -1268,9 +1164,7 @@ function displaySubscriptionStatus(
 
             <br>
 
-            <span>
-                Please choose a subscription plan below.
-            </span>
+            Please choose a subscription plan.
 
         `;
 
@@ -1285,11 +1179,6 @@ function displaySubscriptionStatus(
 
 function attachApplicationEvents() {
 
-
-    /* =====================================================
-       DOWNLOAD TEMPLATE
-       ===================================================== */
-
     if (
         elementExists(
             downloadTemplateButton
@@ -1298,19 +1187,10 @@ function attachApplicationEvents() {
 
         downloadTemplateButton.addEventListener(
             "click",
-            function () {
-
-                downloadExcelTemplate();
-
-            }
+            downloadExcelTemplate
         );
 
     }
-
-
-    /* =====================================================
-       EXCEL UPLOAD
-       ===================================================== */
 
     if (
         elementExists(
@@ -1320,21 +1200,10 @@ function attachApplicationEvents() {
 
         excelFileInput.addEventListener(
             "change",
-            function (event) {
-
-                handleExcelUpload(
-                    event
-                );
-
-            }
+            handleExcelUpload
         );
 
     }
-
-
-    /* =====================================================
-       GENERATE ONE REPORT
-       ===================================================== */
 
     if (
         elementExists(
@@ -1344,19 +1213,10 @@ function attachApplicationEvents() {
 
         generateReportButton.addEventListener(
             "click",
-            function () {
-
-                generateSingleReport();
-
-            }
+            generateSingleReport
         );
 
     }
-
-
-    /* =====================================================
-       GENERATE ALL
-       ===================================================== */
 
     if (
         elementExists(
@@ -1366,19 +1226,10 @@ function attachApplicationEvents() {
 
         generateAllButton.addEventListener(
             "click",
-            function () {
-
-                generateAllReports();
-
-            }
+            generateAllReports
         );
 
     }
-
-
-    /* =====================================================
-       PAYSTACK BUTTONS
-       ===================================================== */
 
     attachPaystackButtons();
 
@@ -1386,7 +1237,7 @@ function attachApplicationEvents() {
 
 
 /* =========================================================
-   CREATE SUBJECT MANAGER
+   SUBJECT MANAGER
    ========================================================= */
 
 function createSubjectManager() {
@@ -1401,12 +1252,10 @@ function createSubjectManager() {
 
     }
 
-
     const existing =
         document.getElementById(
             "subjectManager"
         );
-
 
     if (existing) {
 
@@ -1414,20 +1263,16 @@ function createSubjectManager() {
 
     }
 
-
     const manager =
         document.createElement(
             "section"
         );
 
-
     manager.id =
         "subjectManager";
 
-
     manager.className =
         "card";
-
 
     manager.innerHTML = `
 
@@ -1436,8 +1281,7 @@ function createSubjectManager() {
         </h2>
 
         <p>
-            Enter the subjects offered by your school.
-            You can add or remove subjects before downloading
+            Add or remove subjects before downloading
             the Excel template.
         </p>
 
@@ -1462,12 +1306,10 @@ function createSubjectManager() {
 
     `;
 
-
     const firstCard =
         appSection.querySelector(
             ".card"
         );
-
 
     if (firstCard) {
 
@@ -1484,21 +1326,17 @@ function createSubjectManager() {
 
     }
 
-
     renderSubjectList();
-
 
     const addButton =
         document.getElementById(
             "addSubjectButton"
         );
 
-
     const input =
         document.getElementById(
             "newSubjectInput"
         );
-
 
     if (addButton) {
 
@@ -1508,7 +1346,6 @@ function createSubjectManager() {
 
                 const subject =
                     input.value.trim();
-
 
                 if (!subject) {
 
@@ -1520,11 +1357,9 @@ function createSubjectManager() {
 
                 }
 
-
                 addSubject(
                     subject
                 );
-
 
                 input.value =
                     "";
@@ -1548,17 +1383,14 @@ function renderSubjectList() {
             "subjectList"
         );
 
-
     if (!list) {
 
         return;
 
     }
 
-
     list.innerHTML =
         "";
-
 
     schoolSubjects.forEach(
         function (
@@ -1571,22 +1403,17 @@ function renderSubjectList() {
                     "div"
                 );
 
-
             item.style.display =
                 "flex";
-
 
             item.style.alignItems =
                 "center";
 
-
             item.style.gap =
                 "8px";
 
-
             item.style.marginBottom =
                 "6px";
-
 
             item.innerHTML = `
 
@@ -1607,7 +1434,6 @@ function renderSubjectList() {
 
             `;
 
-
             list.appendChild(
                 item
             );
@@ -1615,11 +1441,12 @@ function renderSubjectList() {
         }
     );
 
-
     list.querySelectorAll(
         ".subject-name-input"
     ).forEach(
-        function (input) {
+        function (
+            input
+        ) {
 
             input.addEventListener(
                 "change",
@@ -1630,10 +1457,8 @@ function renderSubjectList() {
                             input.dataset.subjectIndex
                         );
 
-
                     const newName =
                         input.value.trim();
-
 
                     if (!newName) {
 
@@ -1641,13 +1466,11 @@ function renderSubjectList() {
                             "Subject name cannot be empty."
                         );
 
-
                         renderSubjectList();
 
                         return;
 
                     }
-
 
                     const duplicate =
                         schoolSubjects.some(
@@ -1657,14 +1480,17 @@ function renderSubjectList() {
                             ) {
 
                                 return (
-                                    subjectIndex !== index &&
+
+                                    subjectIndex !==
+                                    index &&
+
                                     subject.toLowerCase() ===
                                     newName.toLowerCase()
+
                                 );
 
                             }
                         );
-
 
                     if (duplicate) {
 
@@ -1672,13 +1498,11 @@ function renderSubjectList() {
                             "This subject already exists."
                         );
 
-
                         renderSubjectList();
 
                         return;
 
                     }
-
 
                     schoolSubjects[index] =
                         newName;
@@ -1689,11 +1513,12 @@ function renderSubjectList() {
         }
     );
 
-
     list.querySelectorAll(
         "[data-remove-subject]"
     ).forEach(
-        function (button) {
+        function (
+            button
+        ) {
 
             button.addEventListener(
                 "click",
@@ -1704,12 +1529,10 @@ function renderSubjectList() {
                             button.dataset.removeSubject
                         );
 
-
                     schoolSubjects.splice(
                         index,
                         1
                     );
-
 
                     renderSubjectList();
 
@@ -1732,15 +1555,17 @@ function addSubject(
 
     const exists =
         schoolSubjects.some(
-            function (existing) {
+            function (
+                existing
+            ) {
 
-                return existing
-                    .toLowerCase() ===
-                    subject.toLowerCase();
+                return (
+                    existing.toLowerCase() ===
+                    subject.toLowerCase()
+                );
 
             }
         );
-
 
     if (exists) {
 
@@ -1748,16 +1573,13 @@ function addSubject(
             "This subject already exists."
         );
 
-
         return;
 
     }
 
-
     schoolSubjects.push(
         subject
     );
-
 
     renderSubjectList();
 
@@ -1765,24 +1587,21 @@ function addSubject(
 
 
 /* =========================================================
-   CLEAN EXCEL SHEET NAME
+   GET SAFE SUBJECT SHEET NAME
    ========================================================= */
 
-function makeSafeSheetName(
-    name,
-    usedNames
+function getSubjectSheetName(
+    subject,
+    workbook
 ) {
 
     let clean =
-        String(
-            name
-        )
+        String(subject)
             .replace(
                 /[:\\\/\?\*\[\]]/g,
                 ""
             )
             .trim();
-
 
     if (!clean) {
 
@@ -1791,32 +1610,36 @@ function makeSafeSheetName(
 
     }
 
-
     clean =
         clean.substring(
             0,
             31
         );
 
-
     let finalName =
         clean;
-
 
     let counter =
         2;
 
-
     while (
-        usedNames.has(
-            finalName.toLowerCase()
+        workbook.SheetNames.some(
+            function (
+                name
+            ) {
+
+                return (
+                    name.toLowerCase() ===
+                    finalName.toLowerCase()
+                );
+
+            }
         )
     ) {
 
         const suffix =
             " " +
             counter;
-
 
         finalName =
             clean.substring(
@@ -1825,16 +1648,9 @@ function makeSafeSheetName(
             ) +
             suffix;
 
-
         counter++;
 
     }
-
-
-    usedNames.add(
-        finalName.toLowerCase()
-    );
-
 
     return finalName;
 
@@ -1846,68 +1662,115 @@ function makeSafeSheetName(
    ========================================================= */
 
 function downloadExcelTemplate() {
-  
+
     try {
 
-        if (typeof XLSX === "undefined") {
+        if (
+            typeof XLSX ===
+            "undefined"
+        ) {
 
-            alert("Excel library has not loaded. Please refresh the page.");
+            alert(
+                "Excel library has not loaded. Please refresh the page."
+            );
 
             return;
+
         }
 
 
-        /* =========================================
-           CLEAN SUBJECT LIST
-        ========================================= */
+        /* =================================================
+           CLEAN SUBJECTS
+           ================================================= */
 
-        schoolSubjects = schoolSubjects
-            .map(function(subject) {
-                return String(subject).trim();
-            })
-            .filter(function(subject) {
-                return subject !== "";
-            });
+        schoolSubjects =
+            schoolSubjects
+                .map(
+                    function (
+                        subject
+                    ) {
+
+                        return String(
+                            subject
+                        ).trim();
+
+                    }
+                )
+                .filter(
+                    function (
+                        subject
+                    ) {
+
+                        return (
+                            subject !== ""
+                        );
+
+                    }
+                );
 
 
-        if (schoolSubjects.length === 0) {
+        if (
+            schoolSubjects.length ===
+            0
+        ) {
 
-            alert("Please add at least one subject.");
+            alert(
+                "Please add at least one subject."
+            );
 
             return;
+
         }
 
 
-        /* =========================================
+        /* =================================================
            CREATE WORKBOOK
-        ========================================= */
+           ================================================= */
 
-        const workbook = XLSX.utils.book_new();
+        const workbook =
+            XLSX.utils.book_new();
 
 
-        /* =========================================
-           CREATE SCORES SHEET
-        ========================================= */
+        /* =================================================
+           SCORES SHEET
+           ================================================= */
 
         const scoresHeaders = [
+
             "Admission No",
             "Student Name",
             "Gender",
             "Class",
             "Term",
             "Session"
+
         ];
 
 
-        schoolSubjects.forEach(function(subject) {
+        schoolSubjects.forEach(
+            function (
+                subject
+            ) {
 
-            scoresHeaders.push(subject + " CA");
-            scoresHeaders.push(subject + " Exams");
+                scoresHeaders.push(
+                    subject + " 1st CA"
+                );
 
-        });
+                scoresHeaders.push(
+                    subject + " 2nd CA"
+                );
+
+                scoresHeaders.push(
+                    subject + " Exams"
+                );
+
+            }
+        );
 
 
-        const scoresData = [scoresHeaders];
+        const scoresData = [
+            scoresHeaders
+        ];
 
 
         for (
@@ -1918,59 +1781,90 @@ function downloadExcelTemplate() {
 
             const row = [
 
-                i === 1 ? "001" : "",
-                i === 1 ? "Example Student" : "",
-                i === 1 ? "Male" : "",
-                i === 1 ? "SS2" : "",
-                i === 1 ? "First Term" : "",
-                i === 1 ? "2025/2026" : ""
+                i === 1
+                    ? "001"
+                    : "",
+
+                i === 1
+                    ? "Example Student"
+                    : "",
+
+                i === 1
+                    ? "Male"
+                    : "",
+
+                i === 1
+                    ? "SS2"
+                    : "",
+
+                i === 1
+                    ? "First Term"
+                    : "",
+
+                i === 1
+                    ? "2025/2026"
+                    : ""
 
             ];
 
 
-            schoolSubjects.forEach(function() {
+            schoolSubjects.forEach(
+                function () {
 
-                row.push("");
-                row.push("");
+                    row.push("");
+                    row.push("");
+                    row.push("");
 
-            });
+                }
+            );
 
 
-            scoresData.push(row);
+            scoresData.push(
+                row
+            );
 
         }
 
 
         const scoresSheet =
-            XLSX.utils.aoa_to_sheet(scoresData);
+            XLSX.utils.aoa_to_sheet(
+                scoresData
+            );
 
 
         scoresSheet["!cols"] = [
+
             { wch: 15 },
             { wch: 30 },
             { wch: 12 },
             { wch: 12 },
             { wch: 15 },
             { wch: 15 }
+
         ];
 
 
-        schoolSubjects.forEach(function() {
+        schoolSubjects.forEach(
+            function () {
 
-            scoresSheet["!cols"].push({
-                wch: 15
-            });
+                scoresSheet["!cols"].push(
+                    { wch: 15 },
+                    { wch: 15 },
+                    { wch: 15 }
+                );
 
-            scoresSheet["!cols"].push({
-                wch: 15
-            });
-
-        });
+            }
+        );
 
 
         scoresSheet["!freeze"] = {
-            xSplit: 0,
-            ySplit: 1
+
+            xSplit:
+                0,
+
+            ySplit:
+                1
+
         };
 
 
@@ -1981,13 +1875,16 @@ function downloadExcelTemplate() {
         );
 
 
-        /* =========================================
-           CREATE SETTINGS SHEET
-        ========================================= */
+        /* =================================================
+           SETTINGS SHEET
+           ================================================= */
 
         const settingsData = [
 
-            ["SETTING", "VALUE"],
+            [
+                "SETTING",
+                "VALUE"
+            ],
 
             [
                 "School Name",
@@ -2000,8 +1897,13 @@ function downloadExcelTemplate() {
             ],
 
             [
-                "CA Maximum",
-                reportSettings.caMaximum
+                "1st CA Maximum",
+                reportSettings.firstCAMaximum
+            ],
+
+            [
+                "2nd CA Maximum",
+                reportSettings.secondCAMaximum
             ],
 
             [
@@ -2041,19 +1943,25 @@ function downloadExcelTemplate() {
 
             [
                 "Subjects",
-                schoolSubjects.join(", ")
+                schoolSubjects.join(
+                    ", "
+                )
             ]
 
         ];
 
 
         const settingsSheet =
-            XLSX.utils.aoa_to_sheet(settingsData);
+            XLSX.utils.aoa_to_sheet(
+                settingsData
+            );
 
 
         settingsSheet["!cols"] = [
+
             { wch: 25 },
             { wch: 50 }
+
         ];
 
 
@@ -2064,280 +1972,384 @@ function downloadExcelTemplate() {
         );
 
 
-        /* =========================================
-           CREATE ONE SHEET FOR EACH SUBJECT
-        ========================================= */
+        /* =================================================
+           SUBJECT SHEETS
+           ================================================= */
 
-        schoolSubjects.forEach(function(subject) {
-
-            let sheetName = String(subject)
-                .replace(/[:\\\/\?\*\[\]]/g, "")
-                .trim();
+        const actualSubjectSheetNames = {};
 
 
-            if (!sheetName) {
-
-                sheetName = "Subject";
-
-            }
-
-
-            /*
-               Excel sheet names cannot exceed 31 characters.
-            */
-
-            sheetName =
-                sheetName.substring(0, 31);
-
-
-            /*
-               Make sure the name is unique.
-            */
-
-            let originalName = sheetName;
-            let counter = 2;
-
-
-            while (
-                workbook.SheetNames.some(
-                    function(name) {
-
-                        return name.toLowerCase() ===
-                               sheetName.toLowerCase();
-
-                    }
-                )
+        schoolSubjects.forEach(
+            function (
+                subject
             ) {
 
-                const suffix =
-                    " " + counter;
+                const sheetName =
+                    getSubjectSheetName(
+                        subject,
+                        workbook
+                    );
 
 
-                sheetName =
-                    originalName.substring(
+                actualSubjectSheetNames[
+                    subject
+                ] =
+                    sheetName;
+
+
+                const subjectData = [
+
+                    [
+                        "Adm No",
+                        "Student Name",
+                        "1st CA",
+                        "2nd CA",
+                        "Exams"
+                    ]
+
+                ];
+
+
+                for (
+                    let i = 1;
+                    i <= TEMPLATE_STUDENT_ROWS;
+                    i++
+                ) {
+
+                    subjectData.push([
+
+                        i === 1
+                            ? "001"
+                            : "",
+
+                        i === 1
+                            ? "Example Student"
+                            : "",
+
+                        "",
+                        "",
+                        ""
+
+                    ]);
+
+                }
+
+
+                const subjectSheet =
+                    XLSX.utils.aoa_to_sheet(
+                        subjectData
+                    );
+
+
+                subjectSheet["!cols"] = [
+
+                    { wch: 15 },
+                    { wch: 30 },
+                    { wch: 15 },
+                    { wch: 15 },
+                    { wch: 15 }
+
+                ];
+
+
+                subjectSheet["!freeze"] = {
+
+                    xSplit:
                         0,
-                        31 - suffix.length
-                    ) +
-                    suffix;
+
+                    ySplit:
+                        1
+
+                };
 
 
-                counter++;
-
-            }
-
-
-            /* =====================================
-               SUBJECT SHEET DATA
-            ===================================== */
-
-            const subjectData = [
-
-                [
-                    "Adm No",
-                    "Student Name",
-                    "C.A Scores",
-                    "Exams Scores"
-                ]
-
-            ];
-
-
-            for (
-                let i = 1;
-                i <= TEMPLATE_STUDENT_ROWS;
-                i++
-            ) {
-
-                subjectData.push([
-
-                    i === 1 ? "001" : "",
-
-                    i === 1
-                        ? "Example Student"
-                        : "",
-
-                    "",
-
-                    ""
-
-                ]);
-
-            }
-
-
-            const subjectSheet =
-                XLSX.utils.aoa_to_sheet(
-                    subjectData
+                XLSX.utils.book_append_sheet(
+                    workbook,
+                    subjectSheet,
+                    sheetName
                 );
 
-
-            subjectSheet["!cols"] = [
-
-                { wch: 15 },
-                { wch: 30 },
-                { wch: 15 },
-                { wch: 15 }
-
-            ];
+            }
+        );
 
 
-            subjectSheet["!freeze"] = {
+        /* =================================================
+           BEHAVIORAL TRAITS SHEET
+           ================================================= */
 
-                xSplit: 0,
-                ySplit: 1
+        const behaviorHeaders = [
 
-            };
+            "Adm No",
+            "Student Name"
 
-
-            /*
-               ADD THE SUBJECT SHEET
-               DIRECTLY TO THE WORKBOOK.
-            */
-
-            XLSX.utils.book_append_sheet(
-                workbook,
-                subjectSheet,
-                sheetName
-            );
-
-        });
+        ];
 
 
-        /* =========================================
-           ADD VLOOKUP FORMULAS TO SCORES
-        ========================================= */
+        behavioralTraits.forEach(
+            function (
+                trait
+            ) {
 
-        schoolSubjects.forEach(function(
-            subject,
-            subjectIndex
+                behaviorHeaders.push(
+                    trait
+                );
+
+            }
+        );
+
+
+        behaviorHeaders.push(
+            "Class Teacher's Comment"
+        );
+
+
+        behaviorHeaders.push(
+            "Principal's Comment"
+        );
+
+
+        const behaviorData = [
+            behaviorHeaders
+        ];
+
+
+        for (
+            let i = 1;
+            i <= TEMPLATE_STUDENT_ROWS;
+            i++
         ) {
 
-            const caColumn =
-                7 + (subjectIndex * 2);
+            behaviorData.push([
+
+                i === 1
+                    ? "001"
+                    : "",
+
+                i === 1
+                    ? "Example Student"
+                    : "",
+
+                "",
+                "",
+                "",
+                "",
+                "",
+
+                "",
+
+                ""
+
+            ]);
+
+        }
 
 
-            const examsColumn =
-                caColumn + 1;
+        const behaviorSheet =
+            XLSX.utils.aoa_to_sheet(
+                behaviorData
+            );
 
 
-            const caLetter =
-                XLSX.utils.encode_col(
-                    caColumn - 1
-                );
+        behaviorSheet["!cols"] = [
+
+            { wch: 15 },
+            { wch: 30 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 20 },
+            { wch: 35 },
+            { wch: 35 }
+
+        ];
 
 
-            const examsLetter =
-                XLSX.utils.encode_col(
-                    examsColumn - 1
-                );
+        behaviorSheet["!freeze"] = {
+
+            xSplit:
+                0,
+
+            ySplit:
+                1
+
+        };
 
 
-            /*
-               Find the actual subject sheet.
-            */
-
-            let sheetName =
-                subject
-                    .replace(
-                        /[:\\\/\?\*\[\]]/g,
-                        ""
-                    )
-                    .trim();
+        XLSX.utils.book_append_sheet(
+            workbook,
+            behaviorSheet,
+            "Behavioral Traits"
+        );
 
 
-            if (!sheetName) {
+        /* =================================================
+           ADD VLOOKUP FORMULAS
+           
+           IMPORTANT:
+           VLOOKUP searches Student Name in COLUMN B.
+           
+           Subject sheet:
+           B = Student Name
+           C = 1st CA
+           D = 2nd CA
+           E = Exams
+           ================================================= */
 
-                sheetName = "Subject";
-
-            }
-
-
-            sheetName =
-                sheetName.substring(
-                    0,
-                    31
-                );
-
-
-            /*
-               Find matching sheet name
-               case-insensitively.
-            */
-
-            const actualSheetName =
-                workbook.SheetNames.find(
-                    function(name) {
-
-                        return name.toLowerCase() ===
-                               sheetName.toLowerCase();
-
-                    }
-                );
-
-
-            if (!actualSheetName) {
-
-                console.error(
-                    "Subject sheet not found:",
-                    subject
-                );
-
-                return;
-
-            }
-
-
-            const safeSheetName =
-                actualSheetName.replace(
-                    /'/g,
-                    "''"
-                );
-
-
-            for (
-                let row = 2;
-                row <= TEMPLATE_STUDENT_ROWS + 1;
-                row++
+        schoolSubjects.forEach(
+            function (
+                subject,
+                subjectIndex
             ) {
 
-                scoresSheet[
-                    caLetter + row
-                ] = {
-
-                    t: "n",
-
-                    f:
-                        `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,2,FALSE),""))`
-
-                };
+                const sheetName =
+                    actualSubjectSheetNames[
+                        subject
+                    ];
 
 
-                scoresSheet[
-                    examsLetter + row
-                ] = {
+                const safeSheetName =
+                    sheetName.replace(
+                        /'/g,
+                        "''"
+                    );
 
-                    t: "n",
 
-                    f:
-                        `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,3,FALSE),""))`
+                const firstCAColumn =
+                    7 +
+                    (
+                        subjectIndex *
+                        3
+                    );
 
-                };
+
+                const secondCAColumn =
+                    firstCAColumn +
+                    1;
+
+
+                const examsColumn =
+                    firstCAColumn +
+                    2;
+
+
+                const firstCALetter =
+                    XLSX.utils.encode_col(
+                        firstCAColumn - 1
+                    );
+
+
+                const secondCALetter =
+                    XLSX.utils.encode_col(
+                        secondCAColumn - 1
+                    );
+
+
+                const examsLetter =
+                    XLSX.utils.encode_col(
+                        examsColumn - 1
+                    );
+
+
+                for (
+                    let row = 2;
+                    row <=
+                    TEMPLATE_STUDENT_ROWS + 1;
+                    row++
+                ) {
+
+                    /*
+                       1st CA
+
+                       Search B(row) in
+                       subject sheet B:E.
+
+                       Column 2 = 1st CA.
+                    */
+
+                    scoresSheet[
+                        firstCALetter +
+                        row
+                    ] = {
+
+                        t:
+                            "n",
+
+                        f:
+                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,2,FALSE),""))`
+
+                    };
+
+
+                    /*
+                       2nd CA
+
+                       Column 3 of B:E.
+                    */
+
+                    scoresSheet[
+                        secondCALetter +
+                        row
+                    ] = {
+
+                        t:
+                            "n",
+
+                        f:
+                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,3,FALSE),""))`
+
+                    };
+
+
+                    /*
+                       Exams
+
+                       Column 4 of B:E.
+                    */
+
+                    scoresSheet[
+                        examsLetter +
+                        row
+                    ] = {
+
+                        t:
+                            "n",
+
+                        f:
+                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,4,FALSE),""))`
+
+                    };
+
+                }
 
             }
+        );
 
-        });
+
+        /* =================================================
+           ADD BEHAVIORAL VLOOKUP
+           
+           Scores sheet does not need to display these
+           values, but the formulas ensure the Excel
+           template can connect the records by Student Name.
+           ================================================= */
 
 
-        /* =========================================
+        /* =================================================
            WRITE EXCEL FILE
-        ========================================= */
+           ================================================= */
 
         const excelData =
             XLSX.write(
                 workbook,
                 {
-                    bookType: "xlsx",
-                    type: "array"
+
+                    bookType:
+                        "xlsx",
+
+                    type:
+                        "array"
+
                 }
             );
 
@@ -2346,60 +2358,77 @@ function downloadExcelTemplate() {
             new Blob(
                 [excelData],
                 {
+
                     type:
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
                 }
             );
 
 
         const url =
-            URL.createObjectURL(blob);
+            URL.createObjectURL(
+                blob
+            );
 
 
         const link =
-            document.createElement("a");
+            document.createElement(
+                "a"
+            );
 
 
-        link.href = url;
+        link.href =
+            url;
+
 
         link.download =
             "Student_Report_Template.xlsx";
 
 
-        document.body.appendChild(link);
+        document.body.appendChild(
+            link
+        );
+
 
         link.click();
 
 
-        setTimeout(function() {
+        setTimeout(
+            function () {
 
-            URL.revokeObjectURL(url);
+                URL.revokeObjectURL(
+                    url
+                );
 
-            if (link.parentNode) {
+                if (
+                    link.parentNode
+                ) {
 
-                link.parentNode.removeChild(link);
+                    link.parentNode.removeChild(
+                        link
+                    );
 
-            }
+                }
 
-        }, 5000);
+            },
+            5000
+        );
 
-
-        /* =========================================
-           CONFIRM SUCCESS
-        ========================================= */
 
         setFileStatus(
 
-            "✅ Template created with " +
+            "✅ Template created successfully with " +
+
             schoolSubjects.length +
-            " subject sheet(s): " +
-            schoolSubjects.join(", ")
+
+            " subject sheet(s), 1st CA, 2nd CA, Exams, Behavioral Traits and Comments."
 
         );
 
 
         console.log(
-            "Workbook sheets created:",
+            "Workbook sheets:",
             workbook.SheetNames
         );
 
@@ -2413,8 +2442,11 @@ function downloadExcelTemplate() {
 
 
         alert(
+
             "❌ Excel template could not be created.\n\n" +
+
             error.message
+
         );
 
 
@@ -2425,6 +2457,7 @@ function downloadExcelTemplate() {
     }
 
 }
+
 
 /* =========================================================
    HANDLE EXCEL UPLOAD
@@ -2454,7 +2487,6 @@ function handleExcelUpload(
             "❌ Excel library has not loaded."
         );
 
-
         return;
 
     }
@@ -2465,7 +2497,9 @@ function handleExcelUpload(
 
 
     reader.onload =
-        function (e) {
+        function (
+            e
+        ) {
 
             try {
 
@@ -2492,14 +2526,17 @@ function handleExcelUpload(
                 ) {
 
                     setFileStatus(
-                        "❌ The Excel file does not contain a 'Scores' sheet."
+                        "❌ The Excel file does not contain a Scores sheet."
                     );
-
 
                     return;
 
                 }
 
+
+                /* =========================================
+                   READ SETTINGS
+                   ========================================= */
 
                 if (
                     workbook.Sheets["Settings"]
@@ -2513,6 +2550,10 @@ function handleExcelUpload(
 
                 }
 
+
+                /* =========================================
+                   READ SCORES
+                   ========================================= */
 
                 const worksheet =
                     workbook.Sheets[
@@ -2532,18 +2573,14 @@ function handleExcelUpload(
                     );
 
 
-                /*
-                   Remove completely empty rows.
-
-                   This is important because the
-                   template contains prepared rows.
-                */
-
                 const actualRows =
                     rows.filter(
-                        function (student) {
+                        function (
+                            student
+                        ) {
 
                             return (
+
                                 String(
                                     student[
                                         "Admission No"
@@ -2557,6 +2594,7 @@ function handleExcelUpload(
                                     ] ||
                                     ""
                                 ).trim() !== ""
+
                             );
 
                         }
@@ -2569,9 +2607,8 @@ function handleExcelUpload(
                 ) {
 
                     setFileStatus(
-                        "❌ The Scores sheet does not contain any student records."
+                        "❌ No student records found."
                     );
-
 
                     return;
 
@@ -2604,7 +2641,6 @@ function handleExcelUpload(
                         "❌ One or more student records have no Student Name."
                     );
 
-
                     return;
 
                 }
@@ -2624,8 +2660,29 @@ function handleExcelUpload(
                     schoolSubjects =
                         detectedSubjects;
 
-
                     renderSubjectList();
+
+                }
+
+
+                /* =========================================
+                   READ BEHAVIORAL DATA
+                   ========================================= */
+
+                const behaviorSheet =
+                    workbook.Sheets[
+                        "Behavioral Traits"
+                    ];
+
+
+                if (
+                    behaviorSheet
+                ) {
+
+                    attachBehaviorData(
+                        actualRows,
+                        behaviorSheet
+                    );
 
                 }
 
@@ -2671,7 +2728,7 @@ function handleExcelUpload(
 
 
                 setFileStatus(
-                    "❌ Unable to read this Excel file. Please make sure you are using the correct template."
+                    "❌ Unable to read this Excel file."
                 );
 
             }
@@ -2710,7 +2767,9 @@ function readSettings(
 
 
     rows.forEach(
-        function (row) {
+        function (
+            row
+        ) {
 
             const setting =
                 String(
@@ -2751,13 +2810,26 @@ function readSettings(
 
             if (
                 setting ===
-                "CA Maximum"
+                "1st CA Maximum"
             ) {
 
-                reportSettings.caMaximum =
+                reportSettings.firstCAMaximum =
                     Number(
                         value
-                    ) || 40;
+                    ) || 20;
+
+            }
+
+
+            if (
+                setting ===
+                "2nd CA Maximum"
+            ) {
+
+                reportSettings.secondCAMaximum =
+                    Number(
+                        value
+                    ) || 20;
 
             }
 
@@ -2858,15 +2930,11 @@ function readSettings(
                 "Subjects"
             ) {
 
-                const subjectText =
+                const importedSubjects =
                     String(
                         value ||
                         ""
-                    );
-
-
-                const importedSubjects =
-                    subjectText
+                    )
                         .split(",")
                         .map(
                             function (
@@ -2882,8 +2950,10 @@ function readSettings(
                                 subject
                             ) {
 
-                                return subject.length >
-                                    0;
+                                return (
+                                    subject.length >
+                                    0
+                                );
 
                             }
                         );
@@ -2911,7 +2981,7 @@ function readSettings(
 
 
 /* =========================================================
-   DETECT SUBJECTS FROM EXCEL HEADERS
+   DETECT SUBJECTS
    ========================================================= */
 
 function detectSubjectsFromRows(
@@ -2940,11 +3010,13 @@ function detectSubjectsFromRows(
     Object.keys(
         firstStudent
     ).forEach(
-        function (key) {
+        function (
+            key
+        ) {
 
             const match =
                 key.match(
-                    /^(.+)\s+(CA|Exams)$/i
+                    /^(.+)\s+(1st CA|2nd CA|Exams)$/i
                 );
 
 
@@ -2952,19 +3024,9 @@ function detectSubjectsFromRows(
                 match
             ) {
 
-                const subject =
-                    match[1].trim();
-
-
-                if (
-                    subject
-                ) {
-
-                    subjectSet.add(
-                        subject
-                    );
-
-                }
+                subjectSet.add(
+                    match[1].trim()
+                );
 
             }
 
@@ -2980,7 +3042,162 @@ function detectSubjectsFromRows(
 
 
 /* =========================================================
-   LOAD STUDENTS INTO DROPDOWN
+   ATTACH BEHAVIOR DATA
+   ========================================================= */
+
+function attachBehaviorData(
+    scoreRows,
+    behaviorSheet
+) {
+
+    const behaviorRows =
+        XLSX.utils.sheet_to_json(
+            behaviorSheet,
+            {
+
+                defval:
+                    ""
+
+            }
+        );
+
+
+    const behaviorMap =
+        new Map();
+
+
+    behaviorRows.forEach(
+        function (
+            row
+        ) {
+
+            const name =
+                String(
+                    row[
+                        "Student Name"
+                    ] ||
+                    ""
+                ).trim()
+                .toLowerCase();
+
+
+            if (
+                name
+            ) {
+
+                behaviorMap.set(
+                    name,
+                    {
+
+                        Attendance:
+                            row[
+                                "Attendance"
+                            ],
+
+                        Punctuality:
+                            row[
+                                "Punctuality"
+                            ],
+
+                        Neatness:
+                            row[
+                                "Neatness"
+                            ],
+
+                        Obedience:
+                            row[
+                                "Obedience"
+                            ],
+
+                        "Class Participation":
+                            row[
+                                "Class Participation"
+                            ],
+
+                        "Class Teacher's Comment":
+                            row[
+                                "Class Teacher's Comment"
+                            ],
+
+                        "Principal's Comment":
+                            row[
+                                "Principal's Comment"
+                            ]
+
+                    }
+                );
+
+            }
+
+        }
+    );
+
+
+    scoreRows.forEach(
+        function (
+            student
+        ) {
+
+            const name =
+                String(
+                    student[
+                        "Student Name"
+                    ] ||
+                    ""
+                ).trim()
+                .toLowerCase();
+
+
+            const behavior =
+                behaviorMap.get(
+                    name
+                );
+
+
+            if (
+                behavior
+            ) {
+
+                student.__behavior =
+                    behavior;
+
+            } else {
+
+                student.__behavior = {
+
+                    Attendance:
+                        "",
+
+                    Punctuality:
+                        "",
+
+                    Neatness:
+                        "",
+
+                    Obedience:
+                        "",
+
+                    "Class Participation":
+                        "",
+
+                    "Class Teacher's Comment":
+                        "",
+
+                    "Principal's Comment":
+                        ""
+
+                };
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LOAD STUDENTS
    ========================================================= */
 
 function loadStudents() {
@@ -3074,7 +3291,6 @@ function generateSingleReport() {
             "Please select a student."
         );
 
-
         return;
 
     }
@@ -3134,7 +3350,6 @@ function generateAllReports() {
             "No student records found."
         );
 
-
         return;
 
     }
@@ -3179,305 +3394,6 @@ function generateAllReports() {
 
 
 /* =========================================================
-   PAYSTACK BUTTONS
-   ========================================================= */
-
-function attachPaystackButtons() {
-
-    const buttons =
-        document.querySelectorAll(
-            ".subscribe-button"
-        );
-
-
-    buttons.forEach(
-        function (button) {
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    startPaystackPayment(
-                        button
-                    );
-
-                }
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   START PAYSTACK PAYMENT
-   ========================================================= */
-
-async function startPaystackPayment(
-    button
-) {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .auth
-                .getSession();
-
-
-        if (
-            error ||
-            !data.session
-        ) {
-
-            alert(
-                "Please create an account or sign in before subscribing."
-            );
-
-
-            return;
-
-        }
-
-
-        const user =
-            data.session.user;
-
-
-        const plan =
-            button.dataset.plan;
-
-
-        const price =
-            Number(
-                button.dataset.price
-            );
-
-
-        const duration =
-            button.dataset.duration ||
-            "";
-
-
-        if (
-            !plan ||
-            !price
-        ) {
-
-            alert(
-                "Invalid subscription plan."
-            );
-
-
-            return;
-
-        }
-
-
-        if (
-            typeof PaystackPop ===
-            "undefined"
-        ) {
-
-            alert(
-                "Paystack has not loaded. Please refresh the page and try again."
-            );
-
-
-            return;
-
-        }
-
-
-        const handler =
-            PaystackPop.setup({
-
-                key:
-                    PAYSTACK_PUBLIC_KEY,
-
-                email:
-                    user.email,
-
-                amount:
-                    price * 100,
-
-                currency:
-                    "NGN",
-
-                metadata: {
-
-                    user_id:
-                        user.id,
-
-                    plan:
-                        plan,
-
-                    duration:
-                        duration
-
-                },
-
-
-                callback:
-                    async function (
-                        response
-                    ) {
-
-                        console.log(
-                            "Paystack reference:",
-                            response.reference
-                        );
-
-
-                        alert(
-                            "Payment received. Verifying payment..."
-                        );
-
-
-                        await verifyPaystackPayment(
-                            response.reference,
-                            plan
-                        );
-
-                    },
-
-
-                onClose:
-                    function () {
-
-                        console.log(
-                            "Paystack checkout closed."
-                        );
-
-                    }
-
-            });
-
-
-        handler.openIframe();
-
-
-    } catch (error) {
-
-        console.error(
-            "Payment error:",
-            error
-        );
-
-
-        alert(
-            "Unable to start payment. Please try again."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   VERIFY PAYSTACK PAYMENT
-   ========================================================= */
-
-async function verifyPaystackPayment(
-    reference,
-    plan
-) {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .functions
-                .invoke(
-                    "verify-paystack-payment",
-                    {
-
-                        body: {
-
-                            reference:
-                                reference,
-
-                            plan:
-                                plan
-
-                        }
-
-                    }
-                );
-
-
-        console.log(
-            "Verification result:",
-            data
-        );
-
-
-        if (error) {
-
-            console.error(
-                "Verification error:",
-                error
-            );
-
-
-            alert(
-                "Payment verification failed. Please contact support."
-            );
-
-
-            return;
-
-        }
-
-
-        if (
-            data &&
-            data.success
-        ) {
-
-            alert(
-                "✅ Payment successful!\n\nYour " +
-                plan.toUpperCase() +
-                " subscription is now active."
-            );
-
-
-            await checkLogin();
-
-
-        } else {
-
-            alert(
-                "Payment could not be verified."
-            );
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            error
-        );
-
-
-        alert(
-            "An error occurred while verifying the payment."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
    CREATE REPORT
    ========================================================= */
 
@@ -3485,8 +3401,7 @@ function createReport(
     student
 ) {
 
-    const subjects =
-        [];
+    const subjects = [];
 
 
     let overallTotal =
@@ -3519,9 +3434,14 @@ function createReport(
             subjectName
         ) {
 
-            const caKey =
+            const firstCAKey =
                 subjectName +
-                " CA";
+                " 1st CA";
+
+
+            const secondCAKey =
+                subjectName +
+                " 2nd CA";
 
 
             const examsKey =
@@ -3529,10 +3449,18 @@ function createReport(
                 " Exams";
 
 
-            const ca =
+            const firstCA =
                 Number(
                     student[
-                        caKey
+                        firstCAKey
+                    ]
+                ) || 0;
+
+
+            const secondCA =
+                Number(
+                    student[
+                        secondCAKey
                     ]
                 ) || 0;
 
@@ -3546,15 +3474,23 @@ function createReport(
 
 
             const total =
-                ca +
+                firstCA +
+                secondCA +
                 exams;
 
 
             if (
+
                 Object.prototype
                     .hasOwnProperty.call(
                         student,
-                        caKey
+                        firstCAKey
+                    ) ||
+
+                Object.prototype
+                    .hasOwnProperty.call(
+                        student,
+                        secondCAKey
                     ) ||
 
                 Object.prototype
@@ -3562,6 +3498,7 @@ function createReport(
                         student,
                         examsKey
                     )
+
             ) {
 
                 subjects.push({
@@ -3569,8 +3506,11 @@ function createReport(
                     name:
                         subjectName,
 
-                    ca:
-                        ca,
+                    firstCA:
+                        firstCA,
+
+                    secondCA:
+                        secondCA,
 
                     exams:
                         exams,
@@ -3594,6 +3534,14 @@ function createReport(
         subjects.length;
 
 
+    /*
+       AVERAGE IS BASED ON ALL SUBJECTS.
+
+       Example:
+       70 + 60 + 80 = 210
+       210 / 3 = 70%
+    */
+
     const average =
         numberOfSubjects > 0
 
@@ -3615,6 +3563,10 @@ function createReport(
             students
         );
 
+
+    /* =====================================================
+       SUBJECT ROWS
+       ===================================================== */
 
     let subjectRows =
         "";
@@ -3642,7 +3594,13 @@ function createReport(
 
                     <td>
                         ${formatScore(
-                            subject.ca
+                            subject.firstCA
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatScore(
+                            subject.secondCA
                         )}
                     </td>
 
@@ -3670,6 +3628,70 @@ function createReport(
 
         }
     );
+
+
+    /* =====================================================
+       BEHAVIOR
+       ===================================================== */
+
+    const behavior =
+        student.__behavior ||
+        {};
+
+
+    let behaviorRows =
+        "";
+
+
+    behavioralTraits.forEach(
+        function (
+            trait
+        ) {
+
+            const rating =
+                behavior[
+                    trait
+                ] !== undefined
+                    ? behavior[
+                        trait
+                    ]
+                    : "";
+
+
+            behaviorRows += `
+
+                <tr>
+
+                    <td>
+                        ${escapeHTML(
+                            trait
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            rating
+                        )}
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    const teacherComment =
+        behavior[
+            "Class Teacher's Comment"
+        ] || "";
+
+
+    const principalComment =
+        behavior[
+            "Principal's Comment"
+        ] || "";
 
 
     return `
@@ -3710,6 +3732,7 @@ function createReport(
                         ] ||
                         ""
                     )}
+
                 </div>
 
 
@@ -3724,6 +3747,7 @@ function createReport(
                         ] ||
                         ""
                     )}
+
                 </div>
 
 
@@ -3738,6 +3762,7 @@ function createReport(
                         ] ||
                         ""
                     )}
+
                 </div>
 
 
@@ -3752,6 +3777,7 @@ function createReport(
                         ] ||
                         ""
                     )}
+
                 </div>
 
 
@@ -3766,6 +3792,7 @@ function createReport(
                         ] ||
                         ""
                     )}
+
                 </div>
 
 
@@ -3780,6 +3807,7 @@ function createReport(
                         ] ||
                         ""
                     )}
+
                 </div>
 
             </div>
@@ -3800,7 +3828,11 @@ function createReport(
                         </th>
 
                         <th>
-                            CA
+                            1st CA
+                        </th>
+
+                        <th>
+                            2nd CA
                         </th>
 
                         <th>
@@ -3831,7 +3863,7 @@ function createReport(
 
                     <tr>
 
-                        <th colspan="4">
+                        <th colspan="5">
                             OVERALL TOTAL
                         </th>
 
@@ -3873,7 +3905,7 @@ function createReport(
                 <p>
 
                     <strong>
-                        Position:
+                        Class Position:
                     </strong>
 
                     ${formatPosition(
@@ -3896,6 +3928,56 @@ function createReport(
             </div>
 
 
+            <!-- =========================================
+                 BEHAVIORAL TRAITS
+                 ========================================= -->
+
+            <div class="behavior-section">
+
+                <h3>
+                    BEHAVIORAL TRAITS
+                </h3>
+
+
+                <p>
+                    Rating: 1 = Lowest, 5 = Highest
+                </p>
+
+
+                <table class="result-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Trait
+                            </th>
+
+                            <th>
+                                Rating (1-5)
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${behaviorRows}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- =========================================
+                 COMMENTS
+                 ========================================= -->
+
             <div class="comments">
 
                 <p>
@@ -3908,6 +3990,11 @@ function createReport(
 
 
                 <div class="comment-box">
+
+                    ${escapeHTML(
+                        teacherComment
+                    )}
+
                 </div>
 
 
@@ -3921,6 +4008,11 @@ function createReport(
 
 
                 <div class="comment-box">
+
+                    ${escapeHTML(
+                        principalComment
+                    )}
+
                 </div>
 
             </div>
@@ -4004,8 +4096,8 @@ function calculatePosition(
     allStudents
 ) {
 
-    const currentTotal =
-        calculateStudentTotal(
+    const currentAverage =
+        calculateStudentAverage(
             currentStudent
         );
 
@@ -4019,15 +4111,15 @@ function calculatePosition(
             student
         ) {
 
-            const studentTotal =
-                calculateStudentTotal(
+            const studentAverage =
+                calculateStudentAverage(
                     student
                 );
 
 
             if (
-                studentTotal >
-                currentTotal
+                studentAverage >
+                currentAverage
             ) {
 
                 position++;
@@ -4044,10 +4136,10 @@ function calculatePosition(
 
 
 /* =========================================================
-   CALCULATE STUDENT TOTAL
+   CALCULATE STUDENT AVERAGE
    ========================================================= */
 
-function calculateStudentTotal(
+function calculateStudentAverage(
     student
 ) {
 
@@ -4055,36 +4147,97 @@ function calculateStudentTotal(
         0;
 
 
-    Object.keys(
-        student
-    ).forEach(
+    let subjectCount =
+        0;
+
+
+    schoolSubjects.forEach(
         function (
-            key
+            subject
         ) {
 
-            const match =
-                key.match(
-                    /^(.+)\s+(CA|Exams)$/i
-                );
+            const firstCA =
+                Number(
+                    student[
+                        subject +
+                        " 1st CA"
+                    ]
+                ) || 0;
 
 
-            if (!match) {
+            const secondCA =
+                Number(
+                    student[
+                        subject +
+                        " 2nd CA"
+                    ]
+                ) || 0;
 
-                return;
+
+            const exams =
+                Number(
+                    student[
+                        subject +
+                        " Exams"
+                    ]
+                ) || 0;
+
+
+            const hasSubject =
+
+                Object.prototype
+                    .hasOwnProperty.call(
+                        student,
+                        subject +
+                        " 1st CA"
+                    ) ||
+
+                Object.prototype
+                    .hasOwnProperty.call(
+                        student,
+                        subject +
+                        " 2nd CA"
+                    ) ||
+
+                Object.prototype
+                    .hasOwnProperty.call(
+                        student,
+                        subject +
+                        " Exams"
+                    );
+
+
+            if (
+                hasSubject
+            ) {
+
+                total +=
+                    firstCA +
+                    secondCA +
+                    exams;
+
+                subjectCount++;
 
             }
-
-
-            total +=
-                Number(
-                    student[key]
-                ) || 0;
 
         }
     );
 
 
-    return total;
+    if (
+        subjectCount ===
+        0
+    ) {
+
+        return 0;
+
+    }
+
+
+    return (
+        total /
+        subjectCount
+    );
 
 }
 
@@ -4125,7 +4278,6 @@ function formatPosition(
                 "st"
             );
 
-
         case 2:
 
             return (
@@ -4133,14 +4285,12 @@ function formatPosition(
                 "nd"
             );
 
-
         case 3:
 
             return (
                 position +
                 "rd"
             );
-
 
         default:
 
@@ -4180,6 +4330,284 @@ function formatScore(
 
 
     return number.toFixed(2);
+
+}
+
+
+/* =========================================================
+   PAYSTACK BUTTONS
+   ========================================================= */
+
+function attachPaystackButtons() {
+
+    const buttons =
+        document.querySelectorAll(
+            ".subscribe-button"
+        );
+
+
+    buttons.forEach(
+        function (
+            button
+        ) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    startPaystackPayment(
+                        button
+                    );
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   START PAYSTACK PAYMENT
+   ========================================================= */
+
+async function startPaystackPayment(
+    button
+) {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .auth
+                .getSession();
+
+
+        if (
+            error ||
+            !data.session
+        ) {
+
+            alert(
+                "Please create an account or sign in before subscribing."
+            );
+
+            return;
+
+        }
+
+
+        const user =
+            data.session.user;
+
+
+        const plan =
+            button.dataset.plan;
+
+
+        const price =
+            Number(
+                button.dataset.price
+            );
+
+
+        const duration =
+            button.dataset.duration ||
+            "";
+
+
+        if (
+            !plan ||
+            !price
+        ) {
+
+            alert(
+                "Invalid subscription plan."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            typeof PaystackPop ===
+            "undefined"
+        ) {
+
+            alert(
+                "Paystack has not loaded."
+            );
+
+            return;
+
+        }
+
+
+        const handler =
+            PaystackPop.setup({
+
+                key:
+                    PAYSTACK_PUBLIC_KEY,
+
+                email:
+                    user.email,
+
+                amount:
+                    price * 100,
+
+                currency:
+                    "NGN",
+
+                metadata: {
+
+                    user_id:
+                        user.id,
+
+                    plan:
+                        plan,
+
+                    duration:
+                        duration
+
+                },
+
+                callback:
+                    async function (
+                        response
+                    ) {
+
+                        alert(
+                            "Payment received. Verifying payment..."
+                        );
+
+
+                        await verifyPaystackPayment(
+                            response.reference,
+                            plan
+                        );
+
+                    },
+
+                onClose:
+                    function () {
+
+                        console.log(
+                            "Paystack checkout closed."
+                        );
+
+                    }
+
+            });
+
+
+        handler.openIframe();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+        alert(
+            "Unable to start payment."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   VERIFY PAYSTACK PAYMENT
+   ========================================================= */
+
+async function verifyPaystackPayment(
+    reference,
+    plan
+) {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .functions
+                .invoke(
+                    "verify-paystack-payment",
+                    {
+
+                        body: {
+
+                            reference:
+                                reference,
+
+                            plan:
+                                plan
+
+                        }
+
+                    }
+                );
+
+
+        if (error) {
+
+            console.error(
+                error
+            );
+
+            alert(
+                "Payment verification failed. Please contact support."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            data &&
+            data.success
+        ) {
+
+            alert(
+                "✅ Payment successful!\n\nYour " +
+                plan.toUpperCase() +
+                " subscription is now active."
+            );
+
+
+            await checkLogin();
+
+
+        } else {
+
+            alert(
+                "Payment could not be verified."
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+        alert(
+            "An error occurred while verifying payment."
+        );
+
+    }
 
 }
 
