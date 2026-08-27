@@ -1,6 +1,6 @@
 /* =========================================================
    STUDENT REPORT GENERATOR
-   COMPLETE script.js
+   COMPLETE CORRECTED script.js
    ========================================================= */
 
 
@@ -78,6 +78,14 @@ let reportSettings = {
         0
 
 };
+
+
+/*
+   Number of student rows prepared in the
+   downloaded Excel template.
+*/
+
+const TEMPLATE_STUDENT_ROWS = 100;
 
 
 /* =========================================================
@@ -618,7 +626,7 @@ function attachAuthenticationEvents() {
 
     }
 
-  
+
     /* =====================================================
        LOGOUT
        ===================================================== */
@@ -676,23 +684,29 @@ function attachAuthenticationEvents() {
 
 }
 
+
 /* =========================================================
    FORGOT PASSWORD
    ========================================================= */
 
 async function forgotPassword() {
 
-    alert("Forgot Password function is running!");
+    const email =
+        prompt(
+            "Enter the email address you used to create your account:"
+        );
 
-    const email = prompt(
-        "Enter the email address you used to create your account:"
-    );
 
     if (!email) {
+
         return;
+
     }
 
-    const cleanEmail = email.trim();
+
+    const cleanEmail =
+        email.trim();
+
 
     if (!cleanEmail) {
 
@@ -701,51 +715,106 @@ async function forgotPassword() {
         );
 
         return;
+
     }
 
-    const { error } =
-        await supabaseClient.auth.resetPasswordForEmail(
-            cleanEmail,
-            {
-                redirectTo:
-                    "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
-            }
+
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .auth
+                .resetPasswordForEmail(
+                    cleanEmail,
+                    {
+
+                        redirectTo:
+                            "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
+
+                    }
+                );
+
+
+        if (error) {
+
+            console.error(
+                "Password reset error:",
+                error
+            );
+
+
+            alert(
+                "❌ " +
+                error.message
+            );
+
+
+            return;
+
+        }
+
+
+        alert(
+            "✅ Password reset email sent. Please check your email."
         );
 
-    if (error) {
+
+    } catch (error) {
 
         console.error(
-            "Password reset error:",
             error
         );
 
+
         alert(
-            "❌ " + error.message
+            "❌ Unable to send password reset email."
         );
 
-        return;
     }
 
-    alert(
-        "✅ Password reset email sent. " +
-        "Please check your email and click the password reset link."
-    );
 }
-  /* =========================================================
+
+
+/* =========================================================
    UPDATE PASSWORD
    ========================================================= */
 
 async function updatePassword() {
 
-    const newPassword =
+    const newPasswordElement =
         document.getElementById(
             "newPassword"
-        ).value;
+        );
 
-    const confirmPassword =
+
+    const confirmPasswordElement =
         document.getElementById(
             "confirmNewPassword"
-        ).value;
+        );
+
+
+    if (
+        !newPasswordElement ||
+        !confirmPasswordElement
+    ) {
+
+        alert(
+            "Password fields could not be found."
+        );
+
+        return;
+
+    }
+
+
+    const newPassword =
+        newPasswordElement.value;
+
+
+    const confirmPassword =
+        confirmPasswordElement.value;
 
 
     if (!newPassword) {
@@ -755,6 +824,7 @@ async function updatePassword() {
         );
 
         return;
+
     }
 
 
@@ -765,6 +835,7 @@ async function updatePassword() {
         );
 
         return;
+
     }
 
 
@@ -775,46 +846,84 @@ async function updatePassword() {
         );
 
         return;
+
     }
 
 
-    const { error } =
-        await supabaseClient.auth.updateUser({
-            password: newPassword
-        });
+    try {
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .auth
+                .updateUser({
+
+                    password:
+                        newPassword
+
+                });
 
 
-    if (error) {
+        if (error) {
+
+            console.error(
+                "Password update error:",
+                error
+            );
+
+
+            alert(
+                "❌ " +
+                error.message
+            );
+
+
+            return;
+
+        }
+
+
+        alert(
+            "✅ Password changed successfully."
+        );
+
+
+        const resetSection =
+            document.getElementById(
+                "resetPasswordSection"
+            );
+
+
+        if (resetSection) {
+
+            resetSection.style.display =
+                "none";
+
+        }
+
+
+        newPasswordElement.value =
+            "";
+
+
+        confirmPasswordElement.value =
+            "";
+
+
+    } catch (error) {
 
         console.error(
-            "Password update error:",
             error
         );
 
+
         alert(
-            "❌ " + error.message
+            "❌ Unable to change password."
         );
 
-        return;
     }
 
-
-    alert(
-        "✅ Password changed successfully. You can now sign in with your new password."
-    );
-
-
-    document.getElementById(
-        "resetPasswordSection"
-    ).style.display = "none";
-
-    document.getElementById(
-        "newPassword"
-    ).value = "";
-
-    document.getElementById(
-        "confirmNewPassword"
-    ).value = "";
 }
 
 
@@ -1014,12 +1123,6 @@ supabaseClient.auth.onAuthStateChange(
         );
 
 
-        /*
-           Do not await checkLogin directly inside
-           onAuthStateChange. This prevents Supabase
-           authentication lock problems.
-        */
-
         setTimeout(
             function () {
 
@@ -1028,6 +1131,37 @@ supabaseClient.auth.onAuthStateChange(
             },
             0
         );
+
+    }
+);
+
+
+/* =========================================================
+   PASSWORD RECOVERY
+   ========================================================= */
+
+supabaseClient.auth.onAuthStateChange(
+    function (event, session) {
+
+        if (
+            event ===
+            "PASSWORD_RECOVERY"
+        ) {
+
+            const resetSection =
+                document.getElementById(
+                    "resetPasswordSection"
+                );
+
+
+            if (resetSection) {
+
+                resetSection.style.display =
+                    "block";
+
+            }
+
+        }
 
     }
 );
@@ -1258,7 +1392,9 @@ function attachApplicationEvents() {
 function createSubjectManager() {
 
     if (
-        !elementExists(appSection)
+        !elementExists(
+            appSection
+        )
     ) {
 
         return;
@@ -1266,11 +1402,18 @@ function createSubjectManager() {
     }
 
 
-    /*
-       We create this section automatically.
-       Therefore you do NOT have to manually add
-       another section to your HTML.
-    */
+    const existing =
+        document.getElementById(
+            "subjectManager"
+        );
+
+
+    if (existing) {
+
+        return;
+
+    }
+
 
     const manager =
         document.createElement(
@@ -1322,7 +1465,7 @@ function createSubjectManager() {
 
     const firstCard =
         appSection.querySelector(
-            "main .card"
+            ".card"
         );
 
 
@@ -1501,6 +1644,36 @@ function renderSubjectList() {
 
                         renderSubjectList();
 
+                        return;
+
+                    }
+
+
+                    const duplicate =
+                        schoolSubjects.some(
+                            function (
+                                subject,
+                                subjectIndex
+                            ) {
+
+                                return (
+                                    subjectIndex !== index &&
+                                    subject.toLowerCase() ===
+                                    newName.toLowerCase()
+                                );
+
+                            }
+                        );
+
+
+                    if (duplicate) {
+
+                        alert(
+                            "This subject already exists."
+                        );
+
+
+                        renderSubjectList();
 
                         return;
 
@@ -1592,194 +1765,367 @@ function addSubject(
 
 
 /* =========================================================
-/* =========================================================
-   DOWNLOAD EXCEL TEMPLATE
+   CLEAN EXCEL SHEET NAME
    ========================================================= */
 
+function makeSafeSheetName(
+    name,
+    usedNames
+) {
+
+    let clean =
+        String(
+            name
+        )
+            .replace(
+                /[:\\\/\?\*\[\]]/g,
+                ""
+            )
+            .trim();
+
+
+    if (!clean) {
+
+        clean =
+            "Subject";
+
+    }
+
+
+    clean =
+        clean.substring(
+            0,
+            31
+        );
+
+
+    let finalName =
+        clean;
+
+
+    let counter =
+        2;
+
+
+    while (
+        usedNames.has(
+            finalName.toLowerCase()
+        )
+    ) {
+
+        const suffix =
+            " " +
+            counter;
+
+
+        finalName =
+            clean.substring(
+                0,
+                31 - suffix.length
+            ) +
+            suffix;
+
+
+        counter++;
+
+    }
+
+
+    usedNames.add(
+        finalName.toLowerCase()
+    );
+
+
+    return finalName;
+
+}
+
+
 function downloadExcelTemplate() {
+  
+alert("NEW DOWNLOAD FUNCTION IS RUNNING");
+    try {
 
-    if (
-        typeof XLSX ===
-        "undefined"
-    ) {
+        if (typeof XLSX === "undefined") {
 
-        alert(
-            "Excel library has not loaded yet. Please refresh the page and try again."
-        );
+            alert("Excel library has not loaded. Please refresh the page.");
 
-        return;
-
-    }
+            return;
+        }
 
 
-    if (
-        schoolSubjects.length ===
-        0
-    ) {
+        /* =========================================
+           CLEAN SUBJECT LIST
+        ========================================= */
 
-        alert(
-            "Please add at least one subject."
-        );
-
-        return;
-
-    }
-
-
-    /* =====================================================
-       CREATE WORKBOOK
-    ===================================================== */
-
-    const workbook =
-        XLSX.utils.book_new();
+        schoolSubjects = schoolSubjects
+            .map(function(subject) {
+                return String(subject).trim();
+            })
+            .filter(function(subject) {
+                return subject !== "";
+            });
 
 
-    /* =====================================================
-       CREATE SCORES SHEET
-    ===================================================== */
+        if (schoolSubjects.length === 0) {
 
-    const scoresHeaders = [
+            alert("Please add at least one subject.");
 
-        "Admission No",
-
-        "Student Name",
-
-        "Gender",
-
-        "Class",
-
-        "Term",
-
-        "Session"
-
-    ];
+            return;
+        }
 
 
-    /*
-       Add CA and Exams columns for every subject.
-    */
+        /* =========================================
+           CREATE WORKBOOK
+        ========================================= */
 
-    schoolSubjects.forEach(
-        function (subject) {
+        const workbook = XLSX.utils.book_new();
 
-            scoresHeaders.push(
-                subject + " CA"
-            );
 
-            scoresHeaders.push(
-                subject + " Exams"
-            );
+        /* =========================================
+           CREATE SCORES SHEET
+        ========================================= */
+
+        const scoresHeaders = [
+            "Admission No",
+            "Student Name",
+            "Gender",
+            "Class",
+            "Term",
+            "Session"
+        ];
+
+
+        schoolSubjects.forEach(function(subject) {
+
+            scoresHeaders.push(subject + " CA");
+            scoresHeaders.push(subject + " Exams");
+
+        });
+
+
+        const scoresData = [scoresHeaders];
+
+
+        for (
+            let i = 1;
+            i <= TEMPLATE_STUDENT_ROWS;
+            i++
+        ) {
+
+            const row = [
+
+                i === 1 ? "001" : "",
+                i === 1 ? "Example Student" : "",
+                i === 1 ? "Male" : "",
+                i === 1 ? "SS2" : "",
+                i === 1 ? "First Term" : "",
+                i === 1 ? "2025/2026" : ""
+
+            ];
+
+
+            schoolSubjects.forEach(function() {
+
+                row.push("");
+                row.push("");
+
+            });
+
+
+            scoresData.push(row);
 
         }
-    );
 
 
-    /*
-       Example student row.
-    */
-
-    const exampleRow = [
-
-        "001",
-
-        "Example Student",
-
-        "Male",
-
-        "SS2",
-
-        "First Term",
-
-        "2025/2026"
-
-    ];
+        const scoresSheet =
+            XLSX.utils.aoa_to_sheet(scoresData);
 
 
-    /*
-       Add empty cells for the subject
-       CA and Exams columns.
-
-       The formulas will be inserted below.
-    */
-
-    schoolSubjects.forEach(
-        function () {
-
-            exampleRow.push("");
-
-            exampleRow.push("");
-
-        }
-    );
+        scoresSheet["!cols"] = [
+            { wch: 15 },
+            { wch: 30 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 15 },
+            { wch: 15 }
+        ];
 
 
-    const scoresData = [
+        schoolSubjects.forEach(function() {
 
-        scoresHeaders,
+            scoresSheet["!cols"].push({
+                wch: 15
+            });
 
-        exampleRow
+            scoresSheet["!cols"].push({
+                wch: 15
+            });
 
-    ];
+        });
 
 
-    const scoresSheet =
-        XLSX.utils.aoa_to_sheet(
-            scoresData
+        scoresSheet["!freeze"] = {
+            xSplit: 0,
+            ySplit: 1
+        };
+
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            scoresSheet,
+            "Scores"
         );
 
 
-    /* =====================================================
-       COLUMN NUMBERS
-    ===================================================== */
+        /* =========================================
+           CREATE SETTINGS SHEET
+        ========================================= */
 
-    /*
-       Scores sheet structure:
+        const settingsData = [
 
-       A = Admission No
-       B = Student Name
-       C = Gender
-       D = Class
-       E = Term
-       F = Session
+            ["SETTING", "VALUE"],
 
-       Subject columns start from G.
-    */
+            [
+                "School Name",
+                reportSettings.schoolName
+            ],
+
+            [
+                "School Address",
+                reportSettings.schoolAddress
+            ],
+
+            [
+                "CA Maximum",
+                reportSettings.caMaximum
+            ],
+
+            [
+                "Exams Maximum",
+                reportSettings.examsMaximum
+            ],
+
+            [
+                "Grade A Minimum",
+                reportSettings.gradeA
+            ],
+
+            [
+                "Grade B Minimum",
+                reportSettings.gradeB
+            ],
+
+            [
+                "Grade C Minimum",
+                reportSettings.gradeC
+            ],
+
+            [
+                "Grade D Minimum",
+                reportSettings.gradeD
+            ],
+
+            [
+                "Grade E Minimum",
+                reportSettings.gradeE
+            ],
+
+            [
+                "Grade F Minimum",
+                reportSettings.gradeF
+            ],
+
+            [
+                "Subjects",
+                schoolSubjects.join(", ")
+            ]
+
+        ];
 
 
-    const subjectStartColumn =
-        7; // Column G
+        const settingsSheet =
+            XLSX.utils.aoa_to_sheet(settingsData);
 
 
-    /*
-       Number of rows initially prepared
-       for student entry.
-
-       Users can add more rows in Excel/WPS,
-       but formulas will initially be prepared
-       for these rows.
-    */
-
-    const templateRows =
-        100;
+        settingsSheet["!cols"] = [
+            { wch: 25 },
+            { wch: 50 }
+        ];
 
 
-    /* =====================================================
-       CREATE SUBJECT SHEETS
-    ===================================================== */
+        XLSX.utils.book_append_sheet(
+            workbook,
+            settingsSheet,
+            "Settings"
+        );
 
-    schoolSubjects.forEach(
-        function (subject) {
+
+        /* =========================================
+           CREATE ONE SHEET FOR EACH SUBJECT
+        ========================================= */
+
+        schoolSubjects.forEach(function(subject) {
+
+            let sheetName = String(subject)
+                .replace(/[:\\\/\?\*\[\]]/g, "")
+                .trim();
+
+
+            if (!sheetName) {
+
+                sheetName = "Subject";
+
+            }
+
 
             /*
-               Each subject gets its own sheet.
-
-               Example:
-
-               Mathematics
-               English
-               Biology
-               etc.
+               Excel sheet names cannot exceed 31 characters.
             */
+
+            sheetName =
+                sheetName.substring(0, 31);
+
+
+            /*
+               Make sure the name is unique.
+            */
+
+            let originalName = sheetName;
+            let counter = 2;
+
+
+            while (
+                workbook.SheetNames.some(
+                    function(name) {
+
+                        return name.toLowerCase() ===
+                               sheetName.toLowerCase();
+
+                    }
+                )
+            ) {
+
+                const suffix =
+                    " " + counter;
+
+
+                sheetName =
+                    originalName.substring(
+                        0,
+                        31 - suffix.length
+                    ) +
+                    suffix;
+
+
+                counter++;
+
+            }
+
+
+            /* =====================================
+               SUBJECT SHEET DATA
+            ===================================== */
 
             const subjectData = [
 
@@ -1788,16 +2134,32 @@ function downloadExcelTemplate() {
                     "Student Name",
                     "C.A Scores",
                     "Exams Scores"
-                ],
-
-                [
-                    "001",
-                    "Example Student",
-                    "",
-                    ""
                 ]
 
             ];
+
+
+            for (
+                let i = 1;
+                i <= TEMPLATE_STUDENT_ROWS;
+                i++
+            ) {
+
+                subjectData.push([
+
+                    i === 1 ? "001" : "",
+
+                    i === 1
+                        ? "Example Student"
+                        : "",
+
+                    "",
+
+                    ""
+
+                ]);
+
+            }
 
 
             const subjectSheet =
@@ -1806,105 +2168,54 @@ function downloadExcelTemplate() {
                 );
 
 
-            /*
-               Make the subject sheet easier to use.
-            */
-
             subjectSheet["!cols"] = [
 
-                {
-                    wch: 15
-                },
-
-                {
-                    wch: 30
-                },
-
-                {
-                    wch: 15
-                },
-
-                {
-                    wch: 15
-                }
+                { wch: 15 },
+                { wch: 30 },
+                { wch: 15 },
+                { wch: 15 }
 
             ];
 
 
+            subjectSheet["!freeze"] = {
+
+                xSplit: 0,
+                ySplit: 1
+
+            };
+
+
             /*
-               Add the subject sheet to the workbook.
+               ADD THE SUBJECT SHEET
+               DIRECTLY TO THE WORKBOOK.
             */
 
             XLSX.utils.book_append_sheet(
                 workbook,
                 subjectSheet,
-                subject.substring(
-                    0,
-                    31
-                )
+                sheetName
             );
 
-        }
-    );
+        });
 
 
-    /* =====================================================
-       ADD VLOOKUP FORMULAS TO SCORES SHEET
-    ===================================================== */
+        /* =========================================
+           ADD VLOOKUP FORMULAS TO SCORES
+        ========================================= */
 
-    /*
-       We prepare formulas for rows 2 to 101.
-
-       This means the user can enter up to
-       100 students initially.
-
-       The VLOOKUP searches the subject sheet
-       using Admission No in column A.
-
-       Subject sheet:
-
-       A = Adm No
-       B = Student Name
-       C = C.A Scores
-       D = Exams Scores
-
-       Therefore:
-
-       C.A = column 3
-       Exams = column 4
-    */
-
-
-    schoolSubjects.forEach(
-        function (
+        schoolSubjects.forEach(function(
             subject,
             subjectIndex
         ) {
 
-            /*
-               Scores sheet column positions.
-
-               Each subject has two columns:
-
-               CA
-               Exams
-            */
-
             const caColumn =
-                subjectStartColumn +
-                (
-                    subjectIndex * 2
-                );
+                7 + (subjectIndex * 2);
 
 
             const examsColumn =
                 caColumn + 1;
 
-
-            /*
-               Convert column number to Excel
-               column letters.
-            */
 
             const caLetter =
                 XLSX.utils.encode_col(
@@ -1919,641 +2230,198 @@ function downloadExcelTemplate() {
 
 
             /*
-               Excel sheet names can contain
-               special characters, so quote them.
+               Find the actual subject sheet.
             */
 
+            let sheetName =
+                subject
+                    .replace(
+                        /[:\\\/\?\*\[\]]/g,
+                        ""
+                    )
+                    .trim();
+
+
+            if (!sheetName) {
+
+                sheetName = "Subject";
+
+            }
+
+
+            sheetName =
+                sheetName.substring(
+                    0,
+                    31
+                );
+
+
+            /*
+               Find matching sheet name
+               case-insensitively.
+            */
+
+            const actualSheetName =
+                workbook.SheetNames.find(
+                    function(name) {
+
+                        return name.toLowerCase() ===
+                               sheetName.toLowerCase();
+
+                    }
+                );
+
+
+            if (!actualSheetName) {
+
+                console.error(
+                    "Subject sheet not found:",
+                    subject
+                );
+
+                return;
+
+            }
+
+
             const safeSheetName =
-                subject.replace(
+                actualSheetName.replace(
                     /'/g,
                     "''"
                 );
 
 
-            /*
-/* =====================================================
-   ADD VLOOKUP FORMULAS TO SCORES SHEET
-   LOOKUP BASED ON STUDENT NAME
-===================================================== */
+            for (
+                let row = 2;
+                row <= TEMPLATE_STUDENT_ROWS + 1;
+                row++
+            ) {
 
-schoolSubjects.forEach(
-    function (
-        subject,
-        subjectIndex
-    ) {
+                scoresSheet[
+                    caLetter + row
+                ] = {
 
-        /*
-           Scores sheet structure:
+                    t: "n",
 
-           A = Admission No
-           B = Student Name
-           C = Gender
-           D = Class
-           E = Term
-           F = Session
+                    f:
+                        `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,2,FALSE),""))`
 
-           Subject columns start from G.
-        */
+                };
 
 
-        const caColumn =
-            subjectStartColumn +
-            (
-                subjectIndex * 2
+                scoresSheet[
+                    examsLetter + row
+                ] = {
+
+                    t: "n",
+
+                    f:
+                        `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,3,FALSE),""))`
+
+                };
+
+            }
+
+        });
+
+
+        /* =========================================
+           WRITE EXCEL FILE
+        ========================================= */
+
+        const excelData =
+            XLSX.write(
+                workbook,
+                {
+                    bookType: "xlsx",
+                    type: "array"
+                }
             );
 
 
-        const examsColumn =
-            caColumn + 1;
-
-
-        /*
-           Convert column numbers to Excel
-           column letters.
-        */
-
-        const caLetter =
-            XLSX.utils.encode_col(
-                caColumn - 1
+        const blob =
+            new Blob(
+                [excelData],
+                {
+                    type:
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
             );
 
 
-        const examsLetter =
-            XLSX.utils.encode_col(
-                examsColumn - 1
-            );
+        const url =
+            URL.createObjectURL(blob);
 
 
-        /*
-           Safely handle apostrophes in
-           subject names.
-        */
-
-        const safeSheetName =
-            subject.replace(
-                /'/g,
-                "''"
-            );
+        const link =
+            document.createElement("a");
 
 
-        /*
-           Create formulas for rows 2 to 101.
-        */
+        link.href = url;
 
-        for (
-            let row = 2;
-            row <= templateRows + 1;
-            row++
-        ) {
-
-            /* =========================================
-               C.A VLOOKUP
-            =========================================
-
-               Lookup value:
-               Student Name in column B
-
-               Subject sheet:
-               B:D
-
-               B = Student Name
-               C = C.A Scores
-               D = Exams Scores
-
-               Return column 2 = C.A Scores
-            */
-
-            scoresSheet[
-                caLetter + row
-            ] = {
-
-                t: "n",
-
-                f:
-                    `IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,2,FALSE),"")`
-
-            };
+        link.download =
+            "Student_Report_Template.xlsx";
 
 
-            /* =========================================
-               EXAMS VLOOKUP
-            =========================================
+        document.body.appendChild(link);
 
-               Lookup value:
-               Student Name in column B
-
-               Subject sheet:
-               B:D
-
-               Return column 3 = Exams Scores
-            */
-
-            scoresSheet[
-                examsLetter + row
-            ] = {
-
-                t: "n",
-
-                f:
-                    `IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$D,3,FALSE),"")`
-
-            };
-
-        }
-
-    }
-);
+        link.click();
 
 
-    /* =====================================================
-       ADD SAMPLE ADMISSION NUMBER
-    ===================================================== */
+        setTimeout(function() {
 
-    /*
-       The example row has Admission No 001.
+            URL.revokeObjectURL(url);
 
-       The formulas will therefore look for
-       001 in each subject sheet.
-    */
+            if (link.parentNode) {
+
+                link.parentNode.removeChild(link);
+
+            }
+
+        }, 5000);
 
 
-    /* =====================================================
-       SETTINGS SHEET
-    ===================================================== */
+        /* =========================================
+           CONFIRM SUCCESS
+        ========================================= */
 
-    const settingsData = [
+        setFileStatus(
 
-        [
-            "SETTING",
-            "VALUE"
-        ],
-
-        [
-            "School Name",
-            reportSettings.schoolName
-        ],
-
-        [
-            "School Address",
-            reportSettings.schoolAddress
-        ],
-
-        [
-            "CA Maximum",
-            reportSettings.caMaximum
-        ],
-
-        [
-            "Exams Maximum",
-            reportSettings.examsMaximum
-        ],
-
-        [
-            "Grade A Minimum",
-            reportSettings.gradeA
-        ],
-
-        [
-            "Grade B Minimum",
-            reportSettings.gradeB
-        ],
-
-        [
-            "Grade C Minimum",
-            reportSettings.gradeC
-        ],
-
-        [
-            "Grade D Minimum",
-            reportSettings.gradeD
-        ],
-
-        [
-            "Grade E Minimum",
-            reportSettings.gradeE
-        ],
-
-        [
-            "Grade F Minimum",
-            reportSettings.gradeF
-        ],
-
-        [
-            "Subjects",
+            "✅ Template created with " +
+            schoolSubjects.length +
+            " subject sheet(s): " +
             schoolSubjects.join(", ")
-        ]
 
-    ];
-
-
-    const settingsSheet =
-        XLSX.utils.aoa_to_sheet(
-            settingsData
         );
 
 
-    /* =====================================================
-       ADD SCORES AND SETTINGS SHEETS
-    ===================================================== */
-
-    /*
-       Add Scores first so it appears first.
-    */
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        scoresSheet,
-        "Scores"
-    );
-
-
-    /*
-       Settings second.
-    */
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        settingsSheet,
-        "Settings"
-    );
-
-
-    /* =====================================================
-       FORMAT COLUMN WIDTHS
-    ===================================================== */
-
-    scoresSheet["!cols"] = [
-
-        {
-            wch: 15
-        },
-
-        {
-            wch: 30
-        },
-
-        {
-            wch: 12
-        },
-
-        {
-            wch: 12
-        },
-
-        {
-            wch: 15
-        },
-
-        {
-            wch: 15
-        }
-
-    ];
-
-
-    /*
-       Add widths for subject CA/Exam columns.
-    */
-
-    schoolSubjects.forEach(
-        function () {
-
-            scoresSheet["!cols"].push(
-                {
-                    wch: 15
-                }
-            );
-
-            scoresSheet["!cols"].push(
-                {
-                    wch: 15
-                }
-            );
-
-        }
-    );
-
-
-    /* =====================================================
-       FREEZE HEADER ROW
-    ===================================================== */
-
-    scoresSheet["!freeze"] = {
-        xSplit: 0,
-        ySplit: 1
-    };
-
-
-    /* =====================================================
-       WRITE EXCEL FILE
-    ===================================================== */
-
-    const excelData =
-        XLSX.write(
-            workbook,
-            {
-                bookType: "xlsx",
-
-                type: "array",
-
-                /*
-                   Ask Excel/WPS to recalculate
-                   formulas when the workbook opens.
-                */
-
-                cellFormula: true
-            }
+        console.log(
+            "Workbook sheets created:",
+            workbook.SheetNames
         );
 
 
-    const blob =
-        new Blob(
-            [excelData],
-            {
-                type:
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            }
+    } catch (error) {
+
+        console.error(
+            "Excel template error:",
+            error
         );
 
 
-    const url =
-        URL.createObjectURL(
-            blob
+        alert(
+            "❌ Excel template could not be created.\n\n" +
+            error.message
         );
 
 
-    const link =
-        document.createElement(
-            "a"
+        setFileStatus(
+            "❌ Excel template generation failed."
         );
-
-
-    link.href =
-        url;
-
-
-    link.download =
-        "Student_Report_Template.xlsx";
-
-
-    document.body.appendChild(
-        link
-    );
-
-
-    link.click();
-
-
-    document.body.removeChild(
-        link
-    );
-
-
-    URL.revokeObjectURL(
-        url
-    );
-
-
-    /* =====================================================
-       SUCCESS MESSAGE
-    ===================================================== */
-
-    if (fileStatus) {
-
-        fileStatus.innerHTML =
-            "✅ Excel template downloaded successfully with Scores, Settings and individual subject sheets.";
 
     }
 
 }
-
-
-    /* =====================================================
-       BUILD HEADER
-       ===================================================== */
-
-    const headers = [
-
-        "Admission No",
-
-        "Student Name",
-
-        "Gender",
-
-        "Class",
-
-        "Term",
-
-        "Session"
-
-    ];
-
-
-    schoolSubjects.forEach(
-        function (subject) {
-
-            headers.push(
-                subject + " CA"
-            );
-
-
-            headers.push(
-                subject + " Exams"
-            );
-
-        }
-    );
-
-
-    /* =====================================================
-       EXAMPLE ROW
-       ===================================================== */
-
-    const exampleRow = [
-
-        "001",
-
-        "Example Student",
-
-        "Male",
-
-        "SS2",
-
-        "First Term",
-
-        "2025/2026"
-
-    ];
-
-
-    schoolSubjects.forEach(
-        function () {
-
-            exampleRow.push(
-                ""
-            );
-
-
-            exampleRow.push(
-                ""
-            );
-
-        }
-    );
-
-
-    const scoresData = [
-
-        headers,
-
-        exampleRow
-
-    ];
-
-
-    /* =====================================================
-       SETTINGS
-       ===================================================== */
-
-    const settingsData = [
-
-        [
-            "SETTING",
-            "VALUE"
-        ],
-
-        [
-            "School Name",
-            reportSettings.schoolName
-        ],
-
-        [
-            "School Address",
-            reportSettings.schoolAddress
-        ],
-
-        [
-            "CA Maximum",
-            reportSettings.caMaximum
-        ],
-
-        [
-            "Exams Maximum",
-            reportSettings.examsMaximum
-        ],
-
-        [
-            "Grade A Minimum",
-            reportSettings.gradeA
-        ],
-
-        [
-            "Grade B Minimum",
-            reportSettings.gradeB
-        ],
-
-        [
-            "Grade C Minimum",
-            reportSettings.gradeC
-        ],
-
-        [
-            "Grade D Minimum",
-            reportSettings.gradeD
-        ],
-
-        [
-            "Grade E Minimum",
-            reportSettings.gradeE
-        ],
-
-        [
-            "Grade F Minimum",
-            reportSettings.gradeF
-        ],
-
-        [
-            "Subjects",
-            schoolSubjects.join(", ")
-        ]
-
-    ];
-
-
-    /* =====================================================
-       CREATE WORKBOOK
-       ===================================================== */
-
-    const workbook =
-        XLSX.utils.book_new();
-
-
-    const scoresSheet =
-        XLSX.utils.aoa_to_sheet(
-            scoresData
-        );
-
-
-    const settingsSheet =
-        XLSX.utils.aoa_to_sheet(
-            settingsData
-        );
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        scoresSheet,
-        "Scores"
-    );
-
-
-    XLSX.utils.book_append_sheet(
-        workbook,
-        settingsSheet,
-        "Settings"
-    );
-
-
-    const excelData = XLSX.write(
-    workbook,
-    {
-        bookType: "xlsx",
-        type: "array"
-    }
-);
-
-const blob = new Blob(
-    [excelData],
-    {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    }
-);
-
-const url = URL.createObjectURL(blob);
-
-const link = document.createElement("a");
-
-link.href = url;
-link.download = "Student_Report_Template.xlsx";
-
-document.body.appendChild(link);
-
-link.click();
-
-document.body.removeChild(link);
-
-URL.revokeObjectURL(url);
-
-
-    if (fileStatus) {
-
-        fileStatus.innerHTML =
-            "✅ Excel template downloaded successfully.";
-
-    }
-
-}
-
 
 /* =========================================================
    HANDLE EXCEL UPLOAD
@@ -2608,15 +2476,13 @@ function handleExcelUpload(
                     XLSX.read(
                         data,
                         {
+
                             type:
                                 "array"
+
                         }
                     );
 
-
-                /* =========================================
-                   CHECK SCORES SHEET
-                ========================================= */
 
                 if (
                     !workbook.Sheets["Scores"]
@@ -2632,25 +2498,18 @@ function handleExcelUpload(
                 }
 
 
-                /* =========================================
-                   READ SETTINGS
-                ========================================= */
-
                 if (
                     workbook.Sheets["Settings"]
                 ) {
 
                     readSettings(
-                        workbook
-                            .Sheets["Settings"]
+                        workbook.Sheets[
+                            "Settings"
+                        ]
                     );
 
                 }
 
-
-                /* =========================================
-                   DETECT SUBJECTS
-                ========================================= */
 
                 const worksheet =
                     workbook.Sheets[
@@ -2662,19 +2521,52 @@ function handleExcelUpload(
                     XLSX.utils.sheet_to_json(
                         worksheet,
                         {
+
                             defval:
                                 ""
+
+                        }
+                    );
+
+
+                /*
+                   Remove completely empty rows.
+
+                   This is important because the
+                   template contains prepared rows.
+                */
+
+                const actualRows =
+                    rows.filter(
+                        function (student) {
+
+                            return (
+                                String(
+                                    student[
+                                        "Admission No"
+                                    ] ||
+                                    ""
+                                ).trim() !== "" ||
+
+                                String(
+                                    student[
+                                        "Student Name"
+                                    ] ||
+                                    ""
+                                ).trim() !== ""
+                            );
+
                         }
                     );
 
 
                 if (
-                    rows.length ===
+                    actualRows.length ===
                     0
                 ) {
 
                     setFileStatus(
-                        "❌ The Scores sheet is empty."
+                        "❌ The Scores sheet does not contain any student records."
                     );
 
 
@@ -2683,12 +2575,8 @@ function handleExcelUpload(
                 }
 
 
-                /* =========================================
-                   VALIDATE STUDENT NAME
-                ========================================= */
-
                 const invalidStudents =
-                    rows.filter(
+                    actualRows.filter(
                         function (
                             student
                         ) {
@@ -2719,13 +2607,9 @@ function handleExcelUpload(
                 }
 
 
-                /* =========================================
-                   DETECT SUBJECTS FROM COLUMNS
-                ========================================= */
-
                 const detectedSubjects =
                     detectSubjectsFromRows(
-                        rows
+                        actualRows
                     );
 
 
@@ -2743,17 +2627,9 @@ function handleExcelUpload(
                 }
 
 
-                /* =========================================
-                   STORE STUDENTS
-                ========================================= */
-
                 students =
-                    rows;
+                    actualRows;
 
-
-                /* =========================================
-                   SUCCESS
-                ========================================= */
 
                 setFileStatus(
 
@@ -2770,16 +2646,8 @@ function handleExcelUpload(
                 );
 
 
-                /* =========================================
-                   LOAD DROPDOWN
-                ========================================= */
-
                 loadStudents();
 
-
-                /* =========================================
-                   SHOW REPORT SECTION
-                ========================================= */
 
                 if (
                     reportSection
@@ -2827,11 +2695,13 @@ function readSettings(
         XLSX.utils.sheet_to_json(
             settingsSheet,
             {
+
                 header:
                     1,
 
                 defval:
                     ""
+
             }
         );
 
@@ -3235,8 +3105,10 @@ function generateSingleReport() {
 
 
         reportContainer.scrollIntoView({
+
             behavior:
                 "smooth"
+
         });
 
     }
@@ -3292,8 +3164,10 @@ function generateAllReports() {
 
 
         reportContainer.scrollIntoView({
+
             behavior:
                 "smooth"
+
         });
 
     }
@@ -3401,10 +3275,6 @@ async function startPaystackPayment(
         }
 
 
-        /*
-           Check whether Paystack loaded.
-        */
-
         if (
             typeof PaystackPop ===
             "undefined"
@@ -3419,10 +3289,6 @@ async function startPaystackPayment(
 
         }
 
-
-        /*
-           Paystack checkout
-        */
 
         const handler =
             PaystackPop.setup({
@@ -3607,31 +3473,6 @@ async function verifyPaystackPayment(
 
 }
 
-/* =========================================================
-   DETECT PASSWORD RECOVERY
-   ========================================================= */
-
-supabaseClient.auth.onAuthStateChange(
-    function (event, session) {
-
-        if (event === "PASSWORD_RECOVERY") {
-
-            const resetSection =
-                document.getElementById(
-                    "resetPasswordSection"
-                );
-
-            if (resetSection) {
-
-                resetSection.style.display =
-                    "block";
-
-            }
-
-        }
-
-    }
-);
 
 /* =========================================================
    CREATE REPORT
@@ -3649,18 +3490,9 @@ function createReport(
         0;
 
 
-    /*
-       Use the subjects defined by the school.
-    */
-
     let subjectsToUse =
         schoolSubjects;
 
-
-    /*
-       If the uploaded Excel contains different
-       subjects, detect them automatically.
-    */
 
     const detectedSubjects =
         detectSubjectsFromRows(
@@ -3678,10 +3510,6 @@ function createReport(
 
     }
 
-
-    /* =====================================================
-       CALCULATE EACH SUBJECT
-       ===================================================== */
 
     subjectsToUse.forEach(
         function (
@@ -3718,11 +3546,6 @@ function createReport(
                 ca +
                 exams;
 
-
-            /*
-               Only add a subject if its columns
-               actually exist in the Excel record.
-            */
 
             if (
                 Object.prototype
@@ -3764,10 +3587,6 @@ function createReport(
     );
 
 
-    /* =====================================================
-       AVERAGE
-       ===================================================== */
-
     const numberOfSubjects =
         subjects.length;
 
@@ -3781,19 +3600,11 @@ function createReport(
             : 0;
 
 
-    /* =====================================================
-       GRADE
-       ===================================================== */
-
     const grade =
         getGrade(
             average
         );
 
-
-    /* =====================================================
-       POSITION
-       ===================================================== */
 
     const position =
         calculatePosition(
@@ -3801,10 +3612,6 @@ function createReport(
             students
         );
 
-
-    /* =====================================================
-       SUBJECT ROWS
-       ===================================================== */
 
     let subjectRows =
         "";
@@ -3861,10 +3668,6 @@ function createReport(
         }
     );
 
-
-    /* =====================================================
-       RETURN REPORT HTML
-       ===================================================== */
 
     return `
 
