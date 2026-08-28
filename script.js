@@ -3057,6 +3057,21 @@ function createReport(student) {
             student,
             students
         );
+  /* =====================================================
+   NUMBER OF STUDENTS IN CLASS
+   ===================================================== */
+
+const classSize =
+    students.filter(
+        function (student) {
+
+            return String(
+                student["Student Name"] || ""
+            ).trim() !== "";
+
+        }
+    ).length;
+  
 
 
     /* =====================================================
@@ -3239,99 +3254,112 @@ function createReport(student) {
 
             <!-- STUDENT INFORMATION -->
 
-            <div class="student-info">
+<div class="student-info">
 
-                <div>
+    <div>
 
-                    <strong>
-                        Admission No:
-                    </strong>
+        <strong>
+            Admission No:
+        </strong>
 
-                    ${escapeHTML(
-                        student["Admission No"] || ""
-                    )}
+        ${escapeHTML(
+            student["Admission No"] || ""
+        )}
 
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Student Name:
-                    </strong>
-
-                    ${escapeHTML(
-                        student["Student Name"] || ""
-                    )}
-
-                </div>
+    </div>
 
 
-                <div>
+    <div>
 
-                    <strong>
-                        Gender:
-                    </strong>
+        <strong>
+            Student Name:
+        </strong>
 
-                    ${escapeHTML(
-                        student["Gender"] || ""
-                    )}
+        ${escapeHTML(
+            student["Student Name"] || ""
+        )}
 
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Class:
-                    </strong>
-
-                    ${escapeHTML(
-                        student["Class"] || ""
-                    )}
-
-                </div>
+    </div>
 
 
-                <div>
+    <div>
 
-                    <strong>
-                        House:
-                    </strong>
+        <strong>
+            Gender:
+        </strong>
 
-                    ${escapeHTML(
-                        studentHouse
-                    )}
+        ${escapeHTML(
+            student["Gender"] || ""
+        )}
 
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Term:
-                    </strong>
-
-                    ${escapeHTML(
-                        student["Term"] || ""
-                    )}
-
-                </div>
+    </div>
 
 
-                <div>
+    <div>
 
-                    <strong>
-                        Session:
-                    </strong>
+        <strong>
+            Class:
+        </strong>
 
-                    ${escapeHTML(
-                        student["Session"] || ""
-                    )}
+        ${escapeHTML(
+            student["Class"] || ""
+        )}
 
-                </div>
+    </div>
 
-            </div>
+
+    <div>
+
+        <strong>
+            House:
+        </strong>
+
+        ${escapeHTML(
+            studentHouse
+        )}
+
+    </div>
+
+
+    <div>
+
+        <strong>
+            Term:
+        </strong>
+
+        ${escapeHTML(
+            student["Term"] || ""
+        )}
+
+    </div>
+
+
+    <div>
+
+        <strong>
+            Session:
+        </strong>
+
+        ${escapeHTML(
+            student["Session"] || ""
+        )}
+
+    </div>
+
+
+    <div>
+
+        <strong>
+            Class Size:
+        </strong>
+
+        ${classSize}
+
+    </div>
+
+</div>
+
+            
 
 
             <!-- SUBJECT RESULTS -->
