@@ -823,6 +823,7 @@ async function checkSubscription(user) {
             );
 
             return;
+
         }
 
         displaySubscriptionStatus(
@@ -1479,9 +1480,14 @@ function downloadExcelTemplate() {
             "Gender",
             "Class",
             "Term",
-            "Session"
+            "Session",
+            "House"
 
         ];
+
+        /* -----------------------------------------------
+           SUBJECT COLUMNS
+           ----------------------------------------------- */
 
         schoolSubjects.forEach(
             function (subject) {
@@ -1501,9 +1507,32 @@ function downloadExcelTemplate() {
             }
         );
 
+
+        /* -----------------------------------------------
+           OVERALL COLUMNS
+           ----------------------------------------------- */
+
+        scoresHeaders.push(
+            "Overall Total"
+        );
+
+        scoresHeaders.push(
+            "Average"
+        );
+
+        scoresHeaders.push(
+            "Position"
+        );
+
+
         const scoresData = [
             scoresHeaders
         ];
+
+
+        /* -----------------------------------------------
+           CREATE 100 STUDENT ROWS
+           ----------------------------------------------- */
 
         for (
             let i = 1;
@@ -1529,9 +1558,17 @@ function downloadExcelTemplate() {
 
                 i === 1
                     ? "2025/2026"
+                    : "",
+
+                i === 1
+                    ? "Example House"
                     : ""
 
             ];
+
+            /* -------------------------------------------
+               SUBJECT SCORE CELLS
+               ------------------------------------------- */
 
             schoolSubjects.forEach(
                 function () {
@@ -1543,25 +1580,55 @@ function downloadExcelTemplate() {
                 }
             );
 
+
+            /* -------------------------------------------
+               OVERALL TOTAL
+               ------------------------------------------- */
+
+            row.push("");
+
+
+            /* -------------------------------------------
+               AVERAGE
+               ------------------------------------------- */
+
+            row.push("");
+
+
+            /* -------------------------------------------
+               POSITION
+               ------------------------------------------- */
+
+            row.push("");
+
+
             scoresData.push(row);
 
         }
+
 
         const scoresSheet =
             XLSX.utils.aoa_to_sheet(
                 scoresData
             );
 
+
+        /* =================================================
+           COLUMN WIDTHS
+           ================================================= */
+
         scoresSheet["!cols"] = [
 
-            { wch: 15 },
-            { wch: 30 },
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 15 },
-            { wch: 15 }
+            { wch: 15 }, // Admission No
+            { wch: 30 }, // Student Name
+            { wch: 12 }, // Gender
+            { wch: 12 }, // Class
+            { wch: 15 }, // Term
+            { wch: 15 }, // Session
+            { wch: 20 }  // House
 
         ];
+
 
         schoolSubjects.forEach(
             function () {
@@ -1575,10 +1642,19 @@ function downloadExcelTemplate() {
             }
         );
 
+
+        scoresSheet["!cols"].push(
+            { wch: 18 }, // Overall Total
+            { wch: 15 }, // Average
+            { wch: 12 }  // Position
+        );
+
+
         scoresSheet["!freeze"] = {
             xSplit: 0,
             ySplit: 1
         };
+
 
         XLSX.utils.book_append_sheet(
             workbook,
@@ -1873,8 +1949,21 @@ function downloadExcelTemplate() {
                         "''"
                     );
 
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * The original Scores sheet had
+                 * 6 information columns.
+                 *
+                 * We added HOUSE as column 7.
+                 *
+                 * Therefore the first subject now
+                 * starts at column 8 (H).
+                 */
+
                 const firstCAColumn =
-                    7 +
+                    8 +
                     (
                         subjectIndex * 3
                     );
@@ -1884,6 +1973,7 @@ function downloadExcelTemplate() {
 
                 const examsColumn =
                     firstCAColumn + 2;
+
 
                 const firstCALetter =
                     XLSX.utils.encode_col(
@@ -1899,6 +1989,7 @@ function downloadExcelTemplate() {
                     XLSX.utils.encode_col(
                         examsColumn - 1
                     );
+
 
                 for (
                     let row = 2;
@@ -1918,6 +2009,7 @@ function downloadExcelTemplate() {
 
                     };
 
+
                     scoresSheet[
                         secondCALetter + row
                     ] = {
@@ -1928,6 +2020,7 @@ function downloadExcelTemplate() {
                             `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,3,FALSE),""))`
 
                     };
+
 
                     scoresSheet[
                         examsLetter + row
@@ -1944,6 +2037,121 @@ function downloadExcelTemplate() {
 
             }
         );
+
+
+        /* =================================================
+           OVERALL TOTAL / AVERAGE / POSITION FORMULAS
+           ================================================= */
+
+        /*
+         * Find the columns immediately after all subjects.
+         */
+
+        const firstSubjectColumn =
+            8;
+
+        const lastSubjectColumn =
+            firstSubjectColumn +
+            (
+                schoolSubjects.length * 3
+            ) -
+            1;
+
+
+        const overallTotalColumn =
+            lastSubjectColumn + 1;
+
+        const averageColumn =
+            overallTotalColumn + 1;
+
+        const positionColumn =
+            averageColumn + 1;
+
+
+        const firstSubjectLetter =
+            XLSX.utils.encode_col(
+                firstSubjectColumn - 1
+            );
+
+        const lastSubjectLetter =
+            XLSX.utils.encode_col(
+                lastSubjectColumn - 1
+            );
+
+        const overallTotalLetter =
+            XLSX.utils.encode_col(
+                overallTotalColumn - 1
+            );
+
+        const averageLetter =
+            XLSX.utils.encode_col(
+                averageColumn - 1
+            );
+
+        const positionLetter =
+            XLSX.utils.encode_col(
+                positionColumn - 1
+            );
+
+
+        /*
+         * Create formulas for every student row.
+         */
+
+        for (
+            let row = 2;
+            row <= TEMPLATE_STUDENT_ROWS + 1;
+            row++
+        ) {
+
+            /* -------------------------------------------
+               OVERALL TOTAL
+               ------------------------------------------- */
+
+            scoresSheet[
+                overallTotalLetter + row
+            ] = {
+
+                t: "n",
+
+                f:
+                    `IF($B${row}="","",SUM(${firstSubjectLetter}${row}:${lastSubjectLetter}${row}))`
+
+            };
+
+
+            /* -------------------------------------------
+               AVERAGE
+               ------------------------------------------- */
+
+            scoresSheet[
+                averageLetter + row
+            ] = {
+
+                t: "n",
+
+                f:
+                    `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/${schoolSubjects.length},0))`
+
+            };
+
+
+            /* -------------------------------------------
+               POSITION
+               ------------------------------------------- */
+
+            scoresSheet[
+                positionLetter + row
+            ] = {
+
+                t: "n",
+
+                f:
+                    `IF($B${row}="","",RANK(${averageLetter}${row},$${averageLetter}$2:$${averageLetter}$${TEMPLATE_STUDENT_ROWS + 1},0))`
+
+            };
+
+        }
 
 
         /* =================================================
@@ -2005,7 +2213,7 @@ function downloadExcelTemplate() {
 
             "✅ Template created successfully with " +
             schoolSubjects.length +
-            " subject sheet(s), 1st CA, 2nd CA, Exams, Behavioral Traits and Comments."
+            " subject sheet(s), House, 1st CA, 2nd CA, Exams, Overall Total, Average, Position, Behavioral Traits and Comments."
 
         );
 
@@ -2734,456 +2942,419 @@ function generateAllReports() {
 }
 
 
+/* =========================================================
+   CREATE REPORT
+   ========================================================= */
+
 function createReport(student) {
 
-const subjects = [];
+    const subjects = [];
 
-let overallTotal = 0;
+    let overallTotal = 0;
 
-let subjectsToUse = schoolSubjects;
+    let subjectsToUse = schoolSubjects;
 
-const detectedSubjects =
-    detectSubjectsFromRows([student]);
+    const detectedSubjects =
+        detectSubjectsFromRows([student]);
 
-if (detectedSubjects.length > 0) {
-    subjectsToUse = detectedSubjects;
-}
+    if (detectedSubjects.length > 0) {
 
-subjectsToUse.forEach(function (subjectName) {
+        subjectsToUse =
+            detectedSubjects;
 
-    const firstCAKey =
-        subjectName + " 1st CA";
-
-    const secondCAKey =
-        subjectName + " 2nd CA";
-
-    const examsKey =
-        subjectName + " Exams";
-
-    const firstCA =
-        Number(student[firstCAKey]) || 0;
-
-    const secondCA =
-        Number(student[secondCAKey]) || 0;
-
-    const exams =
-        Number(student[examsKey]) || 0;
-
-    const total =
-        firstCA +
-        secondCA +
-        exams;
-
-    const hasSubject =
-        Object.prototype.hasOwnProperty.call(
-            student,
-            firstCAKey
-        ) ||
-        Object.prototype.hasOwnProperty.call(
-            student,
-            secondCAKey
-        ) ||
-        Object.prototype.hasOwnProperty.call(
-            student,
-            examsKey
-        );
-
-    if (hasSubject) {
-
-        subjects.push({
-            name: subjectName,
-            firstCA: firstCA,
-            secondCA: secondCA,
-            exams: exams,
-            total: total
-        });
-
-        overallTotal += total;
     }
 
-});
 
+    subjectsToUse.forEach(
+        function (subjectName) {
 
-const numberOfSubjects =
-    subjects.length;
+            const firstCAKey =
+                subjectName + " 1st CA";
 
-const average =
-    numberOfSubjects > 0
-        ? overallTotal / numberOfSubjects
-        : 0;
+            const secondCAKey =
+                subjectName + " 2nd CA";
 
-const grade =
-    getGrade(average);
+            const examsKey =
+                subjectName + " Exams";
 
-const position =
-    calculatePosition(
-        student,
-        students
+            const firstCA =
+                Number(
+                    student[firstCAKey]
+                ) || 0;
+
+            const secondCA =
+                Number(
+                    student[secondCAKey]
+                ) || 0;
+
+            const exams =
+                Number(
+                    student[examsKey]
+                ) || 0;
+
+            const total =
+                firstCA +
+                secondCA +
+                exams;
+
+            const hasSubject =
+                Object.prototype.hasOwnProperty.call(
+                    student,
+                    firstCAKey
+                ) ||
+                Object.prototype.hasOwnProperty.call(
+                    student,
+                    secondCAKey
+                ) ||
+                Object.prototype.hasOwnProperty.call(
+                    student,
+                    examsKey
+                );
+
+            if (hasSubject) {
+
+                subjects.push({
+
+                    name:
+                        subjectName,
+
+                    firstCA:
+                        firstCA,
+
+                    secondCA:
+                        secondCA,
+
+                    exams:
+                        exams,
+
+                    total:
+                        total
+
+                });
+
+                overallTotal +=
+                    total;
+
+            }
+
+        }
     );
 
 
-/* =====================================================
-   SUBJECT ROWS
-   ===================================================== */
+    const numberOfSubjects =
+        subjects.length;
 
-let subjectRows = "";
+    const average =
+        numberOfSubjects > 0
+            ? overallTotal / numberOfSubjects
+            : 0;
 
-subjects.forEach(function (subject, index) {
+    const grade =
+        getGrade(average);
 
-    subjectRows += `
-
-        <tr>
-
-            <td>
-                ${index + 1}
-            </td>
-
-            <td class="subject-name">
-                ${escapeHTML(subject.name)}
-            </td>
-
-            <td>
-                ${formatScore(subject.firstCA)}
-            </td>
-
-            <td>
-                ${formatScore(subject.secondCA)}
-            </td>
-
-            <td>
-                ${formatScore(subject.exams)}
-            </td>
-
-            <td class="total-cell">
-                ${formatScore(subject.total)}
-            </td>
-
-            <td class="grade-cell">
-                ${getGrade(subject.total)}
-            </td>
-
-        </tr>
-
-    `;
-
-});
+    const position =
+        calculatePosition(
+            student,
+            students
+        );
 
 
-/* =====================================================
-   BEHAVIORAL DATA
-   ===================================================== */
+    /* =====================================================
+       SUBJECT ROWS
+       ===================================================== */
 
-const behavior =
-    student.__behavior || {};
+    let subjectRows = "";
+
+    subjects.forEach(
+        function (
+            subject,
+            index
+        ) {
+
+            subjectRows += `
+
+                <tr>
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+                    <td class="subject-name">
+                        ${escapeHTML(
+                            subject.name
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatScore(
+                            subject.firstCA
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatScore(
+                            subject.secondCA
+                        )}
+                    </td>
+
+                    <td>
+                        ${formatScore(
+                            subject.exams
+                        )}
+                    </td>
+
+                    <td class="total-cell">
+                        ${formatScore(
+                            subject.total
+                        )}
+                    </td>
+
+                    <td class="grade-cell">
+                        ${getGrade(
+                            subject.total
+                        )}
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
 
 
-/* =====================================================
-   TRAIT HEADERS
-   ===================================================== */
+    /* =====================================================
+       BEHAVIORAL DATA
+       ===================================================== */
 
-let traitHeaders = `
+    const behavior =
+        student.__behavior || {};
 
-    <th class="trait-title">
-        TRAIT
-    </th>
 
-`;
+    /* =====================================================
+       TRAIT HEADERS
+       ===================================================== */
 
-behavioralTraits.forEach(function (trait) {
+    let traitHeaders = `
 
-    traitHeaders += `
-
-        <th>
-            ${escapeHTML(trait)}
+        <th class="trait-title">
+            TRAIT
         </th>
 
     `;
 
-});
+    behavioralTraits.forEach(
+        function (trait) {
+
+            traitHeaders += `
+
+                <th>
+                    ${escapeHTML(trait)}
+                </th>
+
+            `;
+
+        }
+    );
 
 
-/* =====================================================
-   TRAIT RATINGS
-   ===================================================== */
+    /* =====================================================
+       TRAIT RATINGS
+       ===================================================== */
 
-let traitRatings = `
+    let traitRatings = `
 
-    <td class="trait-title">
-        Rating
-    </td>
-
-`;
-
-behavioralTraits.forEach(function (trait) {
-
-    const rating =
-        behavior[trait] !== undefined
-            ? behavior[trait]
-            : "";
-
-    traitRatings += `
-
-        <td class="trait-rating">
-            ${escapeHTML(rating)}
+        <td class="trait-title">
+            Rating
         </td>
 
     `;
 
-});
+    behavioralTraits.forEach(
+        function (trait) {
+
+            const rating =
+                behavior[trait] !== undefined
+                    ? behavior[trait]
+                    : "";
+
+            traitRatings += `
+
+                <td class="trait-rating">
+                    ${escapeHTML(rating)}
+                </td>
+
+            `;
+
+        }
+    );
 
 
-const teacherComment =
-    behavior["Class Teacher's Comment"] || "";
+    const teacherComment =
+        behavior["Class Teacher's Comment"] || "";
 
 
-const principalComment =
-    behavior["Principal's Comment"] || "";
+    const principalComment =
+        behavior["Principal's Comment"] || "";
 
 
-/* =====================================================
-   REPORT
-   ===================================================== */
+    /* =====================================================
+       HOUSE
+       ===================================================== */
+
+    const studentHouse =
+        student["House"] || "";
 
 
-   return `
+    /* =====================================================
+       REPORT
+       ===================================================== */
 
+    return `
 
-    <div class="report">
+        <div class="report">
 
-        <!-- SCHOOL HEADER -->
+            <!-- SCHOOL HEADER -->
 
-        <div class="school-header">
+            <div class="school-header">
 
-            <h1>
-                ${escapeHTML(
-                    reportSettings.schoolName
-                )}
-            </h1>
+                <h1>
+                    ${escapeHTML(
+                        reportSettings.schoolName
+                    )}
+                </h1>
 
-            <p>
-                ${escapeHTML(
-                    reportSettings.schoolAddress
-                )}
-            </p>
+                <p>
+                    ${escapeHTML(
+                        reportSettings.schoolAddress
+                    )}
+                </p>
 
-            <h2>
-                STUDENT REPORT SHEET
-            </h2>
-
-        </div>
-
-
-        <!-- STUDENT INFORMATION -->
-
-        <div class="student-info">
-
-            <div>
-
-                <strong>
-                    Admission No:
-                </strong>
-
-                ${escapeHTML(
-                    student["Admission No"] || ""
-                )}
-
-            </div>
-
-
-            <div>
-
-                <strong>
-                    Student Name:
-                </strong>
-
-                ${escapeHTML(
-                    student["Student Name"] || ""
-                )}
+                <h2>
+                    STUDENT REPORT SHEET
+                </h2>
 
             </div>
 
 
-            <div>
+            <!-- STUDENT INFORMATION -->
 
-                <strong>
-                    Gender:
-                </strong>
+            <div class="student-info">
 
-                ${escapeHTML(
-                    student["Gender"] || ""
-                )}
+                <div>
+
+                    <strong>
+                        Admission No:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Admission No"] || ""
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Student Name:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Student Name"] || ""
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Gender:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Gender"] || ""
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Class:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Class"] || ""
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        House:
+                    </strong>
+
+                    ${escapeHTML(
+                        studentHouse
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Term:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Term"] || ""
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Session:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Session"] || ""
+                    )}
+
+                </div>
 
             </div>
 
 
-            <div>
+            <!-- SUBJECT RESULTS -->
 
-                <strong>
-                    Class:
-                </strong>
-
-                ${escapeHTML(
-                    student["Class"] || ""
-                )}
-
-            </div>
-
-
-            <div>
-
-                <strong>
-                    Term:
-                </strong>
-
-                ${escapeHTML(
-                    student["Term"] || ""
-                )}
-
-            </div>
-
-
-            <div>
-
-                <strong>
-                    Session:
-                </strong>
-
-                ${escapeHTML(
-                    student["Session"] || ""
-                )}
-
-            </div>
-
-        </div>
-
-
-        <!-- SUBJECT RESULTS -->
-
-        <table class="result-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>No.</th>
-
-                    <th>Subject</th>
-
-                    <th>1st CA</th>
-
-                    <th>2nd CA</th>
-
-                    <th>Exams</th>
-
-                    <th>Total</th>
-
-                    <th>Grade</th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody>
-
-                ${subjectRows}
-
-            </tbody>
-
-
-            <tfoot>
-
-                <tr>
-
-                    <th colspan="5">
-                        OVERALL TOTAL
-                    </th>
-
-                    <th colspan="2">
-                        ${overallTotal.toFixed(2)}
-                    </th>
-
-                </tr>
-
-            </tfoot>
-
-        </table>
-
-
-        <!-- SUMMARY -->
-
-        <div class="summary">
-
-            <p>
-
-                <strong>
-                    Overall Total
-                </strong>
-
-                ${overallTotal.toFixed(2)}
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Average
-                </strong>
-
-                ${average.toFixed(2)}%
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Class Position
-                </strong>
-
-                <span class="position-value">
-
-                    ${formatPosition(position)}
-
-                </span>
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Overall Grade
-                </strong>
-
-                ${grade}
-
-            </p>
-
-        </div>
-
-
-        <!-- BEHAVIORAL TRAITS -->
-
-        <div class="behavior-section">
-
-            <h3>
-                BEHAVIORAL TRAITS
-            </h3>
-
-            <p>
-                Rating: 1 = Lowest, 5 = Highest
-            </p>
-
-
-            <table class="behavior-table">
+            <table class="result-table">
 
                 <thead>
 
                     <tr>
 
-                        ${traitHeaders}
+                        <th>No.</th>
+
+                        <th>Subject</th>
+
+                        <th>1st CA</th>
+
+                        <th>2nd CA</th>
+
+                        <th>Exams</th>
+
+                        <th>Total</th>
+
+                        <th>Grade</th>
 
                     </tr>
 
@@ -3192,63 +3363,171 @@ const principalComment =
 
                 <tbody>
 
-                    <tr>
-
-                        ${traitRatings}
-
-                    </tr>
+                    ${subjectRows}
 
                 </tbody>
 
+
+                <tfoot>
+
+                    <tr>
+
+                        <th colspan="5">
+                            OVERALL TOTAL
+                        </th>
+
+                        <th colspan="2">
+                            ${overallTotal.toFixed(2)}
+                        </th>
+
+                    </tr>
+
+                </tfoot>
+
             </table>
 
-        </div>
+
+            <!-- SUMMARY -->
+
+            <div class="summary">
+
+                <p>
+
+                    <strong>
+                        Overall Total
+                    </strong>
+
+                    ${overallTotal.toFixed(2)}
+
+                </p>
 
 
-        <!-- COMMENTS -->
+                <p>
 
-        <div class="comments">
+                    <strong>
+                        Average
+                    </strong>
 
-            <p>
+                    ${average.toFixed(2)}%
 
-                <strong>
-                    Class Teacher's Comment:
-                </strong>
-
-            </p>
+                </p>
 
 
-            <div class="comment-box">
+                <p>
 
-                ${escapeHTML(
-                    teacherComment
-                )}
+                    <strong>
+                        Class Position
+                    </strong>
+
+                    <span class="position-value">
+
+                        ${formatPosition(
+                            position
+                        )}
+
+                    </span>
+
+                </p>
+
+
+                <p>
+
+                    <strong>
+                        Overall Grade
+                    </strong>
+
+                    ${grade}
+
+                </p>
 
             </div>
 
 
-            <p>
+            <!-- BEHAVIORAL TRAITS -->
 
-                <strong>
-                    Principal's Comment:
-                </strong>
+            <div class="behavior-section">
 
-            </p>
+                <h3>
+                    BEHAVIORAL TRAITS
+                </h3>
+
+                <p>
+                    Rating: 1 = Lowest, 5 = Highest
+                </p>
 
 
-            <div class="comment-box">
+                <table class="behavior-table">
 
-                ${escapeHTML(
-                    principalComment
-                )}
+                    <thead>
+
+                        <tr>
+
+                            ${traitHeaders}
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        <tr>
+
+                            ${traitRatings}
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- COMMENTS -->
+
+            <div class="comments">
+
+                <p>
+
+                    <strong>
+                        Class Teacher's Comment:
+                    </strong>
+
+                </p>
+
+
+                <div class="comment-box">
+
+                    ${escapeHTML(
+                        teacherComment
+                    )}
+
+                </div>
+
+
+                <p>
+
+                    <strong>
+                        Principal's Comment:
+                    </strong>
+
+                </p>
+
+
+                <div class="comment-box">
+
+                    ${escapeHTML(
+                        principalComment
+                    )}
+
+                </div>
 
             </div>
 
         </div>
 
-    </div>
-
-`;
+    `;
 
 }
 
