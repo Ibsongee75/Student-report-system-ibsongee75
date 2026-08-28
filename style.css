@@ -1,3 +1,7 @@
+/* =========================================================
+   GENERAL PAGE
+   ========================================================= */
+
 * {
     box-sizing: border-box;
 }
@@ -9,8 +13,13 @@ body {
     color: #222;
 }
 
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
 header {
-    background: #21391e;
+    background: linear-gradient(135deg, #21391e, #315c38);
     color: white;
     text-align: center;
     padding: 25px 15px;
@@ -18,12 +27,19 @@ header {
 
 header h1 {
     margin: 0;
-    font-size: 25px;
+    font-size: 27px;
+    font-weight: 800;
 }
 
 header p {
-    margin-top: 8px;
+    margin-top: 10px;
+    font-size: 16px;
 }
+
+
+/* =========================================================
+   MAIN
+   ========================================================= */
 
 main {
     width: 95%;
@@ -31,171 +47,78 @@ main {
     margin: 20px auto;
 }
 
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
 .card {
     background: white;
-    padding: 20px;
+    padding: 22px;
     margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-radius: 10px;
+    border-left: 5px solid #3f308f;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
 }
 
 .card h2 {
     margin-top: 0;
+    color: #21391e;
+    font-size: 21px;
 }
 
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
 button {
-    background: #3f308f;
+    background: linear-gradient(135deg, #3f308f, #5946b8);
     color: white;
     border: none;
-    padding: 12px 18px;
-    margin: 8px 5px 8px 0;
+    padding: 12px 20px;
+    margin: 8px 8px 8px 0;
     border-radius: 15px;
     cursor: pointer;
     font-size: 15px;
+    font-weight: bold;
 }
 
 button:hover {
-    opacity: 0.9;
+    opacity: 0.88;
+    transform: translateY(-1px);
 }
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
 
 input[type="file"] {
     width: 100%;
     padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    background: #fafafa;
 }
 
 select {
     padding: 11px;
     min-width: 250px;
     border: 1px solid #aaa;
-    border-radius: 5px;
+    border-radius: 6px;
     margin: 8px;
+    font-size: 15px;
 }
 
 #fileStatus {
     font-weight: bold;
 }
 
-.report {
-    background: white;
-    padding: 25px;
-    margin: 30px auto;
-    max-width: 900px;
-    border: 1px solid #ccc;
-}
 
-.school-header {
-    text-align: center;
-    border-bottom: 2px solid #000;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-}
-
-.school-header h1 {
-    margin: 0;
-    font-size: 25px;
-}
-
-.school-header h2 {
-    margin: 8px 0;
-}
-
-.student-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-.student-info div {
-    padding: 6px;
-}
-
-.result-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
-
-.result-table th,
-.result-table td {
-    border: 1px solid #000;
-    padding: 8px;
-    text-align: center;
-}
-
-.result-table th {
-    font-weight: bold;
-}
-
-.summary {
-    margin-top: 20px;
-    border: 1px solid #000;
-    padding: 12px;
-}
-
-.comments {
-    margin-top: 25px;
-}
-
-.comment-box {
-    border-bottom: 1px solid #000;
-    min-height: 45px;
-    margin-top: 8px;
-}
-
-@media print {
-
-    body {
-        background: white;
-    }
-
-    header,
-    footer,
-    .card {
-        display: none !important;
-    }
-
-    main {
-        width: 100%;
-        margin: 0;
-    }
-
-    .report {
-        border: none;
-        margin: 0;
-        max-width: none;
-        page-break-after: always;
-    }
-
-    .report:last-child {
-        page-break-after: auto;
-    }
-}
-
-@media(max-width:600px) {
-
-    header h1 {
-        font-size: 20px;
-    }
-
-    .student-info {
-        grid-template-columns: 1fr;
-    }
-
-    select {
-        width: 100%;
-        margin: 8px 0;
-    }
-
-    button {
-        width: 100%;
-        margin: 5px 0;
-    }
-  /* =========================================
-   SUBSCRIPTION PLANS
-========================================= */
+/* =========================================================
+   SUBSCRIPTION
+   ========================================================= */
 
 .subscription-section {
     max-width: 1100px;
@@ -206,6 +129,7 @@ select {
 
 .subscription-section h2 {
     margin-bottom: 8px;
+    color: #21391e;
 }
 
 .subscription-intro {
@@ -225,14 +149,16 @@ select {
     padding: 25px;
     border-radius: 12px;
     background: white;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
     position: relative;
     text-align: left;
+    border-top: 5px solid #3f308f;
 }
 
 .plan-card h3 {
     text-align: center;
     font-size: 24px;
+    color: #21391e;
 }
 
 .plan-price {
@@ -240,12 +166,14 @@ select {
     font-size: 30px;
     font-weight: bold;
     margin: 15px 0;
+    color: #3f308f;
 }
 
 .plan-price span {
     display: block;
     font-size: 14px;
     font-weight: normal;
+    color: #555;
 }
 
 .plan-card p {
@@ -276,121 +204,603 @@ select {
     font-weight: bold;
     margin-bottom: 10px;
 }
+
+
 /* =========================================================
-   STUDENT REPORT - SINGLE PAGE PRINT
+   REPORT CONTAINER
+   ========================================================= */
+
+#reportContainer {
+    width: 100%;
+}
+
+
+/* =========================================================
+   REPORT SHEET
    ========================================================= */
 
 .report {
     width: 100%;
     max-width: 210mm;
-    margin: 0 auto;
+    min-height: 277mm;
+
+    margin: 25px auto;
     padding: 10mm;
-    box-sizing: border-box;
+
     background: white;
+
+    border: 1px solid #ccc;
+
+    box-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.12);
+
+    color: #222;
+
+    font-family: Arial, sans-serif;
 }
 
-/* Print settings */
+
+/* =========================================================
+   SCHOOL HEADER
+   ========================================================= */
+
+.school-header {
+    text-align: center;
+
+    border-bottom:
+        3px solid #315c38;
+
+    padding-bottom: 12px;
+
+    margin-bottom: 15px;
+}
+
+.school-header h1 {
+    margin: 0;
+
+    font-size: 26px;
+
+    font-weight: 800;
+
+    color: #21391e;
+}
+
+.school-header h2 {
+    margin: 8px 0;
+
+    font-size: 20px;
+
+    color: #3f308f;
+
+    font-weight: 800;
+}
+
+.school-header p {
+    margin: 4px 0;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   STUDENT INFORMATION
+   ========================================================= */
+
+.student-info {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 7px;
+
+    margin-bottom: 16px;
+}
+
+.student-info div {
+    padding: 8px 10px;
+
+    border:
+        1px solid #c8d4cc;
+
+    border-radius: 5px;
+
+    background: #f4f8f5;
+
+    font-size: 15px;
+
+    font-weight: bold;
+}
+
+.student-info div strong {
+    color: #21391e;
+}
+
+
+/* =========================================================
+   RESULT TABLE
+   ========================================================= */
+
+.result-table {
+    width: 100%;
+
+    border-collapse:
+        collapse;
+
+    margin-top: 12px;
+}
+
+.result-table th,
+.result-table td {
+    border:
+        1px solid #333;
+
+    padding: 8px;
+
+    text-align: center;
+
+    font-size: 14px;
+}
+
+.result-table th {
+    background: #315c38;
+
+    color: white;
+
+    font-weight: bold;
+}
+
+.result-table tr:nth-child(even) {
+    background: #f5f8f5;
+}
+
+.subject-name {
+    text-align: left !important;
+
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+
+.summary {
+    margin-top: 12px;
+
+    border:
+        1px solid #9daaa0;
+
+    border-left:
+        5px solid #3f308f;
+
+    border-radius: 6px;
+
+    padding: 10px;
+
+    background: #f7f7fb;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 8px;
+}
+
+.summary p {
+    margin: 0;
+
+    padding: 6px;
+
+    text-align: center;
+
+    font-weight: bold;
+
+    font-size: 14px;
+}
+
+.summary strong {
+    display: block;
+
+    color: #3f308f;
+
+    margin-bottom: 3px;
+}
+
+.position-value {
+    display: block;
+
+    font-size: 18px;
+
+    font-weight: 800;
+
+    color: #30246f;
+}
+
+
+/* =========================================================
+   BEHAVIORAL SECTION
+   ========================================================= */
+
+.behavior-section {
+    margin-top: 15px;
+
+    width: 100%;
+}
+
+.behavior-section h3 {
+    margin: 0 0 5px 0;
+
+    padding: 7px 9px;
+
+    background: #e8edf5;
+
+    color: #21391e;
+
+    border-left:
+        4px solid #3f308f;
+
+    font-size: 15px;
+}
+
+.behavior-section > p {
+    margin: 4px 0 6px 0;
+
+    font-size: 11px;
+
+    color: #555;
+}
+
+
+/* =========================================================
+   BEHAVIOR TABLE
+   ========================================================= */
+
+.behavior-table {
+    width: 100%;
+
+    border-collapse:
+        collapse;
+
+    table-layout:
+        fixed;
+}
+
+.behavior-table th,
+.behavior-table td {
+    border:
+        1px solid #999;
+
+    padding:
+        7px 4px;
+
+    text-align:
+        center;
+
+    vertical-align:
+        middle;
+
+    font-size:
+        11px;
+}
+
+.behavior-table th {
+    background:
+        #eef3ea;
+
+    color:
+        #21391e;
+
+    font-weight:
+        bold;
+}
+
+.behavior-table td {
+    background:
+        #ffffff;
+}
+
+.behavior-table th:first-child,
+.behavior-table td:first-child {
+    width: 18%;
+
+    font-weight:
+        bold;
+}
+
+.behavior-table th:nth-child(2),
+.behavior-table td:nth-child(2),
+.behavior-table th:nth-child(3),
+.behavior-table td:nth-child(3),
+.behavior-table th:nth-child(4),
+.behavior-table td:nth-child(4),
+.behavior-table th:nth-child(5),
+.behavior-table td:nth-child(5),
+.behavior-table th:nth-child(6),
+.behavior-table td:nth-child(6) {
+    width: 16.4%;
+}
+
+.behavior-table .trait-title {
+    font-weight:
+        bold;
+
+    text-align:
+        center;
+}
+
+.behavior-table .trait-rating {
+    font-size:
+        14px;
+
+    font-weight:
+        bold;
+
+    color:
+        #3f308f;
+}
+
+
+/* =========================================================
+   COMMENTS
+   ========================================================= */
+
+.comments {
+    margin-top: 15px;
+}
+
+.comments p {
+    margin:
+        7px 0 3px 0;
+
+    font-size:
+        13px;
+}
+
+.comment-box {
+    border:
+        1px solid #aaa;
+
+    border-radius:
+        4px;
+
+    min-height:
+        35px;
+
+    padding:
+        6px 8px;
+
+    background:
+        #fafafa;
+
+    font-size:
+        12px;
+}
+
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
 @media print {
 
     @page {
         size: A4 portrait;
-        margin: 5mm;
+        margin: 8mm;
     }
 
+    html,
     body {
-        margin: 0;
-        padding: 0;
-        background: white;
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
     }
 
-    /* Hide everything except the report */
-    body * {
-        visibility: hidden;
+    /* Hide website controls */
+    header,
+    button,
+    input,
+    select,
+    .card,
+    #authSection,
+    #subscriptionPlans,
+    #subscriptionStatus,
+    #appSection > *:not(#reportSection) {
+        display: none !important;
     }
 
-    .report,
-    .report * {
-        visibility: visible;
+    /* Report section */
+    #reportSection {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
+
+    #reportContainer {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* =====================================================
+       EACH STUDENT REPORT = ONE PRINTED PAGE
+       ===================================================== */
 
     .report {
-        position: absolute;
-        left: 0;
-        top: 0;
+        display: block !important;
+        position: relative !important;
 
-        width: 100%;
-        max-width: none;
+        width: 100% !important;
+        max-width: none !important;
 
-        margin: 0;
-        padding: 5mm;
+        height: auto !important;
+        min-height: 0 !important;
 
-        box-sizing: border-box;
+        margin: 0 !important;
+        padding: 5mm !important;
 
-        font-size: 10px;
+        background: white !important;
+
+        border: none !important;
+        box-shadow: none !important;
+
+        /* Important: one student after another */
+        page-break-before: auto !important;
+        page-break-after: always !important;
+
+        break-before: auto !important;
+        break-after: page !important;
+
+        /* DO NOT prevent the browser from laying out
+           the complete collection of reports */
+        page-break-inside: auto !important;
+        break-inside: auto !important;
     }
 
-    .school-header h1 {
-        font-size: 18px;
-        margin: 2px 0;
+    /* No extra blank page after final student */
+    .report:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
     }
 
-    .school-header h2 {
-        font-size: 14px;
-        margin: 2px 0;
-    }
+    /* =====================================================
+       REPORT CONTENT
+       ===================================================== */
 
-    .school-header p {
-        margin: 2px 0;
+    .school-header {
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 
     .student-info {
-        font-size: 9px;
-        margin-bottom: 5px;
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 
     .result-table {
-        width: 100%;
+        page-break-inside: auto;
+        break-inside: auto;
+    }
+
+    .result-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .summary {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .behavior-section {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .behavior-table {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .comments {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Prevent tables from being unnecessarily split */
+    table {
         border-collapse: collapse;
-        font-size: 9px;
+    }
+
+    /* Keep report colours when printing */
+    .report,
+    .report * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media screen and (max-width: 600px) {
+
+    header h1 {
+        font-size: 21px;
+    }
+
+    main {
+        width: 96%;
+    }
+
+    .student-info {
+        grid-template-columns:
+            1fr;
+    }
+
+    select {
+        width: 100%;
+
+        margin:
+            8px 0;
+    }
+
+    button {
+        width: 100%;
+
+        margin:
+            5px 0;
+    }
+
+    .report {
+        padding: 15px;
+
+        margin:
+            15px auto;
+    }
+
+    .result-table {
+        font-size: 12px;
     }
 
     .result-table th,
     .result-table td {
-        padding: 3px;
-        border: 1px solid black;
+        padding: 5px;
+
+        font-size: 12px;
     }
 
     .summary {
-        font-size: 9px;
-        margin-top: 5px;
+        grid-template-columns:
+            1fr 1fr;
     }
 
-    .summary p {
-        margin: 2px 0;
+    .behavior-table {
+        table-layout:
+            fixed;
     }
 
-    .comments {
-        font-size: 9px;
-        margin-top: 5px;
+    .behavior-table th,
+    .behavior-table td {
+        padding:
+            5px 2px;
+
+        font-size:
+            10px;
+
+        word-break:
+            normal;
     }
 
-    .comment-box {
-        min-height: 25px;
-        border: 1px solid black;
-        margin-bottom: 5px;
+    .behavior-table th:first-child,
+    .behavior-table td:first-child {
+        width:
+            18%;
     }
-
-    /* Prevent sections from splitting */
-    .report,
-    .school-header,
-    .student-info,
-    .result-table,
-    .summary,
-    .comments {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-
-}
 
 }
