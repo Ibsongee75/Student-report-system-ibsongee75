@@ -100,7 +100,7 @@ let reportSettings = {
 };
 
 
-const TEMPLATE_STUDENT_ROWS = 1000;
+const TEMPLATE_STUDENT_ROWS = 500;
 
 
 /* =========================================================
