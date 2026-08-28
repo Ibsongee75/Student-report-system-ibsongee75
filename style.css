@@ -6,8 +6,10 @@
     box-sizing: border-box;
 }
 
+html,
 body {
     margin: 0;
+    padding: 0;
     font-family: Arial, sans-serif;
     background: #f2f4f7;
     color: #222;
@@ -212,6 +214,8 @@ select {
 
 #reportContainer {
     width: 100%;
+    height: auto;
+    overflow: visible;
 }
 
 
@@ -237,6 +241,8 @@ select {
     color: #222;
 
     font-family: Arial, sans-serif;
+
+    overflow: visible;
 }
 
 
@@ -592,14 +598,19 @@ select {
 
     html,
     body {
-        width: 100%;
         margin: 0 !important;
         padding: 0 !important;
+        width: 100% !important;
         background: white !important;
+        overflow: visible !important;
     }
 
-    /* Hide website controls */
+    /* -----------------------------------------------------
+       HIDE WEBSITE INTERFACE
+       ----------------------------------------------------- */
+
     header,
+    footer,
     button,
     input,
     select,
@@ -607,38 +618,43 @@ select {
     #authSection,
     #subscriptionPlans,
     #subscriptionStatus,
-    #appSection > *:not(#reportSection) {
+    #subscriptionSection,
+    #step3,
+    .step3,
+    .generate-section,
+    .controls {
         display: none !important;
     }
 
-    /* Report section */
+    /* -----------------------------------------------------
+       SHOW ONLY THE REPORT SECTION
+       ----------------------------------------------------- */
+
     #reportSection {
-        display: block !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
+    display: none !important;
+}
 
     #reportContainer {
         display: block !important;
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
+        background: white !important;
+        overflow: visible !important;
     }
 
-    /* =====================================================
-       EACH STUDENT REPORT = ONE PRINTED PAGE
-       ===================================================== */
+    /* -----------------------------------------------------
+       EACH STUDENT REPORT
+       ----------------------------------------------------- */
 
     .report {
         display: block !important;
-        position: relative !important;
 
         width: 100% !important;
         max-width: none !important;
 
-        height: auto !important;
         min-height: 0 !important;
+        height: auto !important;
 
         margin: 0 !important;
         padding: 5mm !important;
@@ -648,75 +664,79 @@ select {
         border: none !important;
         box-shadow: none !important;
 
-        /* Important: one student after another */
-        page-break-before: auto !important;
+        overflow: visible !important;
+
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+
         page-break-after: always !important;
-
-        break-before: auto !important;
         break-after: page !important;
-
-        /* DO NOT prevent the browser from laying out
-           the complete collection of reports */
-        page-break-inside: auto !important;
-        break-inside: auto !important;
     }
 
-    /* No extra blank page after final student */
+    /* -----------------------------------------------------
+       START EACH NEW STUDENT ON A NEW PAGE
+       ----------------------------------------------------- */
+
+    .report + .report {
+        page-break-before: always !important;
+        break-before: page !important;
+    }
+
+    /* -----------------------------------------------------
+       DO NOT CREATE AN EXTRA BLANK PAGE AFTER LAST REPORT
+       ----------------------------------------------------- */
+
     .report:last-child {
         page-break-after: auto !important;
         break-after: auto !important;
     }
 
-    /* =====================================================
-       REPORT CONTENT
-       ===================================================== */
+    /* -----------------------------------------------------
+       HIDE POSSIBLE FOOTER ELEMENTS
+       ----------------------------------------------------- */
 
-    .school-header {
-        page-break-inside: avoid;
-        break-inside: avoid;
+    body > footer,
+    footer,
+    .footer,
+    #footer,
+    .site-footer,
+    .page-footer {
+        display: none !important;
     }
 
-    .student-info {
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
+    /* -----------------------------------------------------
+       KEEP REPORT CONTENT TOGETHER
+       ----------------------------------------------------- */
 
-    .result-table {
-        page-break-inside: auto;
-        break-inside: auto;
-    }
-
-    .result-table tr {
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
-
-    .summary {
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
-
-    .behavior-section {
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
-
-    .behavior-table {
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
-
+    .school-header,
+    .student-info,
+    .result-table,
+    .summary,
+    .behavior-section,
+    .behavior-table,
     .comments {
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
     }
 
-    /* Prevent tables from being unnecessarily split */
+    /* -----------------------------------------------------
+       TABLES
+       ----------------------------------------------------- */
+
     table {
-        border-collapse: collapse;
+        border-collapse: collapse !important;
     }
 
-    /* Keep report colours when printing */
+    .result-table tr,
+    .behavior-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* -----------------------------------------------------
+       PRESERVE REPORT COLOURS
+       ----------------------------------------------------- */
+
     .report,
     .report * {
         -webkit-print-color-adjust: exact !important;
@@ -725,7 +745,7 @@ select {
 }
 
 /* =========================================================
-   MOBILE
+   MOBILE SCREEN
    ========================================================= */
 
 @media screen and (max-width: 600px) {
@@ -802,5 +822,4 @@ select {
         width:
             18%;
     }
-
 }
