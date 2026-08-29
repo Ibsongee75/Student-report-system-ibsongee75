@@ -3052,11 +3052,16 @@ function createReport(student) {
     const grade =
         getGrade(average);
 
-    const position =
-        calculatePosition(
-            student,
-            students
-        );
+    const positionValue =
+    student["Position"];
+
+const hasPosition =
+    String(positionValue ?? "").trim() !== "";
+
+const position =
+    hasPosition
+        ? Number(positionValue)
+        : null;
   /* =====================================================
    NUMBER OF STUDENTS IN CLASS
    ===================================================== */
@@ -3449,9 +3454,10 @@ const classSize =
 
                     <span class="position-value">
 
-                        ${formatPosition(
-                            position
-                        )}
+                       ${hasPosition && !isNaN(position)
+    ? formatPosition(position)
+    : ""
+}
 
                     </span>
 
