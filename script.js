@@ -4946,7 +4946,7 @@ async function verifyPaystackPayment(
             await supabaseClient
                 .functions
                 .invoke(
-                    "verify-paystack-payment",
+                    "verify-paystack-payment-new-one",
                     {
 
                         body: {
