@@ -35,13 +35,41 @@ const PAYSTACK_PUBLIC_KEY =
 
 let students = [];
 
+let currentSubscriptionPlan = "";
+
+let reportsGenerated = 0;
+
+let currentUserId = null;
+
+
+/* =========================================================
+   REPORT GENERATION LIMITS
+   ========================================================= */
+
+const REPORT_LIMITS = {
+
+    basic: 100,
+
+    standard: 500,
+
+    premium: 1000
+
+};
+
+
+/* =========================================================
+   SCHOOL SUBJECTS
+   ========================================================= */
+
 let schoolSubjects = [
+
     "Mathematics",
     "English",
     "Biology",
     "Physics",
     "Chemistry",
     "Computer Science"
+
 ];
 
 
@@ -50,11 +78,13 @@ let schoolSubjects = [
    ========================================================= */
 
 const behavioralTraits = [
+
     "Attendance",
     "Punctuality",
     "Class Participation",
     "Neatness",
     "Honesty"
+
 ];
 
 
@@ -528,6 +558,12 @@ function attachAuthenticationEvents() {
 
                     students = [];
 
+                    currentSubscriptionPlan = "";
+
+                    reportsGenerated = 0;
+
+                    currentUserId = null;
+
                     showLogin();
 
                     setAuthStatus(
@@ -772,6 +808,12 @@ async function checkLogin() {
 
         if (!data.session) {
 
+            currentSubscriptionPlan = "";
+
+            reportsGenerated = 0;
+
+            currentUserId = null;
+
             showLogin();
 
             return;
@@ -779,6 +821,9 @@ async function checkLogin() {
 
         const user =
             data.session.user;
+
+        currentUserId =
+            user.id;
 
         await checkSubscription(user);
 
@@ -813,7 +858,14 @@ async function checkSubscription(user) {
 
         if (error) {
 
-            console.error(error);
+            console.error(
+                "Subscription error:",
+                error
+            );
+
+            currentSubscriptionPlan = "";
+
+            reportsGenerated = 0;
 
             showSubscription();
 
@@ -826,10 +878,54 @@ async function checkSubscription(user) {
 
         }
 
+
+        /* =================================================
+           RESET VALUES BEFORE READING SUBSCRIPTION
+           ================================================= */
+
+        currentSubscriptionPlan = "";
+
+        reportsGenerated = 0;
+
+
+        /* =================================================
+           READ SUBSCRIPTION PLAN
+           ================================================= */
+
+        if (subscription) {
+
+            currentSubscriptionPlan =
+                String(
+                    subscription.plan ||
+                    subscription.subscription_plan ||
+                    subscription.package ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            /* =================================================
+               READ GENERATED REPORT COUNT
+               ================================================= */
+
+            reportsGenerated =
+                Number(
+                    subscription.reports_generated
+                ) || 0;
+
+        }
+
+
         displaySubscriptionStatus(
             subscription,
             user
         );
+
+
+        /* =================================================
+           VALID PAID SUBSCRIPTION
+           ================================================= */
 
         if (
 
@@ -846,6 +942,8 @@ async function checkSubscription(user) {
         ) {
 
             showApp();
+
+            updateReportStatus();
 
         } else {
 
@@ -932,6 +1030,7 @@ function displaySubscriptionStatus(
     subscriptionStatus.style.display =
         "block";
 
+
     if (
 
         subscription &&
@@ -953,6 +1052,37 @@ function displaySubscriptionStatus(
 
         }
 
+
+        const plan =
+            String(
+                subscription.plan ||
+                subscription.subscription_plan ||
+                subscription.package ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        const limit =
+            REPORT_LIMITS[plan] || 0;
+
+
+        const generated =
+            Number(
+                subscription.reports_generated
+            ) || 0;
+
+
+        const remaining =
+            limit
+                ? Math.max(
+                    limit - generated,
+                    0
+                )
+                : 0;
+
+
         subscriptionStatus.innerHTML = `
 
             <strong>
@@ -962,6 +1092,16 @@ function displaySubscriptionStatus(
             <span style="color:green;">
                 PAID
             </span>
+
+            <br>
+
+            <strong>
+                Plan:
+            </strong>
+
+            ${escapeHTML(
+                getPlanDisplayNameFromPlan(plan)
+            )}
 
             <br>
 
@@ -978,6 +1118,28 @@ function displaySubscriptionStatus(
             </strong>
 
             ${escapeHTML(expiryText)}
+
+            ${
+                limit
+                ? `
+                    <br>
+
+                    <strong>
+                        Reports Generated:
+                    </strong>
+
+                    ${generated} / ${limit}
+
+                    <br>
+
+                    <strong>
+                        Reports Remaining:
+                    </strong>
+
+                    ${remaining}
+                  `
+                : ""
+            }
 
         `;
 
@@ -1000,6 +1162,34 @@ function displaySubscriptionStatus(
         `;
 
     }
+
+}
+
+
+/* =========================================================
+   GET PLAN DISPLAY NAME
+   ========================================================= */
+
+function getPlanDisplayNameFromPlan(plan) {
+
+    const cleanPlan =
+        String(plan || "")
+            .trim()
+            .toLowerCase();
+
+    if (cleanPlan === "basic") {
+        return "BASIC";
+    }
+
+    if (cleanPlan === "standard") {
+        return "STANDARD";
+    }
+
+    if (cleanPlan === "premium") {
+        return "PREMIUM";
+    }
+
+    return "UNKNOWN";
 
 }
 
@@ -1485,9 +1675,6 @@ function downloadExcelTemplate() {
 
         ];
 
-        /* -----------------------------------------------
-           SUBJECT COLUMNS
-           ----------------------------------------------- */
 
         schoolSubjects.forEach(
             function (subject) {
@@ -1508,10 +1695,6 @@ function downloadExcelTemplate() {
         );
 
 
-        /* -----------------------------------------------
-           OVERALL COLUMNS
-           ----------------------------------------------- */
-
         scoresHeaders.push(
             "Overall Total"
         );
@@ -1529,10 +1712,6 @@ function downloadExcelTemplate() {
             scoresHeaders
         ];
 
-
-        /* -----------------------------------------------
-           CREATE 100 STUDENT ROWS
-           ----------------------------------------------- */
 
         for (
             let i = 1;
@@ -1566,9 +1745,6 @@ function downloadExcelTemplate() {
 
             ];
 
-            /* -------------------------------------------
-               SUBJECT SCORE CELLS
-               ------------------------------------------- */
 
             schoolSubjects.forEach(
                 function () {
@@ -1581,23 +1757,9 @@ function downloadExcelTemplate() {
             );
 
 
-            /* -------------------------------------------
-               OVERALL TOTAL
-               ------------------------------------------- */
-
             row.push("");
 
-
-            /* -------------------------------------------
-               AVERAGE
-               ------------------------------------------- */
-
             row.push("");
-
-
-            /* -------------------------------------------
-               POSITION
-               ------------------------------------------- */
 
             row.push("");
 
@@ -1613,19 +1775,15 @@ function downloadExcelTemplate() {
             );
 
 
-        /* =================================================
-           COLUMN WIDTHS
-           ================================================= */
-
         scoresSheet["!cols"] = [
 
-            { wch: 15 }, // Admission No
-            { wch: 30 }, // Student Name
-            { wch: 12 }, // Gender
-            { wch: 12 }, // Class
-            { wch: 15 }, // Term
-            { wch: 15 }, // Session
-            { wch: 20 }  // House
+            { wch: 15 },
+            { wch: 30 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 20 }
 
         ];
 
@@ -1644,9 +1802,9 @@ function downloadExcelTemplate() {
 
 
         scoresSheet["!cols"].push(
-            { wch: 18 }, // Overall Total
-            { wch: 15 }, // Average
-            { wch: 12 }  // Position
+            { wch: 18 },
+            { wch: 15 },
+            { wch: 12 }
         );
 
 
@@ -1733,15 +1891,18 @@ function downloadExcelTemplate() {
 
         ];
 
+
         const settingsSheet =
             XLSX.utils.aoa_to_sheet(
                 settingsData
             );
 
+
         settingsSheet["!cols"] = [
             { wch: 25 },
             { wch: 50 }
         ];
+
 
         XLSX.utils.book_append_sheet(
             workbook,
@@ -1756,6 +1917,7 @@ function downloadExcelTemplate() {
 
         const actualSubjectSheetNames = {};
 
+
         schoolSubjects.forEach(
             function (subject) {
 
@@ -1768,6 +1930,7 @@ function downloadExcelTemplate() {
                 actualSubjectSheetNames[subject] =
                     sheetName;
 
+
                 const subjectData = [
 
                     [
@@ -1779,6 +1942,7 @@ function downloadExcelTemplate() {
                     ]
 
                 ];
+
 
                 for (
                     let i = 1;
@@ -1804,10 +1968,12 @@ function downloadExcelTemplate() {
 
                 }
 
+
                 const subjectSheet =
                     XLSX.utils.aoa_to_sheet(
                         subjectData
                     );
+
 
                 subjectSheet["!cols"] = [
 
@@ -1819,10 +1985,12 @@ function downloadExcelTemplate() {
 
                 ];
 
+
                 subjectSheet["!freeze"] = {
                     xSplit: 0,
                     ySplit: 1
                 };
+
 
                 XLSX.utils.book_append_sheet(
                     workbook,
@@ -1845,6 +2013,7 @@ function downloadExcelTemplate() {
 
         ];
 
+
         behavioralTraits.forEach(
             function (trait) {
 
@@ -1855,6 +2024,7 @@ function downloadExcelTemplate() {
             }
         );
 
+
         behaviorHeaders.push(
             "Class Teacher's Comment"
         );
@@ -1863,9 +2033,11 @@ function downloadExcelTemplate() {
             "Principal's Comment"
         );
 
+
         const behaviorData = [
             behaviorHeaders
         ];
+
 
         for (
             let i = 1;
@@ -1895,10 +2067,12 @@ function downloadExcelTemplate() {
 
         }
 
+
         const behaviorSheet =
             XLSX.utils.aoa_to_sheet(
                 behaviorData
             );
+
 
         behaviorSheet["!cols"] = [
 
@@ -1916,10 +2090,12 @@ function downloadExcelTemplate() {
 
         ];
 
+
         behaviorSheet["!freeze"] = {
             xSplit: 0,
             ySplit: 1
         };
+
 
         XLSX.utils.book_append_sheet(
             workbook,
@@ -1943,6 +2119,7 @@ function downloadExcelTemplate() {
                         subject
                     ];
 
+
                 const safeSheetName =
                     sheetName.replace(
                         /'/g,
@@ -1950,26 +2127,16 @@ function downloadExcelTemplate() {
                     );
 
 
-                /*
-                 * IMPORTANT:
-                 *
-                 * The original Scores sheet had
-                 * 6 information columns.
-                 *
-                 * We added HOUSE as column 7.
-                 *
-                 * Therefore the first subject now
-                 * starts at column 8 (H).
-                 */
-
                 const firstCAColumn =
                     8 +
                     (
                         subjectIndex * 3
                     );
 
+
                 const secondCAColumn =
                     firstCAColumn + 1;
+
 
                 const examsColumn =
                     firstCAColumn + 2;
@@ -1980,10 +2147,12 @@ function downloadExcelTemplate() {
                         firstCAColumn - 1
                     );
 
+
                 const secondCALetter =
                     XLSX.utils.encode_col(
                         secondCAColumn - 1
                     );
+
 
                 const examsLetter =
                     XLSX.utils.encode_col(
@@ -2040,15 +2209,12 @@ function downloadExcelTemplate() {
 
 
         /* =================================================
-           OVERALL TOTAL / AVERAGE / POSITION FORMULAS
+           OVERALL TOTAL / AVERAGE / POSITION
            ================================================= */
-
-        /*
-         * Find the columns immediately after all subjects.
-         */
 
         const firstSubjectColumn =
             8;
+
 
         const lastSubjectColumn =
             firstSubjectColumn +
@@ -2061,8 +2227,10 @@ function downloadExcelTemplate() {
         const overallTotalColumn =
             lastSubjectColumn + 1;
 
+
         const averageColumn =
             overallTotalColumn + 1;
+
 
         const positionColumn =
             averageColumn + 1;
@@ -2073,20 +2241,24 @@ function downloadExcelTemplate() {
                 firstSubjectColumn - 1
             );
 
+
         const lastSubjectLetter =
             XLSX.utils.encode_col(
                 lastSubjectColumn - 1
             );
+
 
         const overallTotalLetter =
             XLSX.utils.encode_col(
                 overallTotalColumn - 1
             );
 
+
         const averageLetter =
             XLSX.utils.encode_col(
                 averageColumn - 1
             );
+
 
         const positionLetter =
             XLSX.utils.encode_col(
@@ -2094,19 +2266,11 @@ function downloadExcelTemplate() {
             );
 
 
-        /*
-         * Create formulas for every student row.
-         */
-
         for (
             let row = 2;
             row <= TEMPLATE_STUDENT_ROWS + 1;
             row++
         ) {
-
-            /* -------------------------------------------
-               OVERALL TOTAL
-               ------------------------------------------- */
 
             scoresSheet[
                 overallTotalLetter + row
@@ -2120,10 +2284,6 @@ function downloadExcelTemplate() {
             };
 
 
-            /* -------------------------------------------
-               AVERAGE
-               ------------------------------------------- */
-
             scoresSheet[
                 averageLetter + row
             ] = {
@@ -2135,10 +2295,6 @@ function downloadExcelTemplate() {
 
             };
 
-
-            /* -------------------------------------------
-               POSITION
-               ------------------------------------------- */
 
             scoresSheet[
                 positionLetter + row
@@ -2167,6 +2323,7 @@ function downloadExcelTemplate() {
                 }
             );
 
+
         const blob =
             new Blob(
                 [excelData],
@@ -2176,21 +2333,28 @@ function downloadExcelTemplate() {
                 }
             );
 
+
         const url =
             URL.createObjectURL(blob);
+
 
         const link =
             document.createElement("a");
 
+
         link.href =
             url;
+
 
         link.download =
             "Student_Report_Template.xlsx";
 
+
         document.body.appendChild(link);
 
+
         link.click();
+
 
         setTimeout(
             function () {
@@ -2209,6 +2373,7 @@ function downloadExcelTemplate() {
             5000
         );
 
+
         setFileStatus(
 
             "✅ Template created successfully with " +
@@ -2217,6 +2382,7 @@ function downloadExcelTemplate() {
 
         );
 
+
     } catch (error) {
 
         console.error(
@@ -2224,10 +2390,12 @@ function downloadExcelTemplate() {
             error
         );
 
+
         alert(
             "❌ Excel template could not be created.\n\n" +
             error.message
         );
+
 
         setFileStatus(
             "❌ Excel template generation failed."
@@ -2247,9 +2415,11 @@ function handleExcelUpload(event) {
     const file =
         event.target.files[0];
 
+
     if (!file) {
         return;
     }
+
 
     if (typeof XLSX === "undefined") {
 
@@ -2260,8 +2430,10 @@ function handleExcelUpload(event) {
         return;
     }
 
+
     const reader =
         new FileReader();
+
 
     reader.onload =
         function (e) {
@@ -2273,6 +2445,7 @@ function handleExcelUpload(event) {
                         e.target.result
                     );
 
+
                 const workbook =
                     XLSX.read(
                         data,
@@ -2280,6 +2453,7 @@ function handleExcelUpload(event) {
                             type: "array"
                         }
                     );
+
 
                 if (!workbook.Sheets["Scores"]) {
 
@@ -2313,6 +2487,7 @@ function handleExcelUpload(event) {
                 const worksheet =
                     workbook.Sheets["Scores"];
 
+
                 const rows =
                     XLSX.utils.sheet_to_json(
                         worksheet,
@@ -2320,6 +2495,7 @@ function handleExcelUpload(event) {
                             defval: ""
                         }
                     );
+
 
                 const actualRows =
                     rows.filter(
@@ -2344,6 +2520,7 @@ function handleExcelUpload(event) {
                         }
                     );
 
+
                 if (actualRows.length === 0) {
 
                     setFileStatus(
@@ -2367,6 +2544,7 @@ function handleExcelUpload(event) {
                         }
                     );
 
+
                 if (invalidStudents.length > 0) {
 
                     setFileStatus(
@@ -2385,6 +2563,7 @@ function handleExcelUpload(event) {
                     detectSubjectsFromRows(
                         actualRows
                     );
+
 
                 if (
                     detectedSubjects.length > 0
@@ -2406,6 +2585,7 @@ function handleExcelUpload(event) {
                     workbook.Sheets[
                         "Behavioral Traits"
                     ];
+
 
                 if (behaviorSheet) {
 
@@ -2430,6 +2610,7 @@ function handleExcelUpload(event) {
                 students =
                     actualRows;
 
+
                 setFileStatus(
 
                     "✅ Excel file successfully loaded. " +
@@ -2440,7 +2621,9 @@ function handleExcelUpload(event) {
 
                 );
 
+
                 loadStudents();
+
 
                 if (reportSection) {
 
@@ -2449,12 +2632,17 @@ function handleExcelUpload(event) {
 
                 }
 
+
+                updateReportStatus();
+
+
             } catch (error) {
 
                 console.error(
                     "Excel upload error:",
                     error
                 );
+
 
                 setFileStatus(
                     "❌ Unable to read this Excel file."
@@ -2463,6 +2651,7 @@ function handleExcelUpload(event) {
             }
 
         };
+
 
     reader.readAsArrayBuffer(file);
 
@@ -2484,6 +2673,7 @@ function readSettings(settingsSheet) {
             }
         );
 
+
     rows.forEach(
         function (row) {
 
@@ -2491,6 +2681,7 @@ function readSettings(settingsSheet) {
                 String(
                     row[0] || ""
                 ).trim();
+
 
             const value =
                 row[1];
@@ -2624,6 +2815,7 @@ function readSettings(settingsSheet) {
                             }
                         );
 
+
                 if (
                     importedSubjects.length > 0
                 ) {
@@ -2637,6 +2829,7 @@ function readSettings(settingsSheet) {
 
         }
     );
+
 
     renderSubjectList();
 
@@ -2658,11 +2851,14 @@ function detectSubjectsFromRows(rows) {
 
     }
 
+
     const firstStudent =
         rows[0];
 
+
     const subjectSet =
         new Set();
+
 
     Object.keys(
         firstStudent
@@ -2674,6 +2870,7 @@ function detectSubjectsFromRows(rows) {
                     /^(.+)\s+(1st CA|2nd CA|Exams)$/i
                 );
 
+
             if (match) {
 
                 subjectSet.add(
@@ -2684,6 +2881,7 @@ function detectSubjectsFromRows(rows) {
 
         }
     );
+
 
     return Array.from(subjectSet);
 
@@ -2707,6 +2905,7 @@ function attachBehaviorData(
             }
         );
 
+
     const behaviorMap =
         new Map();
 
@@ -2720,6 +2919,7 @@ function attachBehaviorData(
                 )
                     .trim()
                     .toLowerCase();
+
 
             if (name) {
 
@@ -2767,8 +2967,10 @@ function attachBehaviorData(
                     .trim()
                     .toLowerCase();
 
+
             const behavior =
                 behaviorMap.get(name);
+
 
             if (behavior) {
 
@@ -2816,8 +3018,10 @@ function loadStudents() {
         return;
     }
 
+
     studentSelect.innerHTML =
         '<option value="">-- Select Student --</option>';
+
 
     students.forEach(
         function (
@@ -2828,8 +3032,10 @@ function loadStudents() {
             const option =
                 document.createElement("option");
 
+
             option.value =
                 index;
+
 
             option.textContent =
 
@@ -2843,6 +3049,7 @@ function loadStudents() {
                     student["Student Name"] || ""
                 );
 
+
             studentSelect.appendChild(
                 option
             );
@@ -2854,10 +3061,334 @@ function loadStudents() {
 
 
 /* =========================================================
+   REPORT LIMIT FUNCTIONS
+   ========================================================= */
+
+function getReportLimit() {
+
+    const plan =
+        String(currentSubscriptionPlan || "")
+            .trim()
+            .toLowerCase();
+
+
+    return REPORT_LIMITS[plan] || 0;
+
+}
+
+
+/* =========================================================
+   GET PLAN DISPLAY NAME
+   ========================================================= */
+
+function getPlanDisplayName() {
+
+    return getPlanDisplayNameFromPlan(
+        currentSubscriptionPlan
+    );
+
+}
+
+
+/* =========================================================
+   UPDATE REPORT STATUS
+   ========================================================= */
+
+function updateReportStatus() {
+
+    const limit =
+        getReportLimit();
+
+
+    const plan =
+        getPlanDisplayName();
+
+
+    let statusElement =
+        document.getElementById(
+            "reportGenerationStatus"
+        );
+
+
+    if (!statusElement) {
+
+        statusElement =
+            document.createElement("div");
+
+
+        statusElement.id =
+            "reportGenerationStatus";
+
+
+        statusElement.style.margin =
+            "10px 0";
+
+
+        statusElement.style.padding =
+            "10px";
+
+
+        statusElement.style.borderRadius =
+            "6px";
+
+
+        statusElement.style.fontWeight =
+            "bold";
+
+
+        statusElement.style.background =
+            "#f5f5f5";
+
+
+        if (reportSection) {
+
+            reportSection.prepend(
+                statusElement
+            );
+
+        }
+
+    }
+
+
+    if (!limit) {
+
+        statusElement.innerHTML =
+            "⚠️ Subscription plan could not be determined.";
+
+        return;
+
+    }
+
+
+    const remaining =
+        Math.max(
+            limit - reportsGenerated,
+            0
+        );
+
+
+    statusElement.innerHTML =
+
+        "📊 Subscription: " +
+        plan +
+        "<br>" +
+
+        "📄 Reports generated: " +
+        reportsGenerated +
+        " / " +
+        limit +
+        "<br>" +
+
+        "📌 Reports remaining: " +
+        remaining;
+
+
+    if (
+        reportsGenerated >= limit
+    ) {
+
+        statusElement.innerHTML +=
+
+            "<br><br>" +
+
+            "⚠️ Report generation limit reached. " +
+
+            "Please upgrade your subscription to generate more reports.";
+
+    }
+
+}
+
+
+/* =========================================================
+   CAN GENERATE REPORTS
+   ========================================================= */
+
+function canGenerateReports(
+    numberOfReports
+) {
+
+    const limit =
+        getReportLimit();
+
+
+    if (!limit) {
+
+        alert(
+            "❌ Your subscription plan could not be determined."
+        );
+
+        return false;
+
+    }
+
+
+    const remaining =
+        limit - reportsGenerated;
+
+
+    if (
+        remaining <= 0
+    ) {
+
+        alert(
+
+            "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +
+
+            "Subscription: " +
+            getPlanDisplayName() +
+            "\n" +
+
+            "Reports generated: " +
+            reportsGenerated +
+            " / " +
+            limit +
+            "\n\n" +
+
+            "Please upgrade your subscription to generate more reports."
+
+        );
+
+
+        updateReportStatus();
+
+        return false;
+
+    }
+
+
+    if (
+        numberOfReports > remaining
+    ) {
+
+        alert(
+
+            "⚠️ REPORT LIMIT EXCEEDED\n\n" +
+
+            "Subscription: " +
+            getPlanDisplayName() +
+            "\n" +
+
+            "Reports generated: " +
+            reportsGenerated +
+            " / " +
+            limit +
+            "\n" +
+
+            "Reports remaining: " +
+            remaining +
+            "\n\n" +
+
+            "You requested " +
+            numberOfReports +
+            " report(s), but only " +
+            remaining +
+            " report(s) remain."
+
+        );
+
+
+        updateReportStatus();
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   INCREMENT REPORT COUNT SECURELY
+   ========================================================= */
+
+async function incrementReportCount(amount) {
+
+    if (!currentUserId) {
+
+        console.error(
+            "No authenticated user found."
+        );
+
+        return false;
+
+    }
+
+    const reportAmount =
+        Number(amount);
+
+    if (
+        !Number.isInteger(reportAmount) ||
+        reportAmount <= 0
+    ) {
+
+        console.error(
+            "Invalid report count:",
+            amount
+        );
+
+        return false;
+
+    }
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient.rpc(
+                "increment_reports_generated",
+                {
+                    report_count:
+                        reportAmount
+                }
+            );
+
+
+        if (error) {
+
+            console.error(
+                "Unable to increment report count:",
+                error
+            );
+
+            return false;
+
+        }
+
+
+        reportsGenerated =
+            Number(data) || reportsGenerated + reportAmount;
+
+
+        updateReportStatus();
+
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "Report count error:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* =========================================================
    GENERATE SINGLE REPORT
    ========================================================= */
 
-function generateSingleReport() {
+async function generateSingleReport() {
 
     if (
         !elementExists(studentSelect)
@@ -2866,8 +3397,10 @@ function generateSingleReport() {
         return;
     }
 
+
     const index =
         studentSelect.value;
+
 
     if (index === "") {
 
@@ -2876,22 +3409,346 @@ function generateSingleReport() {
         );
 
         return;
+
     }
+
 
     const student =
         students[Number(index)];
 
+
     if (!student) {
+
         return;
+
     }
+
+
+    /* =========================================
+       CHECK REPORT LIMIT
+       ========================================= */
+
+    if (
+        !canGenerateReports(1)
+    ) {
+
+        return;
+
+    }
+
 
     const report =
         createReport(student);
+
 
     if (reportContainer) {
 
         reportContainer.innerHTML =
             report;
+
+
+        reportContainer.scrollIntoView({
+            behavior: "smooth"
+        });
+
+    }
+
+
+    await incrementReportCount(1);
+
+}
+
+
+/* =========================================================
+   GENERATE ALL REPORTS
+   ========================================================= */
+
+async function generateAllReports() {
+
+    if (
+        !students ||
+        students.length === 0
+    ) {
+
+        alert(
+            "❌ Please upload an Excel file containing student records first."
+        );
+
+        return;
+
+    }
+
+
+    const limit =
+        getReportLimit();
+
+
+    if (!limit) {
+
+        alert(
+            "❌ Your subscription plan could not be determined."
+        );
+
+        return;
+
+    }
+
+
+    const remaining =
+        Math.max(
+            limit - reportsGenerated,
+            0
+        );
+
+
+    if (remaining <= 0) {
+
+        alert(
+
+            "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +
+
+            "Subscription: " +
+            getPlanDisplayName() +
+            "\n" +
+
+            "Reports generated: " +
+            reportsGenerated +
+            " / " +
+            limit +
+            "\n\n" +
+
+            "Please upgrade your subscription to generate more reports."
+
+        );
+
+
+        updateReportStatus();
+
+        return;
+
+    }
+
+
+    const totalStudents =
+        students.length;
+
+
+    let numberToGenerate =
+        totalStudents;
+
+
+    let stoppedByLimit =
+        false;
+
+
+    if (
+        totalStudents > remaining
+    ) {
+
+        numberToGenerate =
+            remaining;
+
+        stoppedByLimit =
+            true;
+
+    }
+
+
+    const confirmation =
+        confirm(
+
+            "Generate reports for " +
+            numberToGenerate +
+            " student(s)?\n\n" +
+
+            "Subscription: " +
+            getPlanDisplayName() +
+            "\n" +
+
+            "Current reports generated: " +
+            reportsGenerated +
+            " / " +
+            limit +
+            "\n" +
+
+            "Reports remaining: " +
+            remaining +
+
+            (
+                stoppedByLimit
+                    ? "\n\n⚠️ Your subscription limit means only " +
+                      numberToGenerate +
+                      " report(s) can be generated."
+                    : ""
+            )
+
+        );
+
+
+    if (!confirmation) {
+
+        return;
+
+    }
+
+
+    if (
+        !canGenerateReports(
+            numberToGenerate
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    if (reportContainer) {
+
+        reportContainer.innerHTML = "";
+
+    }
+
+
+    let generatedCount =
+        0;
+
+
+    for (
+        let i = 0;
+        i < numberToGenerate;
+        i++
+    ) {
+
+        const student =
+            students[i];
+
+
+        if (!student) {
+            continue;
+        }
+
+
+        const report =
+            createReport(student);
+
+
+        if (reportContainer) {
+
+            reportContainer.insertAdjacentHTML(
+                "beforeend",
+                report
+            );
+
+        }
+
+
+        generatedCount++;
+
+
+        /*
+         * Update display every 10 reports.
+         * This keeps the interface responsive.
+         */
+
+        if (
+            generatedCount % 10 === 0
+        ) {
+
+            updateTemporaryGenerationMessage(
+                generatedCount,
+                numberToGenerate
+            );
+
+            await new Promise(
+                function (resolve) {
+
+                    setTimeout(
+                        resolve,
+                        0
+                    );
+
+                }
+            );
+
+        }
+
+    }
+
+
+    if (
+        generatedCount > 0
+    ) {
+
+        await incrementReportCount(
+            generatedCount
+        );
+
+    }
+
+
+    updateReportStatus();
+
+
+    if (
+        stoppedByLimit
+    ) {
+
+        alert(
+
+            "⚠️ Generation stopped at your subscription limit.\n\n" +
+
+            "Subscription: " +
+            getPlanDisplayName() +
+            "\n" +
+
+            "Reports generated this operation: " +
+            generatedCount +
+            "\n" +
+
+            "Total reports generated: " +
+            reportsGenerated +
+            " / " +
+            limit +
+            "\n\n" +
+
+            "There were " +
+            (
+                totalStudents -
+                numberToGenerate
+            ) +
+            " student(s) remaining."
+
+        );
+
+    } else {
+
+        alert(
+
+            "✅ All reports generated successfully.\n\n" +
+
+            "Reports generated: " +
+            generatedCount +
+            "\n" +
+
+            "Total used: " +
+            reportsGenerated +
+            " / " +
+            limit +
+            "\n" +
+
+            "Reports remaining: " +
+            Math.max(
+                limit - reportsGenerated,
+                0
+            )
+
+        );
+
+    }
+
+
+    if (reportContainer) {
 
         reportContainer.scrollIntoView({
             behavior: "smooth"
@@ -2903,39 +3760,65 @@ function generateSingleReport() {
 
 
 /* =========================================================
-   GENERATE ALL REPORTS
+   TEMPORARY GENERATION MESSAGE
    ========================================================= */
 
-function generateAllReports() {
+function updateTemporaryGenerationMessage(
+    generated,
+    total
+) {
 
-    if (students.length === 0) {
-
-        alert(
-            "No student records found."
-        );
-
+    if (!reportContainer) {
         return;
     }
 
-    let allReports = "";
 
-    students.forEach(
-        function (student) {
+    const existing =
+        document.getElementById(
+            "generationProgress"
+        );
 
-            allReports +=
-                createReport(student);
 
-        }
-    );
+    if (!existing) {
 
-    if (reportContainer) {
+        const progress =
+            document.createElement("div");
 
-        reportContainer.innerHTML =
-            allReports;
 
-        reportContainer.scrollIntoView({
-            behavior: "smooth"
-        });
+        progress.id =
+            "generationProgress";
+
+
+        progress.style.padding =
+            "10px";
+
+
+        progress.style.marginBottom =
+            "10px";
+
+
+        progress.style.fontWeight =
+            "bold";
+
+
+        progress.innerHTML =
+            "⏳ Generating reports: " +
+            generated +
+            " / " +
+            total;
+
+
+        reportContainer.prepend(
+            progress
+        );
+
+    } else {
+
+        existing.innerHTML =
+            "⏳ Generating reports: " +
+            generated +
+            " / " +
+            total;
 
     }
 
@@ -2952,12 +3835,17 @@ function createReport(student) {
 
     let overallTotal = 0;
 
-    let subjectsToUse = schoolSubjects;
+    let subjectsToUse =
+        schoolSubjects;
+
 
     const detectedSubjects =
         detectSubjectsFromRows([student]);
 
-    if (detectedSubjects.length > 0) {
+
+    if (
+        detectedSubjects.length > 0
+    ) {
 
         subjectsToUse =
             detectedSubjects;
@@ -2971,31 +3859,38 @@ function createReport(student) {
             const firstCAKey =
                 subjectName + " 1st CA";
 
+
             const secondCAKey =
                 subjectName + " 2nd CA";
 
+
             const examsKey =
                 subjectName + " Exams";
+
 
             const firstCA =
                 Number(
                     student[firstCAKey]
                 ) || 0;
 
+
             const secondCA =
                 Number(
                     student[secondCAKey]
                 ) || 0;
+
 
             const exams =
                 Number(
                     student[examsKey]
                 ) || 0;
 
+
             const total =
                 firstCA +
                 secondCA +
                 exams;
+
 
             const hasSubject =
                 Object.prototype.hasOwnProperty.call(
@@ -3010,6 +3905,7 @@ function createReport(student) {
                     student,
                     examsKey
                 );
+
 
             if (hasSubject) {
 
@@ -3032,6 +3928,7 @@ function createReport(student) {
 
                 });
 
+
                 overallTotal +=
                     total;
 
@@ -3044,39 +3941,77 @@ function createReport(student) {
     const numberOfSubjects =
         subjects.length;
 
+
     const average =
         numberOfSubjects > 0
             ? overallTotal / numberOfSubjects
             : 0;
 
+
     const grade =
         getGrade(average);
 
+
+    /* =====================================================
+       POSITION FROM UPLOADED TEMPLATE
+       ===================================================== */
+
     const positionValue =
-    student["Position"];
+        student["Position"];
 
-const hasPosition =
-    String(positionValue ?? "").trim() !== "";
 
-const position =
-    hasPosition
-        ? Number(positionValue)
-        : null;
-  /* =====================================================
-   NUMBER OF STUDENTS IN CLASS
-   ===================================================== */
+    /*
+     * IMPORTANT:
+     *
+     * Position is ONLY read from the uploaded Excel file.
+     *
+     * If Position is blank in Excel,
+     * Position will be blank on the report.
+     *
+     * The system will NOT calculate a replacement position.
+     */
 
-const classSize =
-    students.filter(
-        function (student) {
+    const hasPosition =
+        String(
+            positionValue ?? ""
+        ).trim() !== "";
 
-            return String(
-                student["Student Name"] || ""
-            ).trim() !== "";
+
+    let position = null;
+
+
+    if (hasPosition) {
+
+        const numericPosition =
+            Number(positionValue);
+
+
+        if (
+            !isNaN(numericPosition)
+        ) {
+
+            position =
+                numericPosition;
 
         }
-    ).length;
-  
+
+    }
+
+
+    /* =====================================================
+       NUMBER OF STUDENTS IN CLASS
+       ===================================================== */
+
+    const classSize =
+        students.filter(
+            function (student) {
+
+                return String(
+                    student["Student Name"] || ""
+                ).trim() !== "";
+
+            }
+        ).length;
 
 
     /* =====================================================
@@ -3084,6 +4019,7 @@ const classSize =
        ===================================================== */
 
     let subjectRows = "";
+
 
     subjects.forEach(
         function (
@@ -3163,6 +4099,7 @@ const classSize =
 
     `;
 
+
     behavioralTraits.forEach(
         function (trait) {
 
@@ -3190,6 +4127,7 @@ const classSize =
 
     `;
 
+
     behavioralTraits.forEach(
         function (trait) {
 
@@ -3197,6 +4135,7 @@ const classSize =
                 behavior[trait] !== undefined
                     ? behavior[trait]
                     : "";
+
 
             traitRatings += `
 
@@ -3234,8 +4173,6 @@ const classSize =
 
         <div class="report">
 
-            <!-- SCHOOL HEADER -->
-
             <div class="school-header">
 
                 <h1>
@@ -3257,114 +4194,110 @@ const classSize =
             </div>
 
 
-            <!-- STUDENT INFORMATION -->
+            <div class="student-info">
 
-<div class="student-info">
+                <div>
 
-    <div>
+                    <strong>
+                        Admission No:
+                    </strong>
 
-        <strong>
-            Admission No:
-        </strong>
+                    ${escapeHTML(
+                        student["Admission No"] || ""
+                    )}
 
-        ${escapeHTML(
-            student["Admission No"] || ""
-        )}
-
-    </div>
+                </div>
 
 
-    <div>
+                <div>
 
-        <strong>
-            Student Name:
-        </strong>
+                    <strong>
+                        Student Name:
+                    </strong>
 
-        ${escapeHTML(
-            student["Student Name"] || ""
-        )}
+                    ${escapeHTML(
+                        student["Student Name"] || ""
+                    )}
 
-    </div>
-
-
-    <div>
-
-        <strong>
-            Gender:
-        </strong>
-
-        ${escapeHTML(
-            student["Gender"] || ""
-        )}
-
-    </div>
+                </div>
 
 
-    <div>
+                <div>
 
-        <strong>
-            Class:
-        </strong>
+                    <strong>
+                        Gender:
+                    </strong>
 
-        ${escapeHTML(
-            student["Class"] || ""
-        )}
+                    ${escapeHTML(
+                        student["Gender"] || ""
+                    )}
 
-    </div>
-
-
-    <div>
-
-        <strong>
-            House:
-        </strong>
-
-        ${escapeHTML(
-            studentHouse
-        )}
-
-    </div>
+                </div>
 
 
-    <div>
+                <div>
 
-        <strong>
-            Term:
-        </strong>
+                    <strong>
+                        Class:
+                    </strong>
 
-        ${escapeHTML(
-            student["Term"] || ""
-        )}
+                    ${escapeHTML(
+                        student["Class"] || ""
+                    )}
 
-    </div>
-
-
-    <div>
-
-        <strong>
-            Session:
-        </strong>
-
-        ${escapeHTML(
-            student["Session"] || ""
-        )}
-
-    </div>
+                </div>
 
 
-    <div>
+                <div>
 
-        <strong>
-            Class Size:
-        </strong>
+                    <strong>
+                        House:
+                    </strong>
 
-        ${classSize}
+                    ${escapeHTML(
+                        studentHouse
+                    )}
 
-    </div>
+                </div>
 
-</div>
 
-            
+                <div>
+
+                    <strong>
+                        Term:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Term"] || ""
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Session:
+                    </strong>
+
+                    ${escapeHTML(
+                        student["Session"] || ""
+                    )}
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Class Size:
+                    </strong>
+
+                    ${classSize}
+
+                </div>
+
+            </div>
 
 
             <!-- SUBJECT RESULTS -->
@@ -3454,10 +4387,12 @@ const classSize =
 
                     <span class="position-value">
 
-                       ${hasPosition && !isNaN(position)
-    ? formatPosition(position)
-    : ""
-}
+                        ${
+                            hasPosition &&
+                            position !== null
+                                ? formatPosition(position)
+                                : ""
+                        }
 
                     </span>
 
@@ -3578,11 +4513,13 @@ function getGrade(score) {
         return "A";
     }
 
+
     if (
         score >= reportSettings.gradeB
     ) {
         return "B";
     }
+
 
     if (
         score >= reportSettings.gradeC
@@ -3590,17 +4527,20 @@ function getGrade(score) {
         return "C";
     }
 
+
     if (
         score >= reportSettings.gradeD
     ) {
         return "D";
     }
 
+
     if (
         score >= reportSettings.gradeE
     ) {
         return "E";
     }
+
 
     return "F";
 
@@ -3609,6 +4549,10 @@ function getGrade(score) {
 
 /* =========================================================
    CALCULATE POSITION
+   =========================================================
+   Kept for compatibility.
+   The report itself does NOT use this function.
+   It reads Position directly from the Excel template.
    ========================================================= */
 
 function calculatePosition(
@@ -3621,7 +4565,9 @@ function calculatePosition(
             currentStudent
         );
 
+
     let position = 1;
+
 
     allStudents.forEach(
         function (student) {
@@ -3630,6 +4576,7 @@ function calculatePosition(
                 calculateStudentAverage(
                     student
                 );
+
 
             if (
                 studentAverage >
@@ -3642,6 +4589,7 @@ function calculatePosition(
 
         }
     );
+
 
     return position;
 
@@ -3943,6 +4891,7 @@ async function startPaystackPayment(button) {
                             "Payment received. Verifying payment..."
                         );
 
+
                         await verifyPaystackPayment(
                             response.reference,
                             plan
@@ -4036,6 +4985,7 @@ async function verifyPaystackPayment(
                 plan.toUpperCase() +
                 " subscription is now active."
             );
+
 
             await checkLogin();
 
