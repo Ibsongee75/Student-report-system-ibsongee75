@@ -1,37 +1,34 @@
 /* =========================================================
-   STUDENT REPORT GENERATOR
-   COMPLETE CORRECTED script.js
-   ========================================================= */
-
+STUDENT REPORT GENERATOR
+COMPLETE CORRECTED script.js
+========================================================= */
 
 /* =========================================================
-   SUPABASE
-   ========================================================= */
+SUPABASE
+========================================================= */
 
 const SUPABASE_URL =
-    "https://nzeddvcmabfodmvmgsyg.supabase.co";
+"https://nzeddvcmabfodmvmgsyg.supabase.co";
 
 const SUPABASE_KEY =
-    "sb_publishable_Iaro_sV4r31wPbLycRB4Eg_OCDBy2u3";
+"sb_publishable_Iaro_sV4r31wPbLycRB4Eg_OCDBy2u3";
 
 const supabaseClient =
-    supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
-
+supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
 
 /* =========================================================
-   PAYSTACK
-   ========================================================= */
+PAYSTACK
+========================================================= */
 
 const PAYSTACK_PUBLIC_KEY =
-    "pk_test_255b1c6ede75477e3ed59e874ebb68d9e204f844";
-
+"pk_test_255b1c6ede75477e3ed59e874ebb68d9e204f844";
 
 /* =========================================================
-   GLOBAL VARIABLES
-   ========================================================= */
+GLOBAL VARIABLES
+========================================================= */
 
 let students = [];
 
@@ -41,101 +38,95 @@ let reportsGenerated = 0;
 
 let currentUserId = null;
 
-
 /* =========================================================
-   REPORT GENERATION LIMITS
-   ========================================================= */
+REPORT GENERATION LIMITS
+========================================================= */
 
 const REPORT_LIMITS = {
 
-    basic: 100,
+basic: 100,  
 
-    standard: 500,
+standard: 500,  
 
-    premium: 1000
+premium: 1000
 
 };
 
-
 /* =========================================================
-   SCHOOL SUBJECTS
-   ========================================================= */
+SCHOOL SUBJECTS
+========================================================= */
 
 let schoolSubjects = [
 
-    "Mathematics",
-    "English",
-    "Biology",
-    "Physics",
-    "Chemistry",
-    "Computer Science"
+"Mathematics",  
+"English",  
+"Biology",  
+"Physics",  
+"Chemistry",  
+"Computer Science"
 
 ];
 
-
 /* =========================================================
-   BEHAVIORAL TRAITS
-   ========================================================= */
+BEHAVIORAL TRAITS
+========================================================= */
 
 const behavioralTraits = [
 
-    "Attendance",
-    "Punctuality",
-    "Class Participation",
-    "Neatness",
-    "Honesty"
+"Attendance",  
+"Punctuality",  
+"Class Participation",  
+"Neatness",  
+"Honesty"
 
 ];
 
-
 /* =========================================================
-   REPORT SETTINGS
-   ========================================================= */
+REPORT SETTINGS
+========================================================= */
 
 let reportSettings = {
 
-    schoolName:
-        "YOUR SCHOOL NAME",
+schoolName:  
+    "YOUR SCHOOL NAME",  
 
-    schoolAddress:
-        "YOUR SCHOOL ADDRESS",
+schoolAddress:  
+    "YOUR SCHOOL ADDRESS",  
 
-    firstCAMaximum:
-        20,
+firstCAMaximum:  
+    20,  
 
-    secondCAMaximum:
-        20,
+secondCAMaximum:  
+    20,  
 
-    examsMaximum:
-        60,
+examsMaximum:  
+    60,  
 
-    gradeA:
-        70,
+gradeA:  
+    70,  
 
-    gradeB:
-        60,
+gradeB:  
+    60,  
 
-    gradeC:
-        50,
+gradeC:  
+    50,  
 
-    gradeD:
-        45,
+gradeD:  
+    45,  
 
-    gradeE:
-        40,
+gradeE:  
+    40,  
 
-    gradeF:
-        0
+gradeF:  
+    0
 
 };
 
-
 const TEMPLATE_STUDENT_ROWS = 300;
 
-
 /* =========================================================
-   DOM ELEMENTS
-   ========================================================= */
+DOM ELEMENTS
+========================================================= */
 
 let authSection;
 let appSection;
@@ -162,3668 +153,3634 @@ let generateReportButton;
 let generateAllButton;
 let reportContainer;
 
-
 /* =========================================================
-   INITIALIZE
-   ========================================================= */
+INITIALIZE
+========================================================= */
 
 document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+"DOMContentLoaded",
+function () {
 
-        initializeElements();
+initializeElements();  
 
-        attachAuthenticationEvents();
+    attachAuthenticationEvents();  
 
-        attachApplicationEvents();
+    attachApplicationEvents();  
 
-        createSubjectManager();
+    createSubjectManager();  
 
-        checkLogin();
+    checkLogin();  
 
-    }
+}
+
 );
 
-
 /* =========================================================
-   INITIALIZE ELEMENTS
-   ========================================================= */
+INITIALIZE ELEMENTS
+========================================================= */
 
 function initializeElements() {
 
-    authSection =
-        document.getElementById("authSection");
+authSection =  
+    document.getElementById("authSection");  
 
-    appSection =
-        document.getElementById("appSection");
+appSection =  
+    document.getElementById("appSection");  
 
-    subscriptionPlans =
-        document.getElementById("subscriptionPlans");
+subscriptionPlans =  
+    document.getElementById("subscriptionPlans");  
 
-    subscriptionStatus =
-        document.getElementById("subscriptionStatus");
+subscriptionStatus =  
+    document.getElementById("subscriptionStatus");  
 
-    emailInput =
-        document.getElementById("email");
+emailInput =  
+    document.getElementById("email");  
 
-    passwordInput =
-        document.getElementById("password");
+passwordInput =  
+    document.getElementById("password");  
 
-    signUpButton =
-        document.getElementById("signUpButton");
+signUpButton =  
+    document.getElementById("signUpButton");  
 
-    signInButton =
-        document.getElementById("signInButton");
+signInButton =  
+    document.getElementById("signInButton");  
 
-    logoutButton =
-        document.getElementById("logoutButton");
+logoutButton =  
+    document.getElementById("logoutButton");  
 
-    authStatus =
-        document.getElementById("authStatus");
+authStatus =  
+    document.getElementById("authStatus");  
 
-    downloadTemplateButton =
-        document.getElementById("downloadTemplate");
+downloadTemplateButton =  
+    document.getElementById("downloadTemplate");  
 
-    excelFileInput =
-        document.getElementById("excelFile");
+excelFileInput =  
+    document.getElementById("excelFile");  
 
-    fileStatus =
-        document.getElementById("fileStatus");
+fileStatus =  
+    document.getElementById("fileStatus");  
 
-    reportSection =
-        document.getElementById("reportSection");
+reportSection =  
+    document.getElementById("reportSection");  
 
-    studentSelect =
-        document.getElementById("studentSelect");
+studentSelect =  
+    document.getElementById("studentSelect");  
 
-    generateReportButton =
-        document.getElementById("generateReport");
+generateReportButton =  
+    document.getElementById("generateReport");  
 
-    generateAllButton =
-        document.getElementById("generateAll");
+generateAllButton =  
+    document.getElementById("generateAll");  
 
-    reportContainer =
-        document.getElementById("reportContainer");
+reportContainer =  
+    document.getElementById("reportContainer");
 
 }
 
-
 /* =========================================================
-   ELEMENT EXISTS
-   ========================================================= */
+ELEMENT EXISTS
+========================================================= */
 
 function elementExists(element) {
 
-    return (
-        element !== null &&
-        element !== undefined
-    );
+return (  
+    element !== null &&  
+    element !== undefined  
+);
 
 }
 
-
 /* =========================================================
-   SHOW LOGIN
-   ========================================================= */
+SHOW LOGIN
+========================================================= */
 
 function showLogin() {
 
-    if (elementExists(authSection)) {
-        authSection.style.display = "block";
-    }
+if (elementExists(authSection)) {  
+    authSection.style.display = "block";  
+}  
 
-    if (elementExists(subscriptionPlans)) {
-        subscriptionPlans.style.display = "none";
-    }
+if (elementExists(subscriptionPlans)) {  
+    subscriptionPlans.style.display = "none";  
+}  
 
-    if (elementExists(appSection)) {
-        appSection.style.display = "none";
-    }
+if (elementExists(appSection)) {  
+    appSection.style.display = "none";  
+}  
 
-    if (elementExists(subscriptionStatus)) {
-        subscriptionStatus.style.display = "none";
-    }
+if (elementExists(subscriptionStatus)) {  
+    subscriptionStatus.style.display = "none";  
+}
 
 }
 
-
 /* =========================================================
-   SHOW SUBSCRIPTION
-   ========================================================= */
+SHOW SUBSCRIPTION
+========================================================= */
 
 function showSubscription() {
 
-    if (elementExists(authSection)) {
-        authSection.style.display = "none";
-    }
+if (elementExists(authSection)) {  
+    authSection.style.display = "none";  
+}  
 
-    if (elementExists(subscriptionPlans)) {
-        subscriptionPlans.style.display = "block";
-    }
+if (elementExists(subscriptionPlans)) {  
+    subscriptionPlans.style.display = "block";  
+}  
 
-    if (elementExists(appSection)) {
-        appSection.style.display = "none";
-    }
+if (elementExists(appSection)) {  
+    appSection.style.display = "none";  
+}  
 
-    if (elementExists(subscriptionStatus)) {
-        subscriptionStatus.style.display = "block";
-    }
+if (elementExists(subscriptionStatus)) {  
+    subscriptionStatus.style.display = "block";  
+}
 
 }
 
-
 /* =========================================================
-   SHOW APPLICATION
-   ========================================================= */
+SHOW APPLICATION
+========================================================= */
 
 function showApp() {
 
-    if (elementExists(authSection)) {
-        authSection.style.display = "none";
-    }
+if (elementExists(authSection)) {  
+    authSection.style.display = "none";  
+}  
 
-    if (elementExists(subscriptionPlans)) {
-        subscriptionPlans.style.display = "none";
-    }
+if (elementExists(subscriptionPlans)) {  
+    subscriptionPlans.style.display = "none";  
+}  
 
-    if (elementExists(appSection)) {
-        appSection.style.display = "block";
-    }
+if (elementExists(appSection)) {  
+    appSection.style.display = "block";  
+}  
 
-    if (elementExists(subscriptionStatus)) {
-        subscriptionStatus.style.display = "block";
-    }
+if (elementExists(subscriptionStatus)) {  
+    subscriptionStatus.style.display = "block";  
+}
 
 }
 
-
 /* =========================================================
-   AUTHENTICATION EVENTS
-   ========================================================= */
+AUTHENTICATION EVENTS
+========================================================= */
 
 function attachAuthenticationEvents() {
 
+/* =========================  
+   SIGN UP  
+   ========================= */  
 
-    /* =========================
-       SIGN UP
-       ========================= */
+if (elementExists(signUpButton)) {  
 
-    if (elementExists(signUpButton)) {
+    signUpButton.addEventListener(  
+        "click",  
+        async function () {  
 
-        signUpButton.addEventListener(
-            "click",
-            async function () {
+            const email =  
+                emailInput.value.trim();  
 
-                const email =
-                    emailInput.value.trim();
+            const password =  
+                passwordInput.value;  
 
-                const password =
-                    passwordInput.value;
+            if (!email || !password) {  
 
-                if (!email || !password) {
+                setAuthStatus(  
+                    "❌ Please enter your email and password."  
+                );  
 
-                    setAuthStatus(
-                        "❌ Please enter your email and password."
-                    );
+                return;  
+            }  
 
-                    return;
-                }
+            if (password.length < 6) {  
 
-                if (password.length < 6) {
+                setAuthStatus(  
+                    "❌ Password must contain at least 6 characters."  
+                );  
 
-                    setAuthStatus(
-                        "❌ Password must contain at least 6 characters."
-                    );
+                return;  
+            }  
 
-                    return;
-                }
+            setAuthStatus(  
+                "Creating your account..."  
+            );  
 
-                setAuthStatus(
-                    "Creating your account..."
-                );
+            try {  
 
-                try {
+                const {  
+                    data,  
+                    error  
+                } =  
+                    await supabaseClient.auth.signUp({  
 
-                    const {
-                        data,
-                        error
-                    } =
-                        await supabaseClient.auth.signUp({
+                        email: email,  
 
-                            email: email,
+                        password: password,  
 
-                            password: password,
+                        options: {  
 
-                            options: {
+                            emailRedirectTo:  
+                                "https://ibsongee75.github.io/Student-report-system-ibsongee75/"  
 
-                                emailRedirectTo:
-                                    "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
+                        }  
 
-                            }
+                    });  
 
-                        });
+                if (error) {  
 
-                    if (error) {
+                    console.error(  
+                        "Sign up error:",  
+                        error  
+                    );  
 
-                        console.error(
-                            "Sign up error:",
-                            error
-                        );
+                    setAuthStatus(  
+                        "❌ " + error.message  
+                    );  
 
-                        setAuthStatus(
-                            "❌ " + error.message
-                        );
+                    return;  
+                }  
 
-                        return;
-                    }
+                if (  
+                    data.user &&  
+                    !data.session  
+                ) {  
 
-                    if (
-                        data.user &&
-                        !data.session
-                    ) {
+                    setAuthStatus(  
+                        "✅ Account created. Please check your email and confirm your account before signing in."  
+                    );  
 
-                        setAuthStatus(
-                            "✅ Account created. Please check your email and confirm your account before signing in."
-                        );
+                    return;  
+                }  
 
-                        return;
-                    }
+                setAuthStatus(  
+                    "✅ Account created successfully."  
+                );  
 
-                    setAuthStatus(
-                        "✅ Account created successfully."
-                    );
+            } catch (error) {  
 
-                } catch (error) {
+                console.error(error);  
 
-                    console.error(error);
+                setAuthStatus(  
+                    "❌ An unexpected error occurred."  
+                );  
 
-                    setAuthStatus(
-                        "❌ An unexpected error occurred."
-                    );
+            }  
 
-                }
+        }  
+    );  
 
-            }
-        );
+}  
 
-    }
 
+/* =========================  
+   SIGN IN  
+   ========================= */  
 
-    /* =========================
-       SIGN IN
-       ========================= */
+if (elementExists(signInButton)) {  
 
-    if (elementExists(signInButton)) {
+    signInButton.addEventListener(  
+        "click",  
+        async function () {  
 
-        signInButton.addEventListener(
-            "click",
-            async function () {
+            const email =  
+                emailInput.value.trim();  
 
-                const email =
-                    emailInput.value.trim();
+            const password =  
+                passwordInput.value;  
 
-                const password =
-                    passwordInput.value;
+            if (!email || !password) {  
 
-                if (!email || !password) {
+                setAuthStatus(  
+                    "❌ Please enter your email and password."  
+                );  
 
-                    setAuthStatus(
-                        "❌ Please enter your email and password."
-                    );
+                return;  
+            }  
 
-                    return;
-                }
+            setAuthStatus(  
+                "Signing in..."  
+            );  
 
-                setAuthStatus(
-                    "Signing in..."
-                );
+            try {  
 
-                try {
+                const {  
+                    data,  
+                    error  
+                } =  
+                    await supabaseClient.auth  
+                        .signInWithPassword({  
 
-                    const {
-                        data,
-                        error
-                    } =
-                        await supabaseClient.auth
-                            .signInWithPassword({
+                            email:  
+                                email,  
 
-                                email:
-                                    email,
+                            password:  
+                                password  
 
-                                password:
-                                    password
+                        });  
 
-                            });
+                if (error) {  
 
-                    if (error) {
+                    console.error(  
+                        "Sign in error:",  
+                        error  
+                    );  
 
-                        console.error(
-                            "Sign in error:",
-                            error
-                        );
+                    setAuthStatus(  
+                        "❌ " + error.message  
+                    );  
 
-                        setAuthStatus(
-                            "❌ " + error.message
-                        );
+                    return;  
+                }  
 
-                        return;
-                    }
+                setAuthStatus(  
+                    "✅ Login successful."  
+                );  
 
-                    setAuthStatus(
-                        "✅ Login successful."
-                    );
+                await checkLogin();  
 
-                    await checkLogin();
+            } catch (error) {  
 
-                } catch (error) {
+                console.error(error);  
 
-                    console.error(error);
+                setAuthStatus(  
+                    "❌ Unable to sign in."  
+                );  
 
-                    setAuthStatus(
-                        "❌ Unable to sign in."
-                    );
+            }  
 
-                }
+        }  
+    );  
 
-            }
-        );
+}  
 
-    }
 
+/* =========================  
+   LOGOUT  
+   ========================= */  
 
-    /* =========================
-       LOGOUT
-       ========================= */
+if (elementExists(logoutButton)) {  
 
-    if (elementExists(logoutButton)) {
+    logoutButton.addEventListener(  
+        "click",  
+        async function () {  
 
-        logoutButton.addEventListener(
-            "click",
-            async function () {
+            try {  
 
-                try {
+                const {  
+                    error  
+                } =  
+                    await supabaseClient.auth  
+                        .signOut();  
 
-                    const {
-                        error
-                    } =
-                        await supabaseClient.auth
-                            .signOut();
+                if (error) {  
 
-                    if (error) {
+                    console.error(error);  
 
-                        console.error(error);
+                    return;  
+                }  
 
-                        return;
-                    }
+                students = [];  
 
-                    students = [];
+                currentSubscriptionPlan = "";  
 
-                    currentSubscriptionPlan = "";
+                reportsGenerated = 0;  
 
-                    reportsGenerated = 0;
+                currentUserId = null;  
 
-                    currentUserId = null;
+                showLogin();  
 
-                    showLogin();
+                setAuthStatus(  
+                    "You have been logged out."  
+                );  
 
-                    setAuthStatus(
-                        "You have been logged out."
-                    );
+            } catch (error) {  
 
-                } catch (error) {
+                console.error(error);  
 
-                    console.error(error);
+            }  
 
-                }
-
-            }
-        );
-
-    }
+        }  
+    );  
 
 }
 
+}
 
 /* =========================================================
-   FORGOT PASSWORD
-   ========================================================= */
+FORGOT PASSWORD
+========================================================= */
 
 async function forgotPassword() {
 
-    const email =
-        prompt(
-            "Enter the email address you used to create your account:"
-        );
+const email =  
+    prompt(  
+        "Enter the email address you used to create your account:"  
+    );  
 
-    if (!email) {
-        return;
-    }
+if (!email) {  
+    return;  
+}  
 
-    const cleanEmail =
-        email.trim();
+const cleanEmail =  
+    email.trim();  
 
-    if (!cleanEmail) {
+if (!cleanEmail) {  
 
-        alert(
-            "Please enter your email address."
-        );
+    alert(  
+        "Please enter your email address."  
+    );  
 
-        return;
-    }
+    return;  
+}  
 
-    try {
+try {  
 
-        const {
-            error
-        } =
-            await supabaseClient.auth
-                .resetPasswordForEmail(
-                    cleanEmail,
-                    {
+    const {  
+        error  
+    } =  
+        await supabaseClient.auth  
+            .resetPasswordForEmail(  
+                cleanEmail,  
+                {  
 
-                        redirectTo:
-                            "https://ibsongee75.github.io/Student-report-system-ibsongee75/"
+                    redirectTo:  
+                        "https://ibsongee75.github.io/Student-report-system-ibsongee75/"  
 
-                    }
-                );
+                }  
+            );  
 
-        if (error) {
+    if (error) {  
 
-            console.error(error);
+        console.error(error);  
 
-            alert(
-                "❌ " + error.message
-            );
+        alert(  
+            "❌ " + error.message  
+        );  
 
-            return;
-        }
+        return;  
+    }  
 
-        alert(
-            "✅ Password reset email sent."
-        );
+    alert(  
+        "✅ Password reset email sent."  
+    );  
 
-    } catch (error) {
+} catch (error) {  
 
-        console.error(error);
+    console.error(error);  
 
-        alert(
-            "❌ Unable to send password reset email."
-        );
-
-    }
+    alert(  
+        "❌ Unable to send password reset email."  
+    );  
 
 }
 
+}
 
 /* =========================================================
-   UPDATE PASSWORD
-   ========================================================= */
+UPDATE PASSWORD
+========================================================= */
 
 async function updatePassword() {
 
-    const newPasswordElement =
-        document.getElementById("newPassword");
+const newPasswordElement =  
+    document.getElementById("newPassword");  
 
-    const confirmPasswordElement =
-        document.getElementById("confirmNewPassword");
+const confirmPasswordElement =  
+    document.getElementById("confirmNewPassword");  
 
-    if (
-        !newPasswordElement ||
-        !confirmPasswordElement
-    ) {
+if (  
+    !newPasswordElement ||  
+    !confirmPasswordElement  
+) {  
 
-        alert(
-            "Password fields could not be found."
-        );
+    alert(  
+        "Password fields could not be found."  
+    );  
 
-        return;
-    }
+    return;  
+}  
 
-    const newPassword =
-        newPasswordElement.value;
+const newPassword =  
+    newPasswordElement.value;  
 
-    const confirmPassword =
-        confirmPasswordElement.value;
+const confirmPassword =  
+    confirmPasswordElement.value;  
 
-    if (!newPassword) {
+if (!newPassword) {  
 
-        alert(
-            "Please enter a new password."
-        );
+    alert(  
+        "Please enter a new password."  
+    );  
 
-        return;
-    }
+    return;  
+}  
 
-    if (newPassword !== confirmPassword) {
+if (newPassword !== confirmPassword) {  
 
-        alert(
-            "❌ The passwords do not match."
-        );
+    alert(  
+        "❌ The passwords do not match."  
+    );  
 
-        return;
-    }
+    return;  
+}  
 
-    if (newPassword.length < 6) {
+if (newPassword.length < 6) {  
 
-        alert(
-            "❌ Password must be at least 6 characters."
-        );
+    alert(  
+        "❌ Password must be at least 6 characters."  
+    );  
 
-        return;
-    }
+    return;  
+}  
 
-    try {
+try {  
 
-        const {
-            error
-        } =
-            await supabaseClient.auth.updateUser({
+    const {  
+        error  
+    } =  
+        await supabaseClient.auth.updateUser({  
 
-                password:
-                    newPassword
+            password:  
+                newPassword  
 
-            });
+        });  
 
-        if (error) {
+    if (error) {  
 
-            console.error(error);
+        console.error(error);  
 
-            alert(
-                "❌ " + error.message
-            );
+        alert(  
+            "❌ " + error.message  
+        );  
 
-            return;
-        }
+        return;  
+    }  
 
-        alert(
-            "✅ Password changed successfully."
-        );
+    alert(  
+        "✅ Password changed successfully."  
+    );  
 
-        const resetSection =
-            document.getElementById(
-                "resetPasswordSection"
-            );
+    const resetSection =  
+        document.getElementById(  
+            "resetPasswordSection"  
+        );  
 
-        if (resetSection) {
+    if (resetSection) {  
 
-            resetSection.style.display =
-                "none";
+        resetSection.style.display =  
+            "none";  
 
-        }
+    }  
 
-        newPasswordElement.value = "";
-        confirmPasswordElement.value = "";
+    newPasswordElement.value = "";  
+    confirmPasswordElement.value = "";  
 
-    } catch (error) {
+} catch (error) {  
 
-        console.error(error);
+    console.error(error);  
 
-        alert(
-            "❌ Unable to change password."
-        );
-
-    }
+    alert(  
+        "❌ Unable to change password."  
+    );  
 
 }
 
+}
 
 /* =========================================================
-   AUTH STATUS
-   ========================================================= */
+AUTH STATUS
+========================================================= */
 
 function setAuthStatus(message) {
 
-    if (elementExists(authStatus)) {
+if (elementExists(authStatus)) {  
 
-        authStatus.innerHTML =
-            message;
-
-    }
+    authStatus.innerHTML =  
+        message;  
 
 }
 
+}
 
 /* =========================================================
-   CHECK LOGIN
-   ========================================================= */
+CHECK LOGIN
+========================================================= */
 
 async function checkLogin() {
 
-    try {
+try {  
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient.auth.getSession();
+    const {  
+        data,  
+        error  
+    } =  
+        await supabaseClient.auth.getSession();  
 
-        if (error) {
+    if (error) {  
 
-            console.error(error);
+        console.error(error);  
 
-            showLogin();
+        showLogin();  
 
-            return;
-        }
+        return;  
+    }  
 
-        if (!data.session) {
+    if (!data.session) {  
 
-            currentSubscriptionPlan = "";
+        currentSubscriptionPlan = "";  
 
-            reportsGenerated = 0;
+        reportsGenerated = 0;  
 
-            currentUserId = null;
+        currentUserId = null;  
 
-            showLogin();
+        showLogin();  
 
-            return;
-        }
+        return;  
+    }  
 
-        const user =
-            data.session.user;
+    const user =  
+        data.session.user;  
 
-        currentUserId =
-            user.id;
+    currentUserId =  
+        user.id;  
 
-        await checkSubscription(user);
+    await checkSubscription(user);  
 
-    } catch (error) {
+} catch (error) {  
 
-        console.error(error);
+    console.error(error);  
 
-        showLogin();
-
-    }
+    showLogin();  
 
 }
 
+}
 
 /* =========================================================
-   CHECK SUBSCRIPTION
-   ========================================================= */
+CHECK SUBSCRIPTION
+========================================================= */
 
 async function checkSubscription(user) {
 
-    try {
+try {  
 
-        const {
-            data: subscription,
-            error
-        } =
-            await supabaseClient
-                .from("subscriptions")
-                .select("*")
-                .eq("user_id", user.id)
-                .maybeSingle();
+    const {  
+        data: subscription,  
+        error  
+    } =  
+        await supabaseClient  
+            .from("subscriptions")  
+            .select("*")  
+            .eq("user_id", user.id)  
+            .maybeSingle();  
 
-        if (error) {
+    if (error) {  
 
-            console.error(
-                "Subscription error:",
-                error
-            );
+        console.error(  
+            "Subscription error:",  
+            error  
+        );  
 
-            currentSubscriptionPlan = "";
+        currentSubscriptionPlan = "";  
 
-            reportsGenerated = 0;
+        reportsGenerated = 0;  
 
-            showSubscription();
+        showSubscription();  
 
-            displaySubscriptionStatus(
-                null,
-                user
-            );
+        displaySubscriptionStatus(  
+            null,  
+            user  
+        );  
 
-            return;
+        return;  
 
-        }
-
-
-        /* =================================================
-           RESET VALUES BEFORE READING SUBSCRIPTION
-           ================================================= */
-
-        currentSubscriptionPlan = "";
-
-        reportsGenerated = 0;
+    }  
 
 
-        /* =================================================
-           READ SUBSCRIPTION PLAN
-           ================================================= */
+    /* =================================================  
+       RESET VALUES BEFORE READING SUBSCRIPTION  
+       ================================================= */  
 
-        if (subscription) {
+    currentSubscriptionPlan = "";  
 
-            currentSubscriptionPlan =
-                String(
-                    subscription.plan ||
-                    subscription.subscription_plan ||
-                    subscription.package ||
-                    ""
-                )
-                    .trim()
-                    .toLowerCase();
+    reportsGenerated = 0;  
 
 
-            /* =================================================
-               READ GENERATED REPORT COUNT
-               ================================================= */
+    /* =================================================  
+       READ SUBSCRIPTION PLAN  
+       ================================================= */  
 
-            reportsGenerated =
-                Number(
-                    subscription.reports_generated
-                ) || 0;
+    if (subscription) {  
 
-        }
+        currentSubscriptionPlan =  
+            String(  
+                subscription.plan ||  
+                subscription.subscription_plan ||  
+                subscription.package ||  
+                ""  
+            )  
+                .trim()  
+                .toLowerCase();  
 
 
-        displaySubscriptionStatus(
-            subscription,
-            user
-        );
+        /* =================================================  
+           READ GENERATED REPORT COUNT  
+           ================================================= */  
+
+        reportsGenerated =  
+            Number(  
+                subscription.reports_generated  
+            ) || 0;  
+
+    }  
 
 
-        /* =================================================
-           VALID PAID SUBSCRIPTION
-           ================================================= */
+    displaySubscriptionStatus(  
+        subscription,  
+        user  
+    );  
 
-        if (
 
-            subscription &&
+    /* =================================================  
+       VALID PAID SUBSCRIPTION  
+       ================================================= */  
 
-            String(subscription.status)
-                .toLowerCase() === "paid" &&
+    if (  
 
-            subscription.expires_at &&
+        subscription &&  
 
-            new Date(subscription.expires_at)
-                > new Date()
+        String(subscription.status)  
+            .toLowerCase() === "paid" &&  
 
-        ) {
+        subscription.expires_at &&  
 
-            showApp();
+        new Date(subscription.expires_at)  
+            > new Date()  
 
-            updateReportStatus();
+    ) {  
 
-        } else {
+        showApp();  
 
-            showSubscription();
+        updateReportStatus();  
 
-        }
+    } else {  
 
-    } catch (error) {
+        showSubscription();  
 
-        console.error(error);
+    }  
 
-        showSubscription();
+} catch (error) {  
 
-    }
+    console.error(error);  
+
+    showSubscription();  
 
 }
 
+}
 
 /* =========================================================
-   AUTH STATE
-   ========================================================= */
+AUTH STATE
+========================================================= */
 
 supabaseClient.auth.onAuthStateChange(
-    function () {
+function () {
 
-        setTimeout(
-            function () {
+setTimeout(  
+        function () {  
 
-                checkLogin();
+            checkLogin();  
 
-            },
-            0
-        );
+        },  
+        0  
+    );  
 
-    }
+}
+
 );
 
-
 /* =========================================================
-   PASSWORD RECOVERY
-   ========================================================= */
+PASSWORD RECOVERY
+========================================================= */
 
 supabaseClient.auth.onAuthStateChange(
-    function (event) {
+function (event) {
 
-        if (
-            event === "PASSWORD_RECOVERY"
-        ) {
+if (  
+        event === "PASSWORD_RECOVERY"  
+    ) {  
 
-            const resetSection =
-                document.getElementById(
-                    "resetPasswordSection"
-                );
+        const resetSection =  
+            document.getElementById(  
+                "resetPasswordSection"  
+            );  
 
-            if (resetSection) {
+        if (resetSection) {  
 
-                resetSection.style.display =
-                    "block";
+            resetSection.style.display =  
+                "block";  
 
-            }
+        }  
 
-        }
+    }  
 
-    }
+}
+
 );
 
-
 /* =========================================================
-   DISPLAY SUBSCRIPTION
-   ========================================================= */
+DISPLAY SUBSCRIPTION
+========================================================= */
 
 function displaySubscriptionStatus(
-    subscription,
-    user
+subscription,
+user
 ) {
 
-    if (
-        !elementExists(subscriptionStatus)
-    ) {
+if (  
+    !elementExists(subscriptionStatus)  
+) {  
 
-        return;
-    }
+    return;  
+}  
 
-    subscriptionStatus.style.display =
-        "block";
-
-
-    if (
-
-        subscription &&
-
-        String(subscription.status)
-            .toLowerCase() === "paid"
-
-    ) {
-
-        let expiryText =
-            "Unknown";
-
-        if (subscription.expires_at) {
-
-            expiryText =
-                new Date(
-                    subscription.expires_at
-                ).toLocaleDateString();
-
-        }
+subscriptionStatus.style.display =  
+    "block";  
 
 
-        const plan =
-            String(
-                subscription.plan ||
-                subscription.subscription_plan ||
-                subscription.package ||
-                ""
-            )
-                .trim()
-                .toLowerCase();
+if (  
+
+    subscription &&  
+
+    String(subscription.status)  
+        .toLowerCase() === "paid"  
+
+) {  
+
+    let expiryText =  
+        "Unknown";  
+
+    if (subscription.expires_at) {  
+
+        expiryText =  
+            new Date(  
+                subscription.expires_at  
+            ).toLocaleDateString();  
+
+    }  
 
 
-        const limit =
-            REPORT_LIMITS[plan] || 0;
+    const plan =  
+        String(  
+            subscription.plan ||  
+            subscription.subscription_plan ||  
+            subscription.package ||  
+            ""  
+        )  
+            .trim()  
+            .toLowerCase();  
 
 
-        const generated =
-            Number(
-                subscription.reports_generated
-            ) || 0;
+    const limit =  
+        REPORT_LIMITS[plan] || 0;  
 
 
-        const remaining =
-            limit
-                ? Math.max(
-                    limit - generated,
-                    0
-                )
-                : 0;
+    const generated =  
+        Number(  
+            subscription.reports_generated  
+        ) || 0;  
 
 
-        subscriptionStatus.innerHTML = `
+    const remaining =  
+        limit  
+            ? Math.max(  
+                limit - generated,  
+                0  
+            )  
+            : 0;  
 
-            <strong>
-                Subscription Status:
-            </strong>
 
-            <span style="color:green;">
-                PAID
-            </span>
+    subscriptionStatus.innerHTML = `  
 
-            <br>
+        <strong>  
+            Subscription Status:  
+        </strong>  
 
-            <strong>
-                Plan:
-            </strong>
+        <span style="color:green;">  
+            PAID  
+        </span>  
 
-            ${escapeHTML(
-                getPlanDisplayNameFromPlan(plan)
-            )}
+        <br>  
 
-            <br>
+        <strong>  
+            Plan:  
+        </strong>  
 
-            <strong>
-                Account:
-            </strong>
+        ${escapeHTML(  
+            getPlanDisplayNameFromPlan(plan)  
+        )}  
 
-            ${escapeHTML(user.email)}
+        <br>  
 
-            <br>
+        <strong>  
+            Account:  
+        </strong>  
 
-            <strong>
-                Expires:
-            </strong>
+        ${escapeHTML(user.email)}  
 
-            ${escapeHTML(expiryText)}
+        <br>  
 
-            ${
-                limit
-                ? `
-                    <br>
+        <strong>  
+            Expires:  
+        </strong>  
 
-                    <strong>
-                        Reports Generated:
-                    </strong>
+        ${escapeHTML(expiryText)}  
 
-                    ${generated} / ${limit}
+        ${  
+            limit  
+            ? `  
+                <br>  
 
-                    <br>
+                <strong>  
+                    Reports Generated:  
+                </strong>  
 
-                    <strong>
-                        Reports Remaining:
-                    </strong>
+                ${generated} / ${limit}  
 
-                    ${remaining}
-                  `
-                : ""
-            }
+                <br>  
 
-        `;
+                <strong>  
+                    Reports Remaining:  
+                </strong>  
 
-    } else {
+                ${remaining}  
+              `  
+            : ""  
+        }  
 
-        subscriptionStatus.innerHTML = `
+    `;  
 
-            <strong>
-                Subscription Status:
-            </strong>
+} else {  
 
-            <span style="color:red;">
-                UNPAID
-            </span>
+    subscriptionStatus.innerHTML = `  
 
-            <br>
+        <strong>  
+            Subscription Status:  
+        </strong>  
 
-            Please choose a subscription plan.
+        <span style="color:red;">  
+            UNPAID  
+        </span>  
 
-        `;
+        <br>  
 
-    }
+        Please choose a subscription plan.  
+
+    `;  
 
 }
 
+}
 
 /* =========================================================
-   GET PLAN DISPLAY NAME
-   ========================================================= */
+GET PLAN DISPLAY NAME
+========================================================= */
 
 function getPlanDisplayNameFromPlan(plan) {
 
-    const cleanPlan =
-        String(plan || "")
-            .trim()
-            .toLowerCase();
+const cleanPlan =  
+    String(plan || "")  
+        .trim()  
+        .toLowerCase();  
 
-    if (cleanPlan === "basic") {
-        return "BASIC";
-    }
+if (cleanPlan === "basic") {  
+    return "BASIC";  
+}  
 
-    if (cleanPlan === "standard") {
-        return "STANDARD";
-    }
+if (cleanPlan === "standard") {  
+    return "STANDARD";  
+}  
 
-    if (cleanPlan === "premium") {
-        return "PREMIUM";
-    }
+if (cleanPlan === "premium") {  
+    return "PREMIUM";  
+}  
 
-    return "UNKNOWN";
+return "UNKNOWN";
 
 }
 
-
 /* =========================================================
-   APPLICATION EVENTS
-   ========================================================= */
+APPLICATION EVENTS
+========================================================= */
 
 function attachApplicationEvents() {
 
-    if (
-        elementExists(downloadTemplateButton)
-    ) {
+if (  
+    elementExists(downloadTemplateButton)  
+) {  
 
-        downloadTemplateButton.addEventListener(
-            "click",
-            downloadExcelTemplate
-        );
+    downloadTemplateButton.addEventListener(  
+        "click",  
+        downloadExcelTemplate  
+    );  
 
-    }
+}  
 
-    if (
-        elementExists(excelFileInput)
-    ) {
+if (  
+    elementExists(excelFileInput)  
+) {  
 
-        excelFileInput.addEventListener(
-            "change",
-            handleExcelUpload
-        );
+    excelFileInput.addEventListener(  
+        "change",  
+        handleExcelUpload  
+    );  
 
-    }
+}  
 
-    if (
-        elementExists(generateReportButton)
-    ) {
+if (  
+    elementExists(generateReportButton)  
+) {  
 
-        generateReportButton.addEventListener(
-            "click",
-            generateSingleReport
-        );
+    generateReportButton.addEventListener(  
+        "click",  
+        generateSingleReport  
+    );  
 
-    }
+}  
 
-    if (
-        elementExists(generateAllButton)
-    ) {
+if (  
+    elementExists(generateAllButton)  
+) {  
 
-        generateAllButton.addEventListener(
-            "click",
-            generateAllReports
-        );
+    generateAllButton.addEventListener(  
+        "click",  
+        generateAllReports  
+    );  
 
-    }
+}  
 
-    attachPaystackButtons();
+attachPaystackButtons();
 
 }
 
-
 /* =========================================================
-   SUBJECT MANAGER
-   ========================================================= */
+SUBJECT MANAGER
+========================================================= */
 
 function createSubjectManager() {
 
-    if (!elementExists(appSection)) {
-        return;
-    }
+if (!elementExists(appSection)) {  
+    return;  
+}  
 
-    const existing =
-        document.getElementById(
-            "subjectManager"
-        );
+const existing =  
+    document.getElementById(  
+        "subjectManager"  
+    );  
 
-    if (existing) {
-        return;
-    }
+if (existing) {  
+    return;  
+}  
 
-    const manager =
-        document.createElement("section");
+const manager =  
+    document.createElement("section");  
 
-    manager.id =
-        "subjectManager";
+manager.id =  
+    "subjectManager";  
 
-    manager.className =
-        "card";
+manager.className =  
+    "card";  
 
-    manager.innerHTML = `
+manager.innerHTML = `  
 
-        <h2>
-            School Subjects
-        </h2>
+    <h2>  
+        School Subjects  
+    </h2>  
 
-        <p>
-            Add or remove subjects before downloading
-            the Excel template.
-        </p>
+    <p>  
+        Add or remove subjects before downloading  
+        the Excel template.  
+    </p>  
 
-        <div id="subjectList"></div>
+    <div id="subjectList"></div>  
 
-        <div style="margin-top:10px;">
+    <div style="margin-top:10px;">  
 
-            <input
-                type="text"
-                id="newSubjectInput"
-                placeholder="Enter subject name"
-            >
+        <input  
+            type="text"  
+            id="newSubjectInput"  
+            placeholder="Enter subject name"  
+        >  
 
-            <button
-                type="button"
-                id="addSubjectButton"
-            >
-                Add Subject
-            </button>
+        <button  
+            type="button"  
+            id="addSubjectButton"  
+        >  
+            Add Subject  
+        </button>  
 
-        </div>
+    </div>  
 
-    `;
+`;  
 
-    const firstCard =
-        appSection.querySelector(".card");
+const firstCard =  
+    appSection.querySelector(".card");  
 
-    if (firstCard) {
+if (firstCard) {  
 
-        firstCard.parentNode.insertBefore(
-            manager,
-            firstCard
-        );
+    firstCard.parentNode.insertBefore(  
+        manager,  
+        firstCard  
+    );  
 
-    } else {
+} else {  
 
-        appSection.prepend(manager);
+    appSection.prepend(manager);  
 
-    }
+}  
 
-    renderSubjectList();
+renderSubjectList();  
 
-    const addButton =
-        document.getElementById(
-            "addSubjectButton"
-        );
+const addButton =  
+    document.getElementById(  
+        "addSubjectButton"  
+    );  
 
-    const input =
-        document.getElementById(
-            "newSubjectInput"
-        );
+const input =  
+    document.getElementById(  
+        "newSubjectInput"  
+    );  
 
-    if (addButton) {
+if (addButton) {  
 
-        addButton.addEventListener(
-            "click",
-            function () {
+    addButton.addEventListener(  
+        "click",  
+        function () {  
 
-                const subject =
-                    input.value.trim();
+            const subject =  
+                input.value.trim();  
 
-                if (!subject) {
+            if (!subject) {  
 
-                    alert(
-                        "Please enter a subject name."
-                    );
+                alert(  
+                    "Please enter a subject name."  
+                );  
 
-                    return;
-                }
+                return;  
+            }  
 
-                addSubject(subject);
+            addSubject(subject);  
 
-                input.value = "";
+            input.value = "";  
 
-            }
-        );
-
-    }
+        }  
+    );  
 
 }
 
+}
 
 /* =========================================================
-   RENDER SUBJECT LIST
-   ========================================================= */
+RENDER SUBJECT LIST
+========================================================= */
 
 function renderSubjectList() {
 
-    const list =
-        document.getElementById(
-            "subjectList"
-        );
+const list =  
+    document.getElementById(  
+        "subjectList"  
+    );  
 
-    if (!list) {
-        return;
-    }
+if (!list) {  
+    return;  
+}  
 
-    list.innerHTML = "";
+list.innerHTML = "";  
 
-    schoolSubjects.forEach(
-        function (
-            subject,
-            index
-        ) {
+schoolSubjects.forEach(  
+    function (  
+        subject,  
+        index  
+    ) {  
 
-            const item =
-                document.createElement("div");
+        const item =  
+            document.createElement("div");  
 
-            item.style.display = "flex";
-            item.style.alignItems = "center";
-            item.style.gap = "8px";
-            item.style.marginBottom = "6px";
+        item.style.display = "flex";  
+        item.style.alignItems = "center";  
+        item.style.gap = "8px";  
+        item.style.marginBottom = "6px";  
 
-            item.innerHTML = `
+        item.innerHTML = `  
 
-                <input
-                    type="text"
-                    value="${escapeHTML(subject)}"
-                    data-subject-index="${index}"
-                    class="subject-name-input"
-                    style="flex:1;"
-                >
+            <input  
+                type="text"  
+                value="${escapeHTML(subject)}"  
+                data-subject-index="${index}"  
+                class="subject-name-input"  
+                style="flex:1;"  
+            >  
 
-                <button
-                    type="button"
-                    data-remove-subject="${index}"
-                >
-                    Remove
-                </button>
+            <button  
+                type="button"  
+                data-remove-subject="${index}"  
+            >  
+                Remove  
+            </button>  
 
-            `;
+        `;  
 
-            list.appendChild(item);
+        list.appendChild(item);  
 
-        }
-    );
-
-
-    list.querySelectorAll(
-        ".subject-name-input"
-    ).forEach(
-        function (input) {
-
-            input.addEventListener(
-                "change",
-                function () {
-
-                    const index =
-                        Number(
-                            input.dataset.subjectIndex
-                        );
-
-                    const newName =
-                        input.value.trim();
-
-                    if (!newName) {
-
-                        alert(
-                            "Subject name cannot be empty."
-                        );
-
-                        renderSubjectList();
-
-                        return;
-                    }
-
-                    const duplicate =
-                        schoolSubjects.some(
-                            function (
-                                subject,
-                                subjectIndex
-                            ) {
-
-                                return (
-
-                                    subjectIndex !== index &&
-
-                                    subject.toLowerCase() ===
-                                    newName.toLowerCase()
-
-                                );
-
-                            }
-                        );
-
-                    if (duplicate) {
-
-                        alert(
-                            "This subject already exists."
-                        );
-
-                        renderSubjectList();
-
-                        return;
-                    }
-
-                    schoolSubjects[index] =
-                        newName;
-
-                }
-            );
-
-        }
-    );
+    }  
+);  
 
 
-    list.querySelectorAll(
-        "[data-remove-subject]"
-    ).forEach(
-        function (button) {
+list.querySelectorAll(  
+    ".subject-name-input"  
+).forEach(  
+    function (input) {  
 
-            button.addEventListener(
-                "click",
-                function () {
+        input.addEventListener(  
+            "change",  
+            function () {  
 
-                    const index =
-                        Number(
-                            button.dataset.removeSubject
-                        );
+                const index =  
+                    Number(  
+                        input.dataset.subjectIndex  
+                    );  
 
-                    schoolSubjects.splice(
-                        index,
-                        1
-                    );
+                const newName =  
+                    input.value.trim();  
 
-                    renderSubjectList();
+                if (!newName) {  
 
-                }
-            );
+                    alert(  
+                        "Subject name cannot be empty."  
+                    );  
 
-        }
-    );
+                    renderSubjectList();  
+
+                    return;  
+                }  
+
+                const duplicate =  
+                    schoolSubjects.some(  
+                        function (  
+                            subject,  
+                            subjectIndex  
+                        ) {  
+
+                            return (  
+
+                                subjectIndex !== index &&  
+
+                                subject.toLowerCase() ===  
+                                newName.toLowerCase()  
+
+                            );  
+
+                        }  
+                    );  
+
+                if (duplicate) {  
+
+                    alert(  
+                        "This subject already exists."  
+                    );  
+
+                    renderSubjectList();  
+
+                    return;  
+                }  
+
+                schoolSubjects[index] =  
+                    newName;  
+
+            }  
+        );  
+
+    }  
+);  
+
+
+list.querySelectorAll(  
+    "[data-remove-subject]"  
+).forEach(  
+    function (button) {  
+
+        button.addEventListener(  
+            "click",  
+            function () {  
+
+                const index =  
+                    Number(  
+                        button.dataset.removeSubject  
+                    );  
+
+                schoolSubjects.splice(  
+                    index,  
+                    1  
+                );  
+
+                renderSubjectList();  
+
+            }  
+        );  
+
+    }  
+);
 
 }
 
-
 /* =========================================================
-   ADD SUBJECT
-   ========================================================= */
+ADD SUBJECT
+========================================================= */
 
 function addSubject(subject) {
 
-    const exists =
-        schoolSubjects.some(
-            function (existing) {
+const exists =  
+    schoolSubjects.some(  
+        function (existing) {  
 
-                return (
-                    existing.toLowerCase() ===
-                    subject.toLowerCase()
-                );
+            return (  
+                existing.toLowerCase() ===  
+                subject.toLowerCase()  
+            );  
 
-            }
-        );
+        }  
+    );  
 
-    if (exists) {
+if (exists) {  
 
-        alert(
-            "This subject already exists."
-        );
+    alert(  
+        "This subject already exists."  
+    );  
 
-        return;
-    }
+    return;  
+}  
 
-    schoolSubjects.push(subject);
+schoolSubjects.push(subject);  
 
-    renderSubjectList();
+renderSubjectList();
 
 }
 
-
 /* =========================================================
-   SAFE SUBJECT SHEET NAME
-   ========================================================= */
+SAFE SUBJECT SHEET NAME
+========================================================= */
 
 function getSubjectSheetName(
-    subject,
-    workbook
+subject,
+workbook
 ) {
 
-    let clean =
-        String(subject)
-            .replace(
-                /[:\\\/\?\*\[\]]/g,
-                ""
-            )
-            .trim();
+let clean =  
+    String(subject)  
+        .replace(  
+            /[:\\\/\?\*]/g,  
+            ""  
+        )  
+        .trim();  
 
-    if (!clean) {
-        clean = "Subject";
-    }
+if (!clean) {  
+    clean = "Subject";  
+}  
 
-    clean =
-        clean.substring(0, 31);
+clean =  
+    clean.substring(0, 31);  
 
-    let finalName =
-        clean;
+let finalName =  
+    clean;  
 
-    let counter = 2;
+let counter = 2;  
 
-    while (
-        workbook.SheetNames.some(
-            function (name) {
+while (  
+    workbook.SheetNames.some(  
+        function (name) {  
 
-                return (
-                    name.toLowerCase() ===
-                    finalName.toLowerCase()
-                );
+            return (  
+                name.toLowerCase() ===  
+                finalName.toLowerCase()  
+            );  
 
-            }
-        )
-    ) {
+        }  
+    )  
+) {  
 
-        const suffix =
-            " " + counter;
+    const suffix =  
+        " " + counter;  
 
-        finalName =
-            clean.substring(
-                0,
-                31 - suffix.length
-            ) +
-            suffix;
+    finalName =  
+        clean.substring(  
+            0,  
+            31 - suffix.length  
+        ) +  
+        suffix;  
 
-        counter++;
+    counter++;  
 
-    }
+}  
 
-    return finalName;
+return finalName;
 
 }
 
-
 /* =========================================================
-   DOWNLOAD EXCEL TEMPLATE
-   ========================================================= */
+DOWNLOAD EXCEL TEMPLATE
+========================================================= */
 
 function downloadExcelTemplate() {
 
-    try {
+try {  
 
-        if (typeof XLSX === "undefined") {
+    if (typeof XLSX === "undefined") {  
 
-            alert(
-                "Excel library has not loaded. Please refresh the page."
-            );
+        alert(  
+            "Excel library has not loaded. Please refresh the page."  
+        );  
 
-            return;
-        }
+        return;  
+    }  
 
-        schoolSubjects =
-            schoolSubjects
-                .map(
-                    function (subject) {
-                        return String(subject).trim();
-                    }
-                )
-                .filter(
-                    function (subject) {
-                        return subject !== "";
-                    }
-                );
+    schoolSubjects =  
+        schoolSubjects  
+            .map(  
+                function (subject) {  
+                    return String(subject).trim();  
+                }  
+            )  
+            .filter(  
+                function (subject) {  
+                    return subject !== "";  
+                }  
+            );  
 
-        if (schoolSubjects.length === 0) {
+    if (schoolSubjects.length === 0) {  
 
-            alert(
-                "Please add at least one subject."
-            );
+        alert(  
+            "Please add at least one subject."  
+        );  
 
-            return;
-        }
+        return;  
+    }  
 
-        const workbook =
-            XLSX.utils.book_new();
+    const workbook =  
+        XLSX.utils.book_new();  
 
 
-        /* =================================================
-           SCORES SHEET
-           ================================================= */
+    /* =================================================  
+       SCORES SHEET  
+       ================================================= */  
 
-        const scoresHeaders = [
+    const scoresHeaders = [  
 
-            "Admission No",
-            "Student Name",
-            "Gender",
-            "Class",
-            "Term",
-            "Session",
-            "House"
+        "Admission No",  
+        "Student Name",  
+        "Gender",  
+        "Class",  
+        "Term",  
+        "Session",  
+        "House"  
 
-        ];
+    ];  
 
 
-        schoolSubjects.forEach(
-            function (subject) {
+    schoolSubjects.forEach(  
+        function (subject) {  
 
-                scoresHeaders.push(
-                    subject + " 1st CA"
-                );
+            scoresHeaders.push(  
+                subject + " 1st CA"  
+            );  
 
-                scoresHeaders.push(
-                    subject + " 2nd CA"
-                );
+            scoresHeaders.push(  
+                subject + " 2nd CA"  
+            );  
 
-                scoresHeaders.push(
-                    subject + " Exams"
-                );
+            scoresHeaders.push(  
+                subject + " Exams"  
+            );  
 
-            }
-        );
+        }  
+    );  
 
 
-        scoresHeaders.push(
-            "Overall Total"
-        );
+    scoresHeaders.push(  
+        "Overall Total"  
+    );  
 
-        scoresHeaders.push(
-            "Average"
-        );
+    scoresHeaders.push(  
+        "Average"  
+    );  
 
-        scoresHeaders.push(
-            "Position"
-        );
+    scoresHeaders.push(  
+        "Position"  
+    );  
 
 
-        const scoresData = [
-            scoresHeaders
-        ];
+    const scoresData = [  
+        scoresHeaders  
+    ];  
 
 
-        for (
-            let i = 1;
-            i <= TEMPLATE_STUDENT_ROWS;
-            i++
-        ) {
+    for (  
+        let i = 1;  
+        i <= TEMPLATE_STUDENT_ROWS;  
+        i++  
+    ) {  
 
-            const row = [
+        const row = [  
 
-                i === 1 ? "001" : "",
+            i === 1 ? "001" : "",  
 
-                i === 1
-                    ? "Example Student"
-                    : "",
+            i === 1  
+                ? "Example Student"  
+                : "",  
 
-                i === 1 ? "Male" : "",
+            i === 1 ? "Male" : "",  
 
-                i === 1 ? "SS2" : "",
+            i === 1 ? "SS2" : "",  
 
-                i === 1
-                    ? "First Term"
-                    : "",
+            i === 1  
+                ? "First Term"  
+                : "",  
 
-                i === 1
-                    ? "2025/2026"
-                    : "",
+            i === 1  
+                ? "2025/2026"  
+                : "",  
 
-                i === 1
-                    ? "Example House"
-                    : ""
+            i === 1  
+                ? "Example House"  
+                : ""  
 
-            ];
+        ];  
 
 
-            schoolSubjects.forEach(
-                function () {
+        schoolSubjects.forEach(  
+            function () {  
 
-                    row.push("");
-                    row.push("");
-                    row.push("");
+                row.push("");  
+                row.push("");  
+                row.push("");  
 
-                }
-            );
+            }  
+        );  
 
 
-            row.push("");
+        row.push("");  
 
-            row.push("");
+        row.push("");  
 
-            row.push("");
+        row.push("");  
 
 
-            scoresData.push(row);
+        scoresData.push(row);  
 
-        }
+    }  
 
 
-        const scoresSheet =
-            XLSX.utils.aoa_to_sheet(
-                scoresData
-            );
+    const scoresSheet =  
+        XLSX.utils.aoa_to_sheet(  
+            scoresData  
+        );  
 
 
-        scoresSheet["!cols"] = [
+    scoresSheet["!cols"] = [  
 
-            { wch: 15 },
-            { wch: 30 },
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 20 }
+        { wch: 15 },  
+        { wch: 30 },  
+        { wch: 12 },  
+        { wch: 12 },  
+        { wch: 15 },  
+        { wch: 15 },  
+        { wch: 20 }  
 
-        ];
+    ];  
 
 
-        schoolSubjects.forEach(
-            function () {
+    schoolSubjects.forEach(  
+        function () {  
 
-                scoresSheet["!cols"].push(
-                    { wch: 15 },
-                    { wch: 15 },
-                    { wch: 15 }
-                );
+            scoresSheet["!cols"].push(  
+                { wch: 15 },  
+                { wch: 15 },  
+                { wch: 15 }  
+            );  
 
-            }
-        );
+        }  
+    );  
 
 
-        scoresSheet["!cols"].push(
-            { wch: 18 },
-            { wch: 15 },
-            { wch: 12 }
-        );
+    scoresSheet["!cols"].push(  
+        { wch: 18 },  
+        { wch: 15 },  
+        { wch: 12 }  
+    );  
 
 
-        scoresSheet["!freeze"] = {
-            xSplit: 0,
-            ySplit: 1
-        };
+    scoresSheet["!freeze"] = {  
+        xSplit: 0,  
+        ySplit: 1  
+    };  
 
 
-        XLSX.utils.book_append_sheet(
-            workbook,
-            scoresSheet,
-            "Scores"
-        );
+    XLSX.utils.book_append_sheet(  
+        workbook,  
+        scoresSheet,  
+        "Scores"  
+    );  
 
 
-        /* =================================================
-           SETTINGS SHEET
-           ================================================= */
+    /* =================================================  
+       SETTINGS SHEET  
+       ================================================= */  
 
-        const settingsData = [
+    const settingsData = [  
 
-            ["SETTING", "VALUE"],
+        ["SETTING", "VALUE"],  
 
-            [
-                "School Name",
-                reportSettings.schoolName
-            ],
+        [  
+            "School Name",  
+            reportSettings.schoolName  
+        ],  
 
-            [
-                "School Address",
-                reportSettings.schoolAddress
-            ],
+        [  
+            "School Address",  
+            reportSettings.schoolAddress  
+        ],  
 
-            [
-                "1st CA Maximum",
-                reportSettings.firstCAMaximum
-            ],
+        [  
+            "1st CA Maximum",  
+            reportSettings.firstCAMaximum  
+        ],  
 
-            [
-                "2nd CA Maximum",
-                reportSettings.secondCAMaximum
-            ],
+        [  
+            "2nd CA Maximum",  
+            reportSettings.secondCAMaximum  
+        ],  
 
-            [
-                "Exams Maximum",
-                reportSettings.examsMaximum
-            ],
+        [  
+            "Exams Maximum",  
+            reportSettings.examsMaximum  
+        ],  
 
-            [
-                "Grade A Minimum",
-                reportSettings.gradeA
-            ],
+        [  
+            "Grade A Minimum",  
+            reportSettings.gradeA  
+        ],  
 
-            [
-                "Grade B Minimum",
-                reportSettings.gradeB
-            ],
+        [  
+            "Grade B Minimum",  
+            reportSettings.gradeB  
+        ],  
 
-            [
-                "Grade C Minimum",
-                reportSettings.gradeC
-            ],
+        [  
+            "Grade C Minimum",  
+            reportSettings.gradeC  
+        ],  
 
-            [
-                "Grade D Minimum",
-                reportSettings.gradeD
-            ],
+        [  
+            "Grade D Minimum",  
+            reportSettings.gradeD  
+        ],  
 
-            [
-                "Grade E Minimum",
-                reportSettings.gradeE
-            ],
+        [  
+            "Grade E Minimum",  
+            reportSettings.gradeE  
+        ],  
 
-            [
-                "Grade F Minimum",
-                reportSettings.gradeF
-            ],
+        [  
+            "Grade F Minimum",  
+            reportSettings.gradeF  
+        ],  
 
-            [
-                "Subjects",
-                schoolSubjects.join(", ")
-            ]
+        [  
+            "Subjects",  
+            schoolSubjects.join(", ")  
+        ]  
 
-        ];
+    ];  
 
 
-        const settingsSheet =
-            XLSX.utils.aoa_to_sheet(
-                settingsData
-            );
+    const settingsSheet =  
+        XLSX.utils.aoa_to_sheet(  
+            settingsData  
+        );  
 
 
-        settingsSheet["!cols"] = [
-            { wch: 25 },
-            { wch: 50 }
-        ];
+    settingsSheet["!cols"] = [  
+        { wch: 25 },  
+        { wch: 50 }  
+    ];  
 
 
-        XLSX.utils.book_append_sheet(
-            workbook,
-            settingsSheet,
-            "Settings"
-        );
+    XLSX.utils.book_append_sheet(  
+        workbook,  
+        settingsSheet,  
+        "Settings"  
+    );  
 
 
-        /* =================================================
-           SUBJECT SHEETS
-           ================================================= */
+    /* =================================================  
+       SUBJECT SHEETS  
+       ================================================= */  
 
-        const actualSubjectSheetNames = {};
+    const actualSubjectSheetNames = {};  
 
 
-        schoolSubjects.forEach(
-            function (subject) {
+    schoolSubjects.forEach(  
+        function (subject) {  
 
-                const sheetName =
-                    getSubjectSheetName(
-                        subject,
-                        workbook
-                    );
+            const sheetName =  
+                getSubjectSheetName(  
+                    subject,  
+                    workbook  
+                );  
 
-                actualSubjectSheetNames[subject] =
-                    sheetName;
+            actualSubjectSheetNames[subject] =  
+                sheetName;  
 
 
-                const subjectData = [
+            const subjectData = [  
 
-                    [
-                        "Adm No",
-                        "Student Name",
-                        "1st CA",
-                        "2nd CA",
-                        "Exams"
-                    ]
+                [  
+                    "Adm No",  
+                    "Student Name",  
+                    "1st CA",  
+                    "2nd CA",  
+                    "Exams"  
+                ]  
 
-                ];
+            ];  
 
 
-                for (
-                    let i = 1;
-                    i <= TEMPLATE_STUDENT_ROWS;
-                    i++
-                ) {
+            for (  
+                let i = 1;  
+                i <= TEMPLATE_STUDENT_ROWS;  
+                i++  
+            ) {  
 
-                    subjectData.push([
+                subjectData.push([  
 
-                        i === 1
-                            ? "001"
-                            : "",
+                    i === 1  
+                        ? "001"  
+                        : "",  
 
-                        i === 1
-                            ? "Example Student"
-                            : "",
+                    i === 1  
+                        ? "Example Student"  
+                        : "",  
 
-                        "",
-                        "",
-                        ""
+                    "",  
+                    "",  
+                    ""  
 
-                    ]);
+                ]);  
 
-                }
+            }  
 
 
-                const subjectSheet =
-                    XLSX.utils.aoa_to_sheet(
-                        subjectData
-                    );
+            const subjectSheet =  
+                XLSX.utils.aoa_to_sheet(  
+                    subjectData  
+                );  
 
 
-                subjectSheet["!cols"] = [
+            subjectSheet["!cols"] = [  
 
-                    { wch: 15 },
-                    { wch: 30 },
-                    { wch: 15 },
-                    { wch: 15 },
-                    { wch: 15 }
+                { wch: 15 },  
+                { wch: 30 },  
+                { wch: 15 },  
+                { wch: 15 },  
+                { wch: 15 }  
 
-                ];
+            ];  
 
 
-                subjectSheet["!freeze"] = {
-                    xSplit: 0,
-                    ySplit: 1
-                };
+            subjectSheet["!freeze"] = {  
+                xSplit: 0,  
+                ySplit: 1  
+            };  
 
 
-                XLSX.utils.book_append_sheet(
-                    workbook,
-                    subjectSheet,
-                    sheetName
-                );
+            XLSX.utils.book_append_sheet(  
+                workbook,  
+                subjectSheet,  
+                sheetName  
+            );  
 
-            }
-        );
+        }  
+    );  
 
 
-        /* =================================================
-           BEHAVIORAL TRAITS SHEET
-           ================================================= */
+    /* =================================================  
+       BEHAVIORAL TRAITS SHEET  
+       ================================================= */  
 
-        const behaviorHeaders = [
+    const behaviorHeaders = [  
 
-            "Adm No",
-            "Student Name"
+        "Adm No",  
+        "Student Name"  
 
-        ];
+    ];  
 
 
-        behavioralTraits.forEach(
-            function (trait) {
+    behavioralTraits.forEach(  
+        function (trait) {  
 
-                behaviorHeaders.push(
-                    trait
-                );
+            behaviorHeaders.push(  
+                trait  
+            );  
 
-            }
-        );
+        }  
+    );  
 
 
-        behaviorHeaders.push(
-            "Class Teacher's Comment"
-        );
+    behaviorHeaders.push(  
+        "Class Teacher's Comment"  
+    );  
 
-        behaviorHeaders.push(
-            "Principal's Comment"
-        );
+    behaviorHeaders.push(  
+        "Principal's Comment"  
+    );  
 
 
-        const behaviorData = [
-            behaviorHeaders
-        ];
+    const behaviorData = [  
+        behaviorHeaders  
+    ];  
 
 
-        for (
-            let i = 1;
-            i <= TEMPLATE_STUDENT_ROWS;
-            i++
-        ) {
+    for (  
+        let i = 1;  
+        i <= TEMPLATE_STUDENT_ROWS;  
+        i++  
+    ) {  
 
-            behaviorData.push([
+        behaviorData.push([  
 
-                i === 1 ? "001" : "",
+            i === 1 ? "001" : "",  
 
-                i === 1
-                    ? "Example Student"
-                    : "",
+            i === 1  
+                ? "Example Student"  
+                : "",  
 
-                "",
-                "",
-                "",
-                "",
-                "",
+            "",  
+            "",  
+            "",  
+            "",  
+            "",  
 
-                "",
+            "",  
 
-                ""
+            ""  
 
-            ]);
+        ]);  
 
-        }
+    }  
 
 
-        const behaviorSheet =
-            XLSX.utils.aoa_to_sheet(
-                behaviorData
-            );
+    const behaviorSheet =  
+        XLSX.utils.aoa_to_sheet(  
+            behaviorData  
+        );  
 
 
-        behaviorSheet["!cols"] = [
+    behaviorSheet["!cols"] = [  
 
-            { wch: 15 },
-            { wch: 30 },
+        { wch: 15 },  
+        { wch: 30 },  
 
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 22 },
-            { wch: 15 },
-            { wch: 15 },
+        { wch: 15 },  
+        { wch: 15 },  
+        { wch: 22 },  
+        { wch: 15 },  
+        { wch: 15 },  
 
-            { wch: 35 },
-            { wch: 35 }
+        { wch: 35 },  
+        { wch: 35 }  
 
-        ];
+    ];  
 
 
-        behaviorSheet["!freeze"] = {
-            xSplit: 0,
-            ySplit: 1
-        };
+    behaviorSheet["!freeze"] = {  
+        xSplit: 0,  
+        ySplit: 1  
+    };  
 
 
-        XLSX.utils.book_append_sheet(
-            workbook,
-            behaviorSheet,
-            "Behavioral Traits"
-        );
+    XLSX.utils.book_append_sheet(  
+        workbook,  
+        behaviorSheet,  
+        "Behavioral Traits"  
+    );  
 
 
-        /* =================================================
-           VLOOKUP FORMULAS
-           ================================================= */
+    /* =================================================  
+       VLOOKUP FORMULAS  
+       ================================================= */  
 
-        schoolSubjects.forEach(
-            function (
-                subject,
-                subjectIndex
-            ) {
+    schoolSubjects.forEach(  
+        function (  
+            subject,  
+            subjectIndex  
+        ) {  
 
-                const sheetName =
-                    actualSubjectSheetNames[
-                        subject
-                    ];
+            const sheetName =  
+                actualSubjectSheetNames[  
+                    subject  
+                ];  
 
 
-                const safeSheetName =
-                    sheetName.replace(
-                        /'/g,
-                        "''"
-                    );
+            const safeSheetName =  
+                sheetName.replace(  
+                    /'/g,  
+                    "''"  
+                );  
 
 
-                const firstCAColumn =
-                    8 +
-                    (
-                        subjectIndex * 3
-                    );
+            const firstCAColumn =  
+                8 +  
+                (  
+                    subjectIndex * 3  
+                );  
 
 
-                const secondCAColumn =
-                    firstCAColumn + 1;
+            const secondCAColumn =  
+                firstCAColumn + 1;  
 
 
-                const examsColumn =
-                    firstCAColumn + 2;
+            const examsColumn =  
+                firstCAColumn + 2;  
 
 
-                const firstCALetter =
-                    XLSX.utils.encode_col(
-                        firstCAColumn - 1
-                    );
+            const firstCALetter =  
+                XLSX.utils.encode_col(  
+                    firstCAColumn - 1  
+                );  
 
 
-                const secondCALetter =
-                    XLSX.utils.encode_col(
-                        secondCAColumn - 1
-                    );
+            const secondCALetter =  
+                XLSX.utils.encode_col(  
+                    secondCAColumn - 1  
+                );  
 
 
-                const examsLetter =
-                    XLSX.utils.encode_col(
-                        examsColumn - 1
-                    );
+            const examsLetter =  
+                XLSX.utils.encode_col(  
+                    examsColumn - 1  
+                );  
 
 
-                for (
-                    let row = 2;
-                    row <=
-                    TEMPLATE_STUDENT_ROWS + 1;
-                    row++
-                ) {
+            for (  
+                let row = 2;  
+                row <=  
+                TEMPLATE_STUDENT_ROWS + 1;  
+                row++  
+            ) {  
 
-                    scoresSheet[
-                        firstCALetter + row
-                    ] = {
+                scoresSheet[  
+                    firstCALetter + row  
+                ] = {  
 
-                        t: "n",
+                    t: "n",  
 
-                        f:
-                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,2,FALSE),""))`
+                    f:  
+                        `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,2,FALSE),""))`  
 
-                    };
+                };  
 
 
-                    scoresSheet[
-                        secondCALetter + row
-                    ] = {
+                scoresSheet[  
+                    secondCALetter + row  
+                ] = {  
 
-                        t: "n",
+                    t: "n",  
 
-                        f:
-                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,3,FALSE),""))`
+                    f:  
+                        `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,3,FALSE),""))`  
 
-                    };
+                };  
 
 
-                    scoresSheet[
-                        examsLetter + row
-                    ] = {
+                scoresSheet[  
+                    examsLetter + row  
+                ] = {  
 
-                        t: "n",
+                    t: "n",  
 
-                        f:
-                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,4,FALSE),""))`
+                    f:  
+                        `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,4,FALSE),""))`  
 
-                    };
+                };  
 
-                }
+            }  
 
-            }
-        );
+        }  
+    );  
 
 
-        /* =================================================
-           OVERALL TOTAL / AVERAGE / POSITION
-           ================================================= */
+    /* =================================================  
+       OVERALL TOTAL / AVERAGE / POSITION  
+       ================================================= */  
 
-        const firstSubjectColumn =
-            8;
+    const firstSubjectColumn =  
+        8;  
 
 
-        const lastSubjectColumn =
-            firstSubjectColumn +
-            (
-                schoolSubjects.length * 3
-            ) -
-            1;
+    const lastSubjectColumn =  
+        firstSubjectColumn +  
+        (  
+            schoolSubjects.length * 3  
+        ) -  
+        1;  
 
 
-        const overallTotalColumn =
-            lastSubjectColumn + 1;
+    const overallTotalColumn =  
+        lastSubjectColumn + 1;  
 
 
-        const averageColumn =
-            overallTotalColumn + 1;
+    const averageColumn =  
+        overallTotalColumn + 1;  
 
 
-        const positionColumn =
-            averageColumn + 1;
+    const positionColumn =  
+        averageColumn + 1;  
 
 
-        const firstSubjectLetter =
-            XLSX.utils.encode_col(
-                firstSubjectColumn - 1
-            );
+    const firstSubjectLetter =  
+        XLSX.utils.encode_col(  
+            firstSubjectColumn - 1  
+        );  
 
 
-        const lastSubjectLetter =
-            XLSX.utils.encode_col(
-                lastSubjectColumn - 1
-            );
+    const lastSubjectLetter =  
+        XLSX.utils.encode_col(  
+            lastSubjectColumn - 1  
+        );  
 
 
-        const overallTotalLetter =
-            XLSX.utils.encode_col(
-                overallTotalColumn - 1
-            );
+    const overallTotalLetter =  
+        XLSX.utils.encode_col(  
+            overallTotalColumn - 1  
+        );  
 
 
-        const averageLetter =
-            XLSX.utils.encode_col(
-                averageColumn - 1
-            );
+    const averageLetter =  
+        XLSX.utils.encode_col(  
+            averageColumn - 1  
+        );  
 
 
-        const positionLetter =
-            XLSX.utils.encode_col(
-                positionColumn - 1
-            );
+    const positionLetter =  
+        XLSX.utils.encode_col(  
+            positionColumn - 1  
+        );  
 
 
-        for (
-            let row = 2;
-            row <= TEMPLATE_STUDENT_ROWS + 1;
-            row++
-        ) {
+    for (  
+        let row = 2;  
+        row <= TEMPLATE_STUDENT_ROWS + 1;  
+        row++  
+    ) {  
 
-            scoresSheet[
-                overallTotalLetter + row
-            ] = {
+        scoresSheet[  
+            overallTotalLetter + row  
+        ] = {  
 
-                t: "n",
+            t: "n",  
 
-                f:
-                    `IF($B${row}="","",SUM(${firstSubjectLetter}${row}:${lastSubjectLetter}${row}))`
+            f:  
+                `IF($B${row}="","",SUM(${firstSubjectLetter}${row}:${lastSubjectLetter}${row}))`  
 
-            };
+        };  
 
 
-            scoresSheet[
-                averageLetter + row
-            ] = {
+        scoresSheet[  
+            averageLetter + row  
+        ] = {  
 
-                t: "n",
+            t: "n",  
 
-                f:
-                    `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/${schoolSubjects.length},0))`
+            f:  
+                `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/${schoolSubjects.length},0))`  
 
-            };
+        };  
 
 
-            scoresSheet[
-                positionLetter + row
-            ] = {
+        scoresSheet[  
+            positionLetter + row  
+        ] = {  
 
-                t: "n",
+            t: "n",  
 
-                f:
-                    `IF($B${row}="","",RANK(${averageLetter}${row},$${averageLetter}$2:$${averageLetter}$${TEMPLATE_STUDENT_ROWS + 1},0))`
+            f:  
+                `IF($B${row}="","",RANK(${averageLetter}${row},$${averageLetter}$2:$${averageLetter}$${TEMPLATE_STUDENT_ROWS + 1},0))`  
 
-            };
+        };  
 
-        }
+    }  
 
 
-        /* =================================================
-           WRITE FILE
-           ================================================= */
+    /* =================================================  
+       WRITE FILE  
+       ================================================= */  
 
-        const excelData =
-            XLSX.write(
-                workbook,
-                {
-                    bookType: "xlsx",
-                    type: "array"
-                }
-            );
+    const excelData =  
+        XLSX.write(  
+            workbook,  
+            {  
+                bookType: "xlsx",  
+                type: "array"  
+            }  
+        );  
 
 
-        const blob =
-            new Blob(
-                [excelData],
-                {
-                    type:
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                }
-            );
+    const blob =  
+        new Blob(  
+            [excelData],  
+            {  
+                type:  
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"  
+            }  
+        );  
 
 
-        const url =
-            URL.createObjectURL(blob);
+    const url =  
+        URL.createObjectURL(blob);  
 
 
-        const link =
-            document.createElement("a");
+    const link =  
+        document.createElement("a");  
 
 
-        link.href =
-            url;
+    link.href =  
+        url;  
 
 
-        link.download =
-            "Student_Report_Template.xlsx";
+    link.download =  
+        "Student_Report_Template.xlsx";  
 
 
-        document.body.appendChild(link);
+    document.body.appendChild(link);  
 
 
-        link.click();
+    link.click();  
 
 
-        setTimeout(
-            function () {
+    setTimeout(  
+        function () {  
 
-                URL.revokeObjectURL(url);
+            URL.revokeObjectURL(url);  
 
-                if (link.parentNode) {
+            if (link.parentNode) {  
 
-                    link.parentNode.removeChild(
-                        link
-                    );
+                link.parentNode.removeChild(  
+                    link  
+                );  
 
-                }
+            }  
 
-            },
-            5000
-        );
+        },  
+        5000  
+    );  
 
 
-        setFileStatus(
+    setFileStatus(  
 
-            "✅ Template created successfully with " +
-            schoolSubjects.length +
-            " subject sheet(s), House, 1st CA, 2nd CA, Exams, Overall Total, Average, Position, Behavioral Traits and Comments."
+        "✅ Template created successfully with " +  
+        schoolSubjects.length +  
+        " subject sheet(s), House, 1st CA, 2nd CA, Exams, Overall Total, Average, Position, Behavioral Traits and Comments."  
 
-        );
+    );  
 
 
-    } catch (error) {
+} catch (error) {  
 
-        console.error(
-            "Excel template error:",
-            error
-        );
+    console.error(  
+        "Excel template error:",  
+        error  
+    );  
 
 
-        alert(
-            "❌ Excel template could not be created.\n\n" +
-            error.message
-        );
+    alert(  
+        "❌ Excel template could not be created.\n\n" +  
+        error.message  
+    );  
 
 
-        setFileStatus(
-            "❌ Excel template generation failed."
-        );
-
-    }
+    setFileStatus(  
+        "❌ Excel template generation failed."  
+    );  
 
 }
 
+}
 
 /* =========================================================
-   HANDLE EXCEL UPLOAD
-   ========================================================= */
+HANDLE EXCEL UPLOAD
+========================================================= */
 
 function handleExcelUpload(event) {
 
-    const file =
-        event.target.files[0];
+const file =  
+    event.target.files[0];  
 
 
-    if (!file) {
-        return;
-    }
+if (!file) {  
+    return;  
+}  
 
 
-    if (typeof XLSX === "undefined") {
+if (typeof XLSX === "undefined") {  
 
-        setFileStatus(
-            "❌ Excel library has not loaded."
-        );
+    setFileStatus(  
+        "❌ Excel library has not loaded."  
+    );  
 
-        return;
-    }
+    return;  
+}  
 
 
-    const reader =
-        new FileReader();
+const reader =  
+    new FileReader();  
 
 
-    reader.onload =
-        function (e) {
+reader.onload =  
+    function (e) {  
 
-            try {
+        try {  
 
-                const data =
-                    new Uint8Array(
-                        e.target.result
-                    );
+            const data =  
+                new Uint8Array(  
+                    e.target.result  
+                );  
 
 
-                const workbook =
-                    XLSX.read(
-                        data,
-                        {
-                            type: "array"
-                        }
-                    );
+            const workbook =  
+                XLSX.read(  
+                    data,  
+                    {  
+                        type: "array"  
+                    }  
+                );  
 
 
-                if (!workbook.Sheets["Scores"]) {
+            if (!workbook.Sheets["Scores"]) {  
 
-                    setFileStatus(
-                        "❌ The Excel file does not contain a Scores sheet."
-                    );
+                setFileStatus(  
+                    "❌ The Excel file does not contain a Scores sheet."  
+                );  
 
-                    return;
-                }
+                return;  
+            }  
 
 
-                /* =========================
-                   SETTINGS
-                   ========================= */
+            /* =========================  
+               SETTINGS  
+               ========================= */  
 
-                if (
-                    workbook.Sheets["Settings"]
-                ) {
+            if (  
+                workbook.Sheets["Settings"]  
+            ) {  
 
-                    readSettings(
-                        workbook.Sheets["Settings"]
-                    );
+                readSettings(  
+                    workbook.Sheets["Settings"]  
+                );  
 
-                }
+            }  
 
 
-                /* =========================
-                   SCORES
-                   ========================= */
+            /* =========================  
+               SCORES  
+               ========================= */  
 
-                const worksheet =
-                    workbook.Sheets["Scores"];
+            const worksheet =  
+                workbook.Sheets["Scores"];  
 
 
-                const rows =
-                    XLSX.utils.sheet_to_json(
-                        worksheet,
-                        {
-                            defval: ""
-                        }
-                    );
+            const rows =  
+                XLSX.utils.sheet_to_json(  
+                    worksheet,  
+                    {  
+                        defval: ""  
+                    }  
+                );  
 
 
-                const actualRows =
-                    rows.filter(
-                        function (student) {
+            const actualRows =  
+                rows.filter(  
+                    function (student) {  
 
-                            return (
+                        return (  
 
-                                String(
-                                    student[
-                                        "Admission No"
-                                    ] || ""
-                                ).trim() !== "" ||
+                            String(  
+                                student[  
+                                    "Admission No"  
+                                ] || ""  
+                            ).trim() !== "" ||  
 
-                                String(
-                                    student[
-                                        "Student Name"
-                                    ] || ""
-                                ).trim() !== ""
+                            String(  
+                                student[  
+                                    "Student Name"  
+                                ] || ""  
+                            ).trim() !== ""  
 
-                            );
+                        );  
 
-                        }
-                    );
+                    }  
+                );  
 
 
-                if (actualRows.length === 0) {
+            if (actualRows.length === 0) {  
 
-                    setFileStatus(
-                        "❌ No student records found."
-                    );
+                setFileStatus(  
+                    "❌ No student records found."  
+                );  
 
-                    return;
-                }
+                return;  
+            }  
 
 
-                const invalidStudents =
-                    actualRows.filter(
-                        function (student) {
+            const invalidStudents =  
+                actualRows.filter(  
+                    function (student) {  
 
-                            return !String(
-                                student[
-                                    "Student Name"
-                                ] || ""
-                            ).trim();
+                        return !String(  
+                            student[  
+                                "Student Name"  
+                            ] || ""  
+                        ).trim();  
 
-                        }
-                    );
+                    }  
+                );  
 
 
-                if (invalidStudents.length > 0) {
+            if (invalidStudents.length > 0) {  
 
-                    setFileStatus(
-                        "❌ One or more student records have no Student Name."
-                    );
+                setFileStatus(  
+                    "❌ One or more student records have no Student Name."  
+                );  
 
-                    return;
-                }
+                return;  
+            }  
 
 
-                /* =========================
-                   SUBJECTS
-                   ========================= */
+            /* =========================  
+               SUBJECTS  
+               ========================= */  
 
-                const detectedSubjects =
-                    detectSubjectsFromRows(
-                        actualRows
-                    );
+            const detectedSubjects =  
+                detectSubjectsFromRows(  
+                    actualRows  
+                );  
 
 
-                if (
-                    detectedSubjects.length > 0
-                ) {
+            if (  
+                detectedSubjects.length > 0  
+            ) {  
 
-                    schoolSubjects =
-                        detectedSubjects;
+                schoolSubjects =  
+                    detectedSubjects;  
 
-                    renderSubjectList();
+                renderSubjectList();  
 
-                }
+            }  
 
 
-                /* =========================
-                   BEHAVIOR
-                   ========================= */
+            /* =========================  
+               BEHAVIOR  
+               ========================= */  
 
-                const behaviorSheet =
-                    workbook.Sheets[
-                        "Behavioral Traits"
-                    ];
+            const behaviorSheet =  
+                workbook.Sheets[  
+                    "Behavioral Traits"  
+                ];  
 
 
-                if (behaviorSheet) {
+            if (behaviorSheet) {  
 
-                    attachBehaviorData(
-                        actualRows,
-                        behaviorSheet
-                    );
+                attachBehaviorData(  
+                    actualRows,  
+                    behaviorSheet  
+                );  
 
-                } else {
+            } else {  
 
-                    actualRows.forEach(
-                        function (student) {
+                actualRows.forEach(  
+                    function (student) {  
 
-                            student.__behavior = {};
+                        student.__behavior = {};  
 
-                        }
-                    );
+                    }  
+                );  
 
-                }
+            }  
 
 
-                students =
-                    actualRows;
+            students =  
+                actualRows;  
 
 
-                setFileStatus(
+            setFileStatus(  
 
-                    "✅ Excel file successfully loaded. " +
-                    students.length +
-                    " student record(s) found. " +
-                    schoolSubjects.length +
-                    " subject(s) detected."
+                "✅ Excel file successfully loaded. " +  
+                students.length +  
+                " student record(s) found. " +  
+                schoolSubjects.length +  
+                " subject(s) detected."  
 
-                );
+            );  
 
 
-                loadStudents();
+            loadStudents();  
 
 
-                if (reportSection) {
+            if (reportSection) {  
 
-                    reportSection.style.display =
-                        "block";
+                reportSection.style.display =  
+                    "block";  
 
-                }
+            }  
 
 
-                updateReportStatus();
+            updateReportStatus();  
 
 
-            } catch (error) {
+        } catch (error) {  
 
-                console.error(
-                    "Excel upload error:",
-                    error
-                );
+            console.error(  
+                "Excel upload error:",  
+                error  
+            );  
 
 
-                setFileStatus(
-                    "❌ Unable to read this Excel file."
-                );
+            setFileStatus(  
+                "❌ Unable to read this Excel file."  
+            );  
 
-            }
+        }  
 
-        };
+    };  
 
 
-    reader.readAsArrayBuffer(file);
+reader.readAsArrayBuffer(file);
 
 }
 
-
 /* =========================================================
-   READ SETTINGS
-   ========================================================= */
+READ SETTINGS
+========================================================= */
 
 function readSettings(settingsSheet) {
 
-    const rows =
-        XLSX.utils.sheet_to_json(
-            settingsSheet,
-            {
-                header: 1,
-                defval: ""
-            }
-        );
+const rows =  
+    XLSX.utils.sheet_to_json(  
+        settingsSheet,  
+        {  
+            header: 1,  
+            defval: ""  
+        }  
+    );  
 
 
-    rows.forEach(
-        function (row) {
+rows.forEach(  
+    function (row) {  
 
-            const setting =
-                String(
-                    row[0] || ""
-                ).trim();
-
-
-            const value =
-                row[1];
+        const setting =  
+            String(  
+                row[0] || ""  
+            ).trim();  
 
 
-            if (
-                setting === "School Name"
-            ) {
-
-                reportSettings.schoolName =
-                    String(value);
-
-            }
+        const value =  
+            row[1];  
 
 
-            if (
-                setting === "School Address"
-            ) {
+        if (  
+            setting === "School Name"  
+        ) {  
 
-                reportSettings.schoolAddress =
-                    String(value);
+            reportSettings.schoolName =  
+                String(value);  
 
-            }
-
-
-            if (
-                setting === "1st CA Maximum"
-            ) {
-
-                reportSettings.firstCAMaximum =
-                    Number(value) || 20;
-
-            }
+        }  
 
 
-            if (
-                setting === "2nd CA Maximum"
-            ) {
+        if (  
+            setting === "School Address"  
+        ) {  
 
-                reportSettings.secondCAMaximum =
-                    Number(value) || 20;
+            reportSettings.schoolAddress =  
+                String(value);  
 
-            }
-
-
-            if (
-                setting === "Exams Maximum"
-            ) {
-
-                reportSettings.examsMaximum =
-                    Number(value) || 60;
-
-            }
+        }  
 
 
-            if (
-                setting === "Grade A Minimum"
-            ) {
+        if (  
+            setting === "1st CA Maximum"  
+        ) {  
 
-                reportSettings.gradeA =
-                    Number(value);
+            reportSettings.firstCAMaximum =  
+                Number(value) || 20;  
 
-            }
-
-
-            if (
-                setting === "Grade B Minimum"
-            ) {
-
-                reportSettings.gradeB =
-                    Number(value);
-
-            }
+        }  
 
 
-            if (
-                setting === "Grade C Minimum"
-            ) {
+        if (  
+            setting === "2nd CA Maximum"  
+        ) {  
 
-                reportSettings.gradeC =
-                    Number(value);
+            reportSettings.secondCAMaximum =  
+                Number(value) || 20;  
 
-            }
-
-
-            if (
-                setting === "Grade D Minimum"
-            ) {
-
-                reportSettings.gradeD =
-                    Number(value);
-
-            }
+        }  
 
 
-            if (
-                setting === "Grade E Minimum"
-            ) {
+        if (  
+            setting === "Exams Maximum"  
+        ) {  
 
-                reportSettings.gradeE =
-                    Number(value);
+            reportSettings.examsMaximum =  
+                Number(value) || 60;  
 
-            }
-
-
-            if (
-                setting === "Grade F Minimum"
-            ) {
-
-                reportSettings.gradeF =
-                    Number(value);
-
-            }
+        }  
 
 
-            if (
-                setting === "Subjects"
-            ) {
+        if (  
+            setting === "Grade A Minimum"  
+        ) {  
 
-                const importedSubjects =
-                    String(value || "")
-                        .split(",")
-                        .map(
-                            function (subject) {
-                                return subject.trim();
-                            }
-                        )
-                        .filter(
-                            function (subject) {
-                                return subject.length > 0;
-                            }
-                        );
+            reportSettings.gradeA =  
+                Number(value);  
+
+        }  
 
 
-                if (
-                    importedSubjects.length > 0
-                ) {
+        if (  
+            setting === "Grade B Minimum"  
+        ) {  
 
-                    schoolSubjects =
-                        importedSubjects;
+            reportSettings.gradeB =  
+                Number(value);  
 
-                }
-
-            }
-
-        }
-    );
+        }  
 
 
-    renderSubjectList();
+        if (  
+            setting === "Grade C Minimum"  
+        ) {  
+
+            reportSettings.gradeC =  
+                Number(value);  
+
+        }  
+
+
+        if (  
+            setting === "Grade D Minimum"  
+        ) {  
+
+            reportSettings.gradeD =  
+                Number(value);  
+
+        }  
+
+
+        if (  
+            setting === "Grade E Minimum"  
+        ) {  
+
+            reportSettings.gradeE =  
+                Number(value);  
+
+        }  
+
+
+        if (  
+            setting === "Grade F Minimum"  
+        ) {  
+
+            reportSettings.gradeF =  
+                Number(value);  
+
+        }  
+
+
+        if (  
+            setting === "Subjects"  
+        ) {  
+
+            const importedSubjects =  
+                String(value || "")  
+                    .split(",")  
+                    .map(  
+                        function (subject) {  
+                            return subject.trim();  
+                        }  
+                    )  
+                    .filter(  
+                        function (subject) {  
+                            return subject.length > 0;  
+                        }  
+                    );  
+
+
+            if (  
+                importedSubjects.length > 0  
+            ) {  
+
+                schoolSubjects =  
+                    importedSubjects;  
+
+            }  
+
+        }  
+
+    }  
+);  
+
+
+renderSubjectList();
 
 }
 
-
 /* =========================================================
-   DETECT SUBJECTS
-   ========================================================= */
+DETECT SUBJECTS
+========================================================= */
 
 function detectSubjectsFromRows(rows) {
 
-    if (
-        !rows ||
-        rows.length === 0
-    ) {
+if (  
+    !rows ||  
+    rows.length === 0  
+) {  
 
-        return [];
+    return [];  
 
-    }
-
-
-    const firstStudent =
-        rows[0];
+}  
 
 
-    const subjectSet =
-        new Set();
+const firstStudent =  
+    rows[0];  
 
 
-    Object.keys(
-        firstStudent
-    ).forEach(
-        function (key) {
-
-            const match =
-                key.match(
-                    /^(.+)\s+(1st CA|2nd CA|Exams)$/i
-                );
+const subjectSet =  
+    new Set();  
 
 
-            if (match) {
+Object.keys(  
+    firstStudent  
+).forEach(  
+    function (key) {  
 
-                subjectSet.add(
-                    match[1].trim()
-                );
-
-            }
-
-        }
-    );
+        const match =  
+            key.match(  
+                /^(.+)\s+(1st CA|2nd CA|Exams)$/i  
+            );  
 
 
-    return Array.from(subjectSet);
+        if (match) {  
+
+            subjectSet.add(  
+                match[1].trim()  
+            );  
+
+        }  
+
+    }  
+);  
+
+
+return Array.from(subjectSet);
 
 }
 
-
 /* =========================================================
-   ATTACH BEHAVIOR DATA
-   ========================================================= */
+ATTACH BEHAVIOR DATA
+========================================================= */
 
 function attachBehaviorData(
-    scoreRows,
-    behaviorSheet
+scoreRows,
+behaviorSheet
 ) {
 
-    const behaviorRows =
-        XLSX.utils.sheet_to_json(
-            behaviorSheet,
-            {
-                defval: ""
-            }
-        );
+const behaviorRows =  
+    XLSX.utils.sheet_to_json(  
+        behaviorSheet,  
+        {  
+            defval: ""  
+        }  
+    );  
 
 
-    const behaviorMap =
-        new Map();
+const behaviorMap =  
+    new Map();  
 
 
-    behaviorRows.forEach(
-        function (row) {
+behaviorRows.forEach(  
+    function (row) {  
 
-            const name =
-                String(
-                    row["Student Name"] || ""
-                )
-                    .trim()
-                    .toLowerCase();
-
-
-            if (name) {
-
-                behaviorMap.set(
-                    name,
-                    {
-
-                        Attendance:
-                            row["Attendance"] || "",
-
-                        Punctuality:
-                            row["Punctuality"] || "",
-
-                        "Class Participation":
-                            row["Class Participation"] || "",
-
-                        Neatness:
-                            row["Neatness"] || "",
-
-                        Honesty:
-                            row["Honesty"] || "",
-
-                        "Class Teacher's Comment":
-                            row["Class Teacher's Comment"] || "",
-
-                        "Principal's Comment":
-                            row["Principal's Comment"] || ""
-
-                    }
-                );
-
-            }
-
-        }
-    );
+        const name =  
+            String(  
+                row["Student Name"] || ""  
+            )  
+                .trim()  
+                .toLowerCase();  
 
 
-    scoreRows.forEach(
-        function (student) {
+        if (name) {  
 
-            const name =
-                String(
-                    student["Student Name"] || ""
-                )
-                    .trim()
-                    .toLowerCase();
+            behaviorMap.set(  
+                name,  
+                {  
+
+                    Attendance:  
+                        row["Attendance"] || "",  
+
+                    Punctuality:  
+                        row["Punctuality"] || "",  
+
+                    "Class Participation":  
+                        row["Class Participation"] || "",  
+
+                    Neatness:  
+                        row["Neatness"] || "",  
+
+                    Honesty:  
+                        row["Honesty"] || "",  
+
+                    "Class Teacher's Comment":  
+                        row["Class Teacher's Comment"] || "",  
+
+                    "Principal's Comment":  
+                        row["Principal's Comment"] || ""  
+
+                }  
+            );  
+
+        }  
+
+    }  
+);  
 
 
-            const behavior =
-                behaviorMap.get(name);
+scoreRows.forEach(  
+    function (student) {  
+
+        const name =  
+            String(  
+                student["Student Name"] || ""  
+            )  
+                .trim()  
+                .toLowerCase();  
 
 
-            if (behavior) {
+        const behavior =  
+            behaviorMap.get(name);  
 
-                student.__behavior =
-                    behavior;
 
-            } else {
+        if (behavior) {  
 
-                student.__behavior = {
+            student.__behavior =  
+                behavior;  
 
-                    Attendance: "",
+        } else {  
 
-                    Punctuality: "",
+            student.__behavior = {  
 
-                    "Class Participation": "",
+                Attendance: "",  
 
-                    Neatness: "",
+                Punctuality: "",  
 
-                    Honesty: "",
+                "Class Participation": "",  
 
-                    "Class Teacher's Comment": "",
+                Neatness: "",  
 
-                    "Principal's Comment": ""
+                Honesty: "",  
 
-                };
+                "Class Teacher's Comment": "",  
 
-            }
+                "Principal's Comment": ""  
 
-        }
-    );
+            };  
+
+        }  
+
+    }  
+);
 
 }
 
-
 /* =========================================================
-   LOAD STUDENTS
-   ========================================================= */
+LOAD STUDENTS
+========================================================= */
 
 function loadStudents() {
 
-    if (
-        !elementExists(studentSelect)
-    ) {
+if (  
+    !elementExists(studentSelect)  
+) {  
 
-        return;
-    }
-
-
-    studentSelect.innerHTML =
-        '<option value="">-- Select Student --</option>';
+    return;  
+}  
 
 
-    students.forEach(
-        function (
-            student,
-            index
-        ) {
-
-            const option =
-                document.createElement("option");
+studentSelect.innerHTML =  
+    '<option value="">-- Select Student --</option>';  
 
 
-            option.value =
-                index;
+students.forEach(  
+    function (  
+        student,  
+        index  
+    ) {  
+
+        const option =  
+            document.createElement("option");  
 
 
-            option.textContent =
-
-                (
-                    student["Admission No"] || ""
-                ) +
-
-                " - " +
-
-                (
-                    student["Student Name"] || ""
-                );
+        option.value =  
+            index;  
 
 
-            studentSelect.appendChild(
-                option
-            );
+        option.textContent =  
 
-        }
-    );
+            (  
+                student["Admission No"] || ""  
+            ) +  
+
+            " - " +  
+
+            (  
+                student["Student Name"] || ""  
+            );  
+
+
+        studentSelect.appendChild(  
+            option  
+        );  
+
+    }  
+);
 
 }
 
-
 /* =========================================================
-   REPORT LIMIT FUNCTIONS
-   ========================================================= */
+REPORT LIMIT FUNCTIONS
+========================================================= */
 
 function getReportLimit() {
 
-    const plan =
-        String(currentSubscriptionPlan || "")
-            .trim()
-            .toLowerCase();
+const plan =  
+    String(currentSubscriptionPlan || "")  
+        .trim()  
+        .toLowerCase();  
 
 
-    return REPORT_LIMITS[plan] || 0;
+return REPORT_LIMITS[plan] || 0;
 
 }
 
-
 /* =========================================================
-   GET PLAN DISPLAY NAME
-   ========================================================= */
+GET PLAN DISPLAY NAME
+========================================================= */
 
 function getPlanDisplayName() {
 
-    return getPlanDisplayNameFromPlan(
-        currentSubscriptionPlan
-    );
+return getPlanDisplayNameFromPlan(  
+    currentSubscriptionPlan  
+);
 
 }
 
-
 /* =========================================================
-   UPDATE REPORT STATUS
-   ========================================================= */
+UPDATE REPORT STATUS
+========================================================= */
 
 function updateReportStatus() {
 
-    const limit =
-        getReportLimit();
+const limit =  
+    getReportLimit();  
 
 
-    const plan =
-        getPlanDisplayName();
+const plan =  
+    getPlanDisplayName();  
 
 
-    let statusElement =
-        document.getElementById(
-            "reportGenerationStatus"
-        );
+let statusElement =  
+    document.getElementById(  
+        "reportGenerationStatus"  
+    );  
 
 
-    if (!statusElement) {
+if (!statusElement) {  
 
-        statusElement =
-            document.createElement("div");
-
-
-        statusElement.id =
-            "reportGenerationStatus";
+    statusElement =  
+        document.createElement("div");  
 
 
-        statusElement.style.margin =
-            "10px 0";
+    statusElement.id =  
+        "reportGenerationStatus";  
 
 
-        statusElement.style.padding =
-            "10px";
+    statusElement.style.margin =  
+        "10px 0";  
 
 
-        statusElement.style.borderRadius =
-            "6px";
+    statusElement.style.padding =  
+        "10px";  
 
 
-        statusElement.style.fontWeight =
-            "bold";
+    statusElement.style.borderRadius =  
+        "6px";  
 
 
-        statusElement.style.background =
-            "#f5f5f5";
+    statusElement.style.fontWeight =  
+        "bold";  
 
 
-        if (reportSection) {
-
-            reportSection.prepend(
-                statusElement
-            );
-
-        }
-
-    }
+    statusElement.style.background =  
+        "#f5f5f5";  
 
 
-    if (!limit) {
+    if (reportSection) {  
 
-        statusElement.innerHTML =
-            "⚠️ Subscription plan could not be determined.";
+        reportSection.prepend(  
+            statusElement  
+        );  
 
-        return;
+    }  
 
-    }
-
-
-    const remaining =
-        Math.max(
-            limit - reportsGenerated,
-            0
-        );
+}  
 
 
-    statusElement.innerHTML =
+if (!limit) {  
 
-        "📊 Subscription: " +
-        plan +
-        "<br>" +
+    statusElement.innerHTML =  
+        "⚠️ Subscription plan could not be determined.";  
 
-        "📄 Reports generated: " +
-        reportsGenerated +
-        " / " +
-        limit +
-        "<br>" +
+    return;  
 
-        "📌 Reports remaining: " +
-        remaining;
+}  
 
 
-    if (
-        reportsGenerated >= limit
-    ) {
+const remaining =  
+    Math.max(  
+        limit - reportsGenerated,  
+        0  
+    );  
 
-        statusElement.innerHTML +=
 
-            "<br><br>" +
+statusElement.innerHTML =  
 
-            "⚠️ Report generation limit reached. " +
+    "📊 Subscription: " +  
+    plan +  
+    "<br>" +  
 
-            "Please upgrade your subscription to generate more reports.";
+    "📄 Reports generated: " +  
+    reportsGenerated +  
+    " / " +  
+    limit +  
+    "<br>" +  
 
-    }
+    "📌 Reports remaining: " +  
+    remaining;  
+
+
+if (  
+    reportsGenerated >= limit  
+) {  
+
+    statusElement.innerHTML +=  
+
+        "<br><br>" +  
+
+        "⚠️ Report generation limit reached. " +  
+
+        "Please upgrade your subscription to generate more reports.";  
 
 }
 
+}
 
 /* =========================================================
-   CAN GENERATE REPORTS
-   ========================================================= */
+CAN GENERATE REPORTS
+========================================================= */
 
 function canGenerateReports(
-    numberOfReports
+numberOfReports
 ) {
 
-    const limit =
-        getReportLimit();
+const limit =  
+    getReportLimit();  
 
 
-    if (!limit) {
+if (!limit) {  
 
-        alert(
-            "❌ Your subscription plan could not be determined."
-        );
+    alert(  
+        "❌ Your subscription plan could not be determined."  
+    );  
 
-        return false;
+    return false;  
 
-    }
-
-
-    const remaining =
-        limit - reportsGenerated;
+}  
 
 
-    if (
-        remaining <= 0
-    ) {
-
-        alert(
-
-            "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +
-
-            "Subscription: " +
-            getPlanDisplayName() +
-            "\n" +
-
-            "Reports generated: " +
-            reportsGenerated +
-            " / " +
-            limit +
-            "\n\n" +
-
-            "Please upgrade your subscription to generate more reports."
-
-        );
+const remaining =  
+    limit - reportsGenerated;  
 
 
-        updateReportStatus();
+if (  
+    remaining <= 0  
+) {  
 
-        return false;
+    alert(  
 
-    }
+        "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +  
 
+        "Subscription: " +  
+        getPlanDisplayName() +  
+        "\n" +  
 
-    if (
-        numberOfReports > remaining
-    ) {
+        "Reports generated: " +  
+        reportsGenerated +  
+        " / " +  
+        limit +  
+        "\n\n" +  
 
-        alert(
+        "Please upgrade your subscription to generate more reports."  
 
-            "⚠️ REPORT LIMIT EXCEEDED\n\n" +
-
-            "Subscription: " +
-            getPlanDisplayName() +
-            "\n" +
-
-            "Reports generated: " +
-            reportsGenerated +
-            " / " +
-            limit +
-            "\n" +
-
-            "Reports remaining: " +
-            remaining +
-            "\n\n" +
-
-            "You requested " +
-            numberOfReports +
-            " report(s), but only " +
-            remaining +
-            " report(s) remain."
-
-        );
+    );  
 
 
-        updateReportStatus();
+    updateReportStatus();  
 
-        return false;
+    return false;  
 
-    }
+}  
 
 
-    return true;
+if (  
+    numberOfReports > remaining  
+) {  
+
+    alert(  
+
+        "⚠️ REPORT LIMIT EXCEEDED\n\n" +  
+
+        "Subscription: " +  
+        getPlanDisplayName() +  
+        "\n" +  
+
+        "Reports generated: " +  
+        reportsGenerated +  
+        " / " +  
+        limit +  
+        "\n" +  
+
+        "Reports remaining: " +  
+        remaining +  
+        "\n\n" +  
+
+        "You requested " +  
+        numberOfReports +  
+        " report(s), but only " +  
+        remaining +  
+        " report(s) remain."  
+
+    );  
+
+
+    updateReportStatus();  
+
+    return false;  
+
+}  
+
+
+return true;
 
 }
 
-
 /* =========================================================
-   INCREMENT REPORT COUNT SECURELY
-   ========================================================= */
+INCREMENT REPORT COUNT SECURELY
+========================================================= */
 
 async function incrementReportCount(amount) {
 
-    if (!currentUserId) {
+if (!currentUserId) {  
 
-        console.error(
-            "No authenticated user found."
-        );
+    console.error(  
+        "No authenticated user found."  
+    );  
 
-        return false;
+    return false;  
 
-    }
+}  
 
-    const reportAmount =
-        Number(amount);
+const reportAmount =  
+    Number(amount);  
 
-    if (
-        !Number.isInteger(reportAmount) ||
-        reportAmount <= 0
-    ) {
+if (  
+    !Number.isInteger(reportAmount) ||  
+    reportAmount <= 0  
+) {  
 
-        console.error(
-            "Invalid report count:",
-            amount
-        );
+    console.error(  
+        "Invalid report count:",  
+        amount  
+    );  
 
-        return false;
+    return false;  
 
-    }
+}  
 
-    try {
+try {  
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient.rpc(
-                "increment_reports_generated",
-                {
-                    report_count:
-                        reportAmount
-                }
-            );
-
-
-        if (error) {
-
-            console.error(
-                "Unable to increment report count:",
-                error
-            );
-
-            return false;
-
-        }
+    const {  
+        data,  
+        error  
+    } =  
+        await supabaseClient.rpc(  
+            "increment_reports_generated",  
+            {  
+                report_count:  
+                    reportAmount  
+            }  
+        );  
 
 
-        reportsGenerated =
-            Number(data) || reportsGenerated + reportAmount;
+    if (error) {  
+
+        console.error(  
+            "Unable to increment report count:",  
+            error  
+        );  
+
+        return false;  
+
+    }  
 
 
-        updateReportStatus();
+    reportsGenerated =  
+        Number(data) || reportsGenerated + reportAmount;  
 
 
-        return true;
+    updateReportStatus();  
 
-    } catch (error) {
 
-        console.error(
-            "Report count error:",
-            error
-        );
+    return true;  
 
-        return false;
+} catch (error) {  
 
-    }
+    console.error(  
+        "Report count error:",  
+        error  
+    );  
+
+    return false;  
 
 }
 
+}
 
 /* =========================================================
-   GENERATE SINGLE REPORT
-   ========================================================= */
+GENERATE SINGLE REPORT
+========================================================= */
 
 async function generateSingleReport() {
 
-    if (
-        !elementExists(studentSelect)
-    ) {
+if (  
+    !elementExists(studentSelect)  
+) {  
 
-        return;
-    }
-
-
-    const index =
-        studentSelect.value;
+    return;  
+}  
 
 
-    if (index === "") {
-
-        alert(
-            "Please select a student."
-        );
-
-        return;
-
-    }
+const index =  
+    studentSelect.value;  
 
 
-    const student =
-        students[Number(index)];
+if (index === "") {  
+
+    alert(  
+        "Please select a student."  
+    );  
+
+    return;  
+
+}  
 
 
-    if (!student) {
-
-        return;
-
-    }
+const student =  
+    students[Number(index)];  
 
 
-    /* =========================================
-       CHECK REPORT LIMIT
-       ========================================= */
+if (!student) {  
 
-    if (
-        !canGenerateReports(1)
-    ) {
+    return;  
 
-        return;
-
-    }
+}  
 
 
-    const report =
-        createReport(student);
+/* =========================================  
+   CHECK REPORT LIMIT  
+   ========================================= */  
+
+if (  
+    !canGenerateReports(1)  
+) {  
+
+    return;  
+
+}  
 
 
-    if (reportContainer) {
-
-        reportContainer.innerHTML =
-            report;
+const report =  
+    createReport(student);  
 
 
-        reportContainer.scrollIntoView({
-            behavior: "smooth"
-        });
+if (reportContainer) {  
 
-    }
+    reportContainer.innerHTML =  
+        report;  
 
 
-    await incrementReportCount(1);
+    reportContainer.scrollIntoView({  
+        behavior: "smooth"  
+    });  
+
+}  
+
+
+await incrementReportCount(1);
 
 }
 
-
 /* =========================================================
-   GENERATE ALL REPORTS
-   ========================================================= */
+GENERATE ALL REPORTS
+========================================================= */
 
 async function generateAllReports() {
 
-    if (
-        !students ||
-        students.length === 0
-    ) {
+if (  
+    !students ||  
+    students.length === 0  
+) {  
 
-        alert(
-            "❌ Please upload an Excel file containing student records first."
-        );
+    alert(  
+        "❌ Please upload an Excel file containing student records first."  
+    );  
 
-        return;
+    return;  
 
-    }
+}  
 
 
-    const limit =
-        getReportLimit();
+const limit =  
+    getReportLimit();  
 
 
-    if (!limit) {
+if (!limit) {  
 
-        alert(
-            "❌ Your subscription plan could not be determined."
-        );
+    alert(  
+        "❌ Your subscription plan could not be determined."  
+    );  
 
-        return;
+    return;  
 
-    }
+}  
 
 
-    const remaining =
-        Math.max(
-            limit - reportsGenerated,
-            0
-        );
+const remaining =  
+    Math.max(  
+        limit - reportsGenerated,  
+        0  
+    );  
 
 
-    if (remaining <= 0) {
+if (remaining <= 0) {  
 
-        alert(
+    alert(  
 
-            "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +
+        "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +  
 
-            "Subscription: " +
-            getPlanDisplayName() +
-            "\n" +
+        "Subscription: " +  
+        getPlanDisplayName() +  
+        "\n" +  
 
-            "Reports generated: " +
-            reportsGenerated +
-            " / " +
-            limit +
-            "\n\n" +
+        "Reports generated: " +  
+        reportsGenerated +  
+        " / " +  
+        limit +  
+        "\n\n" +  
 
-            "Please upgrade your subscription to generate more reports."
+        "Please upgrade your subscription to generate more reports."  
 
-        );
+    );  
 
 
-        updateReportStatus();
+    updateReportStatus();  
 
-        return;
+    return;  
 
-    }
+}  
 
 
-    const totalStudents =
-        students.length;
+const totalStudents =  
+    students.length;  
 
 
-    let numberToGenerate =
-        totalStudents;
+let numberToGenerate =  
+    totalStudents;  
 
 
-    let stoppedByLimit =
-        false;
+let stoppedByLimit =  
+    false;  
 
 
-    if (
-        totalStudents > remaining
-    ) {
+if (  
+    totalStudents > remaining  
+) {  
 
-        numberToGenerate =
-            remaining;
+    numberToGenerate =  
+        remaining;  
 
-        stoppedByLimit =
-            true;
+    stoppedByLimit =  
+        true;  
 
-    }
+}  
 
 
-    const confirmation =
-        confirm(
+const confirmation =  
+    confirm(  
 
-            "Generate reports for " +
-            numberToGenerate +
-            " student(s)?\n\n" +
+        "Generate reports for " +  
+        numberToGenerate +  
+        " student(s)?\n\n" +  
 
-            "Subscription: " +
-            getPlanDisplayName() +
-            "\n" +
+        "Subscription: " +  
+        getPlanDisplayName() +  
+        "\n" +  
 
-            "Current reports generated: " +
-            reportsGenerated +
-            " / " +
-            limit +
-            "\n" +
+        "Current reports generated: " +  
+        reportsGenerated +  
+        " / " +  
+        limit +  
+        "\n" +  
 
-            "Reports remaining: " +
-            remaining +
+        "Reports remaining: " +  
+        remaining +  
 
-            (
-                stoppedByLimit
-                    ? "\n\n⚠️ Your subscription limit means only " +
-                      numberToGenerate +
-                      " report(s) can be generated."
-                    : ""
-            )
+        (  
+            stoppedByLimit  
+                ? "\n\n⚠️ Your subscription limit means only " +  
+                  numberToGenerate +  
+                  " report(s) can be generated."  
+                : ""  
+        )  
 
-        );
+    );  
 
 
-    if (!confirmation) {
+if (!confirmation) {  
 
-        return;
+    return;  
 
-    }
+}  
 
 
-    if (
-        !canGenerateReports(
-            numberToGenerate
-        )
-    ) {
+if (  
+    !canGenerateReports(  
+        numberToGenerate  
+    )  
+) {  
 
-        return;
+    return;  
 
-    }
+}  
 
 
-    if (reportContainer) {
+if (reportContainer) {  
 
-        reportContainer.innerHTML = "";
+    reportContainer.innerHTML = "";  
 
-    }
+}  
 
 
-    let generatedCount =
-        0;
+let generatedCount =  
+    0;  
 
 
-    for (
-        let i = 0;
-        i < numberToGenerate;
-        i++
-    ) {
+for (  
+    let i = 0;  
+    i < numberToGenerate;  
+    i++  
+) {  
 
-        const student =
-            students[i];
+    const student =  
+        students[i];  
 
 
-        if (!student) {
-            continue;
-        }
+    if (!student) {  
+        continue;  
+    }  
 
 
-        const report =
-            createReport(student);
+    const report =  
+        createReport(student);  
 
 
-        if (reportContainer) {
+    if (reportContainer) {  
 
-            reportContainer.insertAdjacentHTML(
-                "beforeend",
-                report
-            );
+        reportContainer.insertAdjacentHTML(  
+            "beforeend",  
+            report  
+        );  
 
-        }
+    }  
 
 
-        generatedCount++;
+    generatedCount++;  
 
 
-        /*
-         * Update display every 10 reports.
-         * This keeps the interface responsive.
-         */
+    /*  
+     * Update display every 10 reports.  
+     * This keeps the interface responsive.  
+     */  
 
-        if (
-            generatedCount % 10 === 0
-        ) {
+    if (  
+        generatedCount % 10 === 0  
+    ) {  
 
-            updateTemporaryGenerationMessage(
-                generatedCount,
-                numberToGenerate
-            );
+        updateTemporaryGenerationMessage(  
+            generatedCount,  
+            numberToGenerate  
+        );  
 
-            await new Promise(
-                function (resolve) {
+        await new Promise(  
+            function (resolve) {  
 
-                    setTimeout(
-                        resolve,
-                        0
-                    );
+                setTimeout(  
+                    resolve,  
+                    0  
+                );  
 
-                }
-            );
+            }  
+        );  
 
-        }
+    }  
 
-    }
+}  
 
 
-    if (
-        generatedCount > 0
-    ) {
+if (  
+    generatedCount > 0  
+) {  
 
-        await incrementReportCount(
-            generatedCount
-        );
+    await incrementReportCount(  
+        generatedCount  
+    );  
 
-    }
+}  
 
 
-    updateReportStatus();
+updateReportStatus();  
 
 
-    if (
-        stoppedByLimit
-    ) {
+if (  
+    stoppedByLimit  
+) {  
 
-        alert(
+    alert(  
 
-            "⚠️ Generation stopped at your subscription limit.\n\n" +
+        "⚠️ Generation stopped at your subscription limit.\n\n" +  
 
-            "Subscription: " +
-            getPlanDisplayName() +
-            "\n" +
+        "Subscription: " +  
+        getPlanDisplayName() +  
+        "\n" +  
 
-            "Reports generated this operation: " +
-            generatedCount +
-            "\n" +
+        "Reports generated this operation: " +  
+        generatedCount +  
+        "\n" +  
 
-            "Total reports generated: " +
-            reportsGenerated +
-            " / " +
-            limit +
-            "\n\n" +
+        "Total reports generated: " +  
+        reportsGenerated +  
+        " / " +  
+        limit +  
+        "\n\n" +  
 
-            "There were " +
-            (
-                totalStudents -
-                numberToGenerate
-            ) +
-            " student(s) remaining."
+        "There were " +  
+        (  
+            totalStudents -  
+            numberToGenerate  
+        ) +  
+        " student(s) remaining."  
 
-        );
+    );  
 
-    } else {
+} else {  
 
-        alert(
+    alert(  
 
-            "✅ All reports generated successfully.\n\n" +
+        "✅ All reports generated successfully.\n\n" +  
 
-            "Reports generated: " +
-            generatedCount +
-            "\n" +
+        "Reports generated: " +  
+        generatedCount +  
+        "\n" +  
 
-            "Total used: " +
-            reportsGenerated +
-            " / " +
-            limit +
-            "\n" +
+        "Total used: " +  
+        reportsGenerated +  
+        " / " +  
+        limit +  
+        "\n" +  
 
-            "Reports remaining: " +
-            Math.max(
-                limit - reportsGenerated,
-                0
-            )
+        "Reports remaining: " +  
+        Math.max(  
+            limit - reportsGenerated,  
+            0  
+        )  
 
-        );
+    );  
 
-    }
+}  
 
 
-    if (reportContainer) {
+if (reportContainer) {  
 
-        reportContainer.scrollIntoView({
-            behavior: "smooth"
-        });
-
-    }
+    reportContainer.scrollIntoView({  
+        behavior: "smooth"  
+    });  
 
 }
 
+}
 
 /* =========================================================
-   TEMPORARY GENERATION MESSAGE
-   ========================================================= */
+TEMPORARY GENERATION MESSAGE
+========================================================= */
 
 function updateTemporaryGenerationMessage(
-    generated,
-    total
+generated,
+total
 ) {
 
-    if (!reportContainer) {
-        return;
-    }
+if (!reportContainer) {  
+    return;  
+}  
 
 
-    const existing =
-        document.getElementById(
-            "generationProgress"
-        );
+const existing =  
+    document.getElementById(  
+        "generationProgress"  
+    );  
 
 
-    if (!existing) {
+if (!existing) {  
 
-        const progress =
-            document.createElement("div");
-
-
-        progress.id =
-            "generationProgress";
+    const progress =  
+        document.createElement("div");  
 
 
-        progress.style.padding =
-            "10px";
+    progress.id =  
+        "generationProgress";  
 
 
-        progress.style.marginBottom =
-            "10px";
+    progress.style.padding =  
+        "10px";  
 
 
-        progress.style.fontWeight =
-            "bold";
+    progress.style.marginBottom =  
+        "10px";  
 
 
-        progress.innerHTML =
-            "⏳ Generating reports: " +
-            generated +
-            " / " +
-            total;
+    progress.style.fontWeight =  
+        "bold";  
 
 
-        reportContainer.prepend(
-            progress
-        );
+    progress.innerHTML =  
+        "⏳ Generating reports: " +  
+        generated +  
+        " / " +  
+        total;  
 
-    } else {
 
-        existing.innerHTML =
-            "⏳ Generating reports: " +
-            generated +
-            " / " +
-            total;
+    reportContainer.prepend(  
+        progress  
+    );  
 
-    }
+} else {  
+
+    existing.innerHTML =  
+        "⏳ Generating reports: " +  
+        generated +  
+        " / " +  
+        total;  
 
 }
 
+}
 
 /* =========================================================
    CREATE REPORT
@@ -3852,6 +3809,10 @@ function createReport(student) {
 
     }
 
+
+    /* =====================================================
+       SUBJECT RESULTS
+       ===================================================== */
 
     subjectsToUse.forEach(
         function (subjectName) {
@@ -3938,6 +3899,10 @@ function createReport(student) {
     );
 
 
+    /* =====================================================
+       AVERAGE
+       ===================================================== */
+
     const numberOfSubjects =
         subjects.length;
 
@@ -3961,14 +3926,10 @@ function createReport(student) {
 
 
     /*
-     * IMPORTANT:
-     *
-     * Position is ONLY read from the uploaded Excel file.
+     * Position is read directly from the uploaded Excel file.
      *
      * If Position is blank in Excel,
-     * Position will be blank on the report.
-     *
-     * The system will NOT calculate a replacement position.
+     * Position remains blank on the report.
      */
 
     const hasPosition =
@@ -4149,6 +4110,10 @@ function createReport(student) {
     );
 
 
+    /* =====================================================
+       COMMENTS
+       ===================================================== */
+
     const teacherComment =
         behavior["Class Teacher's Comment"] || "";
 
@@ -4163,6 +4128,28 @@ function createReport(student) {
 
     const studentHouse =
         student["House"] || "";
+
+
+    /* =====================================================
+       DYNAMIC MARKING SETTINGS
+       ===================================================== */
+
+    const firstCAMax =
+        Number(
+            reportSettings.firstCAMaximum
+        ) || 20;
+
+
+    const secondCAMax =
+        Number(
+            reportSettings.secondCAMaximum
+        ) || 20;
+
+
+    const examsMax =
+        Number(
+            reportSettings.examsMaximum
+        ) || 60;
 
 
     /* =====================================================
@@ -4193,6 +4180,8 @@ function createReport(student) {
 
             </div>
 
+
+            <!-- STUDENT INFORMATION -->
 
             <div class="student-info">
 
@@ -4308,19 +4297,42 @@ function createReport(student) {
 
                     <tr>
 
-                        <th>No.</th>
+                        <th>
+                            No.
+                        </th>
 
-                        <th>Subject</th>
+                        <th>
+                            Subject
+                        </th>
 
-                        <th>1st CA</th>
+                        <th>
+                            1st CA<br>
+                            (${firstCAMax} mks)
+                        </th>
 
-                        <th>2nd CA</th>
+                        <th>
+                            2nd CA<br>
+                            (${secondCAMax} mks)
+                        </th>
 
-                        <th>Exams</th>
+                        <th>
+                            Exams<br>
+                            (${examsMax} mks)
+                        </th>
 
-                        <th>Total</th>
+                        
+<th>
+    Total<br>
+    (${(
+        reportSettings.firstCAMaximum +
+        reportSettings.secondCAMaximum +
+        reportSettings.examsMaximum
+    )} Mks)
+</th>
 
-                        <th>Grade</th>
+                        <th>
+                            Grade
+                        </th>
 
                     </tr>
 
@@ -4500,571 +4512,560 @@ function createReport(student) {
 
 }
 
-
 /* =========================================================
-   GRADING
-   ========================================================= */
+GRADING
+========================================================= */
 
 function getGrade(score) {
 
-    if (
-        score >= reportSettings.gradeA
-    ) {
-        return "A";
-    }
+if (  
+    score >= reportSettings.gradeA  
+) {  
+    return "A";  
+}  
 
 
-    if (
-        score >= reportSettings.gradeB
-    ) {
-        return "B";
-    }
+if (  
+    score >= reportSettings.gradeB  
+) {  
+    return "B";  
+}  
 
 
-    if (
-        score >= reportSettings.gradeC
-    ) {
-        return "C";
-    }
+if (  
+    score >= reportSettings.gradeC  
+) {  
+    return "C";  
+}  
 
 
-    if (
-        score >= reportSettings.gradeD
-    ) {
-        return "D";
-    }
+if (  
+    score >= reportSettings.gradeD  
+) {  
+    return "D";  
+}  
 
 
-    if (
-        score >= reportSettings.gradeE
-    ) {
-        return "E";
-    }
+if (  
+    score >= reportSettings.gradeE  
+) {  
+    return "E";  
+}  
 
 
-    return "F";
+return "F";
 
 }
 
-
 /* =========================================================
-   CALCULATE POSITION
-   =========================================================
-   Kept for compatibility.
-   The report itself does NOT use this function.
-   It reads Position directly from the Excel template.
-   ========================================================= */
+CALCULATE POSITION
+
+Kept for compatibility.
+The report itself does NOT use this function.
+It reads Position directly from the Excel template.
+========================================================= */
 
 function calculatePosition(
-    currentStudent,
-    allStudents
+currentStudent,
+allStudents
 ) {
 
-    const currentAverage =
-        calculateStudentAverage(
-            currentStudent
-        );
+const currentAverage =  
+    calculateStudentAverage(  
+        currentStudent  
+    );  
 
 
-    let position = 1;
+let position = 1;  
 
 
-    allStudents.forEach(
-        function (student) {
+allStudents.forEach(  
+    function (student) {  
 
-            const studentAverage =
-                calculateStudentAverage(
-                    student
-                );
-
-
-            if (
-                studentAverage >
-                currentAverage
-            ) {
-
-                position++;
-
-            }
-
-        }
-    );
+        const studentAverage =  
+            calculateStudentAverage(  
+                student  
+            );  
 
 
-    return position;
+        if (  
+            studentAverage >  
+            currentAverage  
+        ) {  
+
+            position++;  
+
+        }  
+
+    }  
+);  
+
+
+return position;
 
 }
 
-
 /* =========================================================
-   CALCULATE AVERAGE
-   ========================================================= */
+CALCULATE AVERAGE
+========================================================= */
 
 function calculateStudentAverage(student) {
 
-    let total = 0;
+let total = 0;  
 
-    let subjectCount = 0;
-
-
-    schoolSubjects.forEach(
-        function (subject) {
-
-            const firstCA =
-                Number(
-                    student[
-                        subject + " 1st CA"
-                    ]
-                ) || 0;
+let subjectCount = 0;  
 
 
-            const secondCA =
-                Number(
-                    student[
-                        subject + " 2nd CA"
-                    ]
-                ) || 0;
+schoolSubjects.forEach(  
+    function (subject) {  
+
+        const firstCA =  
+            Number(  
+                student[  
+                    subject + " 1st CA"  
+                ]  
+            ) || 0;  
 
 
-            const exams =
-                Number(
-                    student[
-                        subject + " Exams"
-                    ]
-                ) || 0;
+        const secondCA =  
+            Number(  
+                student[  
+                    subject + " 2nd CA"  
+                ]  
+            ) || 0;  
 
 
-            const hasSubject =
-
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
-                        subject + " 1st CA"
-                    ) ||
-
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
-                        subject + " 2nd CA"
-                    ) ||
-
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
-                        subject + " Exams"
-                    );
+        const exams =  
+            Number(  
+                student[  
+                    subject + " Exams"  
+                ]  
+            ) || 0;  
 
 
-            if (hasSubject) {
+        const hasSubject =  
 
-                total +=
-                    firstCA +
-                    secondCA +
-                    exams;
+            Object.prototype  
+                .hasOwnProperty.call(  
+                    student,  
+                    subject + " 1st CA"  
+                ) ||  
 
-                subjectCount++;
+            Object.prototype  
+                .hasOwnProperty.call(  
+                    student,  
+                    subject + " 2nd CA"  
+                ) ||  
 
-            }
-
-        }
-    );
-
-
-    if (subjectCount === 0) {
-
-        return 0;
-
-    }
+            Object.prototype  
+                .hasOwnProperty.call(  
+                    student,  
+                    subject + " Exams"  
+                );  
 
 
-    return (
-        total /
-        subjectCount
-    );
+        if (hasSubject) {  
+
+            total +=  
+                firstCA +  
+                secondCA +  
+                exams;  
+
+            subjectCount++;  
+
+        }  
+
+    }  
+);  
+
+
+if (subjectCount === 0) {  
+
+    return 0;  
+
+}  
+
+
+return (  
+    total /  
+    subjectCount  
+);
 
 }
 
-
 /* =========================================================
-   FORMAT POSITION
-   ========================================================= */
+FORMAT POSITION
+========================================================= */
 
 function formatPosition(position) {
 
-    const lastTwo =
-        position % 100;
+const lastTwo =  
+    position % 100;  
 
 
-    if (
-        lastTwo >= 11 &&
-        lastTwo <= 13
-    ) {
+if (  
+    lastTwo >= 11 &&  
+    lastTwo <= 13  
+) {  
 
-        return position + "th";
+    return position + "th";  
 
-    }
+}  
 
 
-    switch (
-        position % 10
-    ) {
+switch (  
+    position % 10  
+) {  
 
-        case 1:
-            return position + "st";
+    case 1:  
+        return position + "st";  
 
-        case 2:
-            return position + "nd";
+    case 2:  
+        return position + "nd";  
 
-        case 3:
-            return position + "rd";
+    case 3:  
+        return position + "rd";  
 
-        default:
-            return position + "th";
-
-    }
+    default:  
+        return position + "th";  
 
 }
 
+}
 
 /* =========================================================
-   FORMAT SCORE
-   ========================================================= */
+FORMAT SCORE
+========================================================= */
 
 function formatScore(score) {
 
-    const number =
-        Number(score);
+const number =  
+    Number(score);  
 
 
-    if (
-        Number.isInteger(number)
-    ) {
+if (  
+    Number.isInteger(number)  
+) {  
 
-        return String(number);
+    return String(number);  
 
-    }
+}  
 
 
-    return number.toFixed(2);
+return number.toFixed(2);
 
 }
 
-
 /* =========================================================
-   PAYSTACK BUTTONS
-   ========================================================= */
+PAYSTACK BUTTONS
+========================================================= */
 
 function attachPaystackButtons() {
 
-    const buttons =
-        document.querySelectorAll(
-            ".subscribe-button"
-        );
+const buttons =  
+    document.querySelectorAll(  
+        ".subscribe-button"  
+    );  
 
 
-    buttons.forEach(
-        function (button) {
+buttons.forEach(  
+    function (button) {  
 
-            button.addEventListener(
-                "click",
-                function () {
+        button.addEventListener(  
+            "click",  
+            function () {  
 
-                    startPaystackPayment(
-                        button
-                    );
+                startPaystackPayment(  
+                    button  
+                );  
 
-                }
-            );
+            }  
+        );  
 
-        }
+    }  
+);
+
+}
+
+/* =========================================================
+START PAYSTACK
+========================================================= */
+
+async function startPaystackPayment(button) {
+
+try {  
+
+    const {  
+        data,  
+        error  
+    } =  
+        await supabaseClient.auth  
+            .getSession();  
+
+
+    if (  
+        error ||  
+        !data.session  
+    ) {  
+
+        alert(  
+            "Please create an account or sign in before subscribing."  
+        );  
+
+        return;  
+    }  
+
+
+    const user =  
+        data.session.user;  
+
+
+    const plan =  
+        button.dataset.plan;  
+
+
+    const price =  
+        Number(  
+            button.dataset.price  
+        );  
+
+
+    const duration =  
+        button.dataset.duration || "";  
+
+
+    if (  
+        !plan ||  
+        !price  
+    ) {  
+
+        alert(  
+            "Invalid subscription plan."  
+        );  
+
+        return;  
+    }  
+
+
+    if (  
+        typeof PaystackPop ===  
+        "undefined"  
+    ) {  
+
+        alert(  
+            "Paystack has not loaded."  
+        );  
+
+        return;  
+    }  
+
+
+    const handler =  
+        PaystackPop.setup({  
+
+            key:  
+                PAYSTACK_PUBLIC_KEY,  
+
+            email:  
+                user.email,  
+
+            amount:  
+                price * 100,  
+
+            currency:  
+                "NGN",  
+
+            metadata: {  
+
+                user_id:  
+                    user.id,  
+
+                plan:  
+                    plan,  
+
+                duration:  
+                    duration  
+
+            },  
+
+
+            callback:  
+                async function (response) {  
+
+                    alert(  
+                        "Payment received. Verifying payment..."  
+                    );  
+
+
+                    await verifyPaystackPayment(  
+                        response.reference,  
+                        plan  
+                    );  
+
+                },  
+
+
+            onClose:  
+                function () {  
+
+                    console.log(  
+                        "Paystack checkout closed."  
+                    );  
+
+                }  
+
+        });  
+
+
+    handler.openIframe();  
+
+
+} catch (error) {  
+
+    console.error(error);  
+
+    alert(  
+        "Unable to start payment."  
+    );  
+
+}
+
+}
+
+/* =========================================================
+VERIFY PAYSTACK
+========================================================= */
+
+async function verifyPaystackPayment(
+reference,
+plan
+) {
+
+try {  
+
+    const {  
+        data,  
+        error  
+    } =  
+        await supabaseClient  
+            .functions  
+            .invoke(  
+                "verify-paystack-payment-new-one",  
+                {  
+
+                    body: {  
+
+                        reference:  
+                            reference,  
+
+                        plan:  
+                            plan  
+
+                    }  
+
+                }  
+            );  
+
+
+    if (error) {  
+
+        console.error(error);  
+
+        alert(  
+            "Payment verification failed. Please contact support."  
+        );  
+
+        return;  
+    }  
+
+
+    if (  
+        data &&  
+        data.success  
+    ) {  
+
+        alert(  
+            "✅ Payment successful!\n\nYour " +  
+            plan.toUpperCase() +  
+            " subscription is now active."  
+        );  
+
+
+        await checkLogin();  
+
+    } else {  
+
+        alert(  
+            "Payment could not be verified."  
+        );  
+
+    }  
+
+
+} catch (error) {  
+
+    console.error(error);  
+
+    alert(  
+        "An error occurred while verifying payment."  
+    );  
+
+}
+
+}
+
+/* =========================================================
+FILE STATUS
+========================================================= */
+
+function setFileStatus(message) {
+
+if (  
+    elementExists(fileStatus)  
+) {  
+
+    fileStatus.innerHTML =  
+        message;  
+
+}
+
+}
+
+/* =========================================================
+HTML SECURITY
+========================================================= */
+
+function escapeHTML(value) {
+
+return String(value)  
+
+    .replace(  
+        /&/g,  
+        "&amp;"  
+    )  
+
+    .replace(  
+        /</g,  
+        "&lt;"  
+    )  
+
+    .replace(  
+        />/g,  
+        "&gt;"  
+    )  
+
+    .replace(  
+        /"/g,  
+        "&quot;"  
+    )  
+
+    .replace(  
+        /'/g,  
+        "&#039;"  
     );
 
 }
 
-
 /* =========================================================
-   START PAYSTACK
-   ========================================================= */
-
-async function startPaystackPayment(button) {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient.auth
-                .getSession();
-
-
-        if (
-            error ||
-            !data.session
-        ) {
-
-            alert(
-                "Please create an account or sign in before subscribing."
-            );
-
-            return;
-        }
-
-
-        const user =
-            data.session.user;
-
-
-        const plan =
-            button.dataset.plan;
-
-
-        const price =
-            Number(
-                button.dataset.price
-            );
-
-
-        const duration =
-            button.dataset.duration || "";
-
-
-        if (
-            !plan ||
-            !price
-        ) {
-
-            alert(
-                "Invalid subscription plan."
-            );
-
-            return;
-        }
-
-
-        if (
-            typeof PaystackPop ===
-            "undefined"
-        ) {
-
-            alert(
-                "Paystack has not loaded."
-            );
-
-            return;
-        }
-
-
-        const handler =
-            PaystackPop.setup({
-
-                key:
-                    PAYSTACK_PUBLIC_KEY,
-
-                email:
-                    user.email,
-
-                amount:
-                    price * 100,
-
-                currency:
-                    "NGN",
-
-                metadata: {
-
-                    user_id:
-                        user.id,
-
-                    plan:
-                        plan,
-
-                    duration:
-                        duration
-
-                },
-
-
-                callback:
-                    async function (response) {
-
-                        alert(
-                            "Payment received. Verifying payment..."
-                        );
-
-
-                        await verifyPaystackPayment(
-                            response.reference,
-                            plan
-                        );
-
-                    },
-
-
-                onClose:
-                    function () {
-
-                        console.log(
-                            "Paystack checkout closed."
-                        );
-
-                    }
-
-            });
-
-
-        handler.openIframe();
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Unable to start payment."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   VERIFY PAYSTACK
-   ========================================================= */
-
-async function verifyPaystackPayment(
-    reference,
-    plan
-) {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .functions
-                .invoke(
-                    "verify-paystack-payment-new-one",
-                    {
-
-                        body: {
-
-                            reference:
-                                reference,
-
-                            plan:
-                                plan
-
-                        }
-
-                    }
-                );
-
-
-        if (error) {
-
-            console.error(error);
-
-            alert(
-                "Payment verification failed. Please contact support."
-            );
-
-            return;
-        }
-
-
-        if (
-            data &&
-            data.success
-        ) {
-
-            alert(
-                "✅ Payment successful!\n\nYour " +
-                plan.toUpperCase() +
-                " subscription is now active."
-            );
-
-
-            await checkLogin();
-
-        } else {
-
-            alert(
-                "Payment could not be verified."
-            );
-
-        }
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "An error occurred while verifying payment."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   FILE STATUS
-   ========================================================= */
-
-function setFileStatus(message) {
-
-    if (
-        elementExists(fileStatus)
-    ) {
-
-        fileStatus.innerHTML =
-            message;
-
-    }
-
-}
-
-
-/* =========================================================
-   HTML SECURITY
-   ========================================================= */
-
-function escapeHTML(value) {
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/* =========================================================
-   END OF SCRIPT
-   ========================================================= */
+END OF SCRIPT
+========================================================= */
