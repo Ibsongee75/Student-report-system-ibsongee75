@@ -1458,141 +1458,241 @@ async function checkLogin() {
 
 async function checkSubscription(user) {
 
-    try {
+try {
 
-        const {
-            data: subscription,
+    const {
+        data: subscription,
+        error
+    } =
+        await supabaseClient
+            .from("subscriptions")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+
+    /* =================================================
+       DATABASE ERROR
+    ================================================= */
+
+    if (error) {
+
+        console.error(
+            "Subscription database error:",
             error
-        } =
-            await supabaseClient
-                .from("subscriptions")
-                .select("*")
-                .eq(
-                    "user_id",
-                    user.id
-                )
-                .maybeSingle();
+        );
 
-
-        if (error) {
-
-            console.error(
-                "Subscription error:",
-                error
-            );
-
-            currentSubscriptionPlan =
-                "";
-
-            reportsGenerated =
-                0;
-
-            showSubscription();
-
-            displaySubscriptionStatus(
-                null,
-                user
-            );
-
-            return;
-
-        }
-
-
-        /* =========================
-           RESET VALUES
-           ========================= */
-
-        currentSubscriptionPlan =
-            "";
-
-        reportsGenerated =
-            0;
-
-
-        /* =========================
-           READ SUBSCRIPTION PLAN
-           ========================= */
-
-        if (subscription) {
-
-            currentSubscriptionPlan =
-                String(
-
-                    subscription.plan ||
-
-                    subscription.subscription_plan ||
-
-                    subscription.package ||
-
-                    ""
-
-                )
-                    .trim()
-                    .toLowerCase();
-
-
-            /* =========================
-               READ REPORT COUNT
-               ========================= */
-
-            reportsGenerated =
-                Number(
-                    subscription.reports_generated
-                ) || 0;
-
-        }
-
+        currentSubscriptionPlan = "";
+        reportsGenerated = 0;
 
         displaySubscriptionStatus(
-            subscription,
+            null,
             user
         );
 
+        showSubscription();
 
-        /* =========================
-           VALID PAID SUBSCRIPTION
-           ========================= */
+        return;
 
-        if (
+    }
 
-            subscription &&
 
-            String(
-                subscription.status
-            )
-                .toLowerCase() ===
-                "paid" &&
+    /* =================================================
+       RESET VALUES
+    ================================================= */
 
-            subscription.expires_at &&
+    currentSubscriptionPlan = "";
+    reportsGenerated = 0;
 
+
+    /* =================================================
+       NO SUBSCRIPTION RECORD
+    ================================================= */
+
+    if (!subscription) {
+
+        displaySubscriptionStatus(
+            null,
+            user
+        );
+
+        showSubscription();
+
+        return;
+
+    }
+
+
+    /* =================================================
+       READ PLAN
+    ================================================= */
+
+    currentSubscriptionPlan =
+        String(
+
+            subscription.plan ||
+
+            subscription.subscription_plan ||
+
+            subscription.package ||
+
+            ""
+
+        )
+            .trim()
+            .toLowerCase();
+
+
+    /* =================================================
+       READ REPORT COUNT
+    ================================================= */
+
+    reportsGenerated =
+        Number(
+            subscription.reports_generated
+        ) || 0;
+
+
+    /* =================================================
+       READ STATUS
+    ================================================= */
+
+    const subscriptionStatusValue =
+        String(
+            subscription.status ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    /* =================================================
+       CHECK EXPIRATION
+    ================================================= */
+
+    let subscriptionIsActive = false;
+
+
+    if (
+        subscription.expires_at
+    ) {
+
+        const expiryDate =
             new Date(
                 subscription.expires_at
-            ) >
-            new Date()
+            );
 
+
+        const now =
+            new Date();
+
+
+        if (
+            !isNaN(
+                expiryDate.getTime()
+            ) &&
+            expiryDate > now
         ) {
 
-            showApp();
-
-            updateReportStatus();
-
-        } else {
-
-            showSubscription();
+            subscriptionIsActive = true;
 
         }
 
+    }
 
-    } catch (error) {
 
-        console.error(
-            error
+    /* =================================================
+       ACCEPT VALID PAID STATUS VALUES
+    ================================================= */
+
+    const validPaidStatuses = [
+
+        "paid",
+        "active",
+        "success",
+        "successful",
+        "completed"
+
+    ];
+
+
+    const paymentStatusIsValid =
+        validPaidStatuses.includes(
+            subscriptionStatusValue
+        );
+
+
+    /* =================================================
+       DISPLAY STATUS
+    ================================================= */
+
+    displaySubscriptionStatus(
+        subscription,
+        user
+    );
+
+
+    /* =================================================
+       FINAL ACCESS CHECK
+    ================================================= */
+
+    if (
+
+        paymentStatusIsValid &&
+
+        subscriptionIsActive &&
+
+        currentSubscriptionPlan &&
+
+        REPORT_LIMITS[
+            currentSubscriptionPlan
+        ]
+
+    ) {
+
+        console.log(
+            "Active subscription:",
+            currentSubscriptionPlan
+        );
+
+        showApp();
+
+        updateReportStatus();
+
+    } else {
+
+        console.log(
+            "Subscription is not active.",
+            {
+                status:
+                    subscriptionStatusValue,
+
+                plan:
+                    currentSubscriptionPlan,
+
+                expires_at:
+                    subscription.expires_at
+            }
         );
 
         showSubscription();
 
     }
+
+
+} catch (error) {
+
+    console.error(
+        "Subscription check failed:",
+        error
+    );
+
+    currentSubscriptionPlan = "";
+    reportsGenerated = 0;
+
+    showSubscription();
+
+}
 
 }
 
@@ -1653,181 +1753,345 @@ supabaseClient.auth.onAuthStateChange(
    ========================================================= */
 
 function displaySubscriptionStatus(
-    subscription,
-    user
+subscription,
+user
 ) {
 
+if (
+    !elementExists(
+        subscriptionStatus
+    )
+) {
+
+    return;
+
+}
+
+
+subscriptionStatus.style.display =
+    "block";
+
+
+/* =================================================
+   NO SUBSCRIPTION
+================================================= */
+
+if (!subscription) {
+
+    subscriptionStatus.innerHTML = `
+
+        <strong>
+            Subscription Status:
+        </strong>
+
+        <span style="color:red;">
+            UNPAID
+        </span>
+
+        <br>
+
+        Account:
+        ${escapeHTML(
+            user?.email || ""
+        )}
+
+        <br><br>
+
+        Please choose a subscription plan
+        to access the Student Report Generator.
+
+    `;
+
+    return;
+
+}
+
+
+/* =================================================
+   PLAN
+================================================= */
+
+const plan =
+    String(
+
+        subscription.plan ||
+
+        subscription.subscription_plan ||
+
+        subscription.package ||
+
+        ""
+
+    )
+        .trim()
+        .toLowerCase();
+
+
+/* =================================================
+   STATUS
+================================================= */
+
+const status =
+    String(
+        subscription.status ||
+        ""
+    )
+        .trim()
+        .toLowerCase();
+
+
+/* =================================================
+   EXPIRY
+================================================= */
+
+let expiryDate = null;
+
+let expiryText =
+    "Unknown";
+
+
+if (
+    subscription.expires_at
+) {
+
+    expiryDate =
+        new Date(
+            subscription.expires_at
+        );
+
+
     if (
-        !elementExists(
-            subscriptionStatus
+        !isNaN(
+            expiryDate.getTime()
         )
     ) {
 
-        return;
+        expiryText =
+            expiryDate.toLocaleDateString();
 
     }
 
-
-    subscriptionStatus.style.display =
-        "block";
+}
 
 
-    if (
+/* =================================================
+   ACTIVE?
+================================================= */
 
-        subscription &&
+const validPaidStatuses = [
 
-        String(
-            subscription.status
+    "paid",
+    "active",
+    "success",
+    "successful",
+    "completed"
+
+];
+
+
+const statusIsPaid =
+    validPaidStatuses.includes(
+        status
+    );
+
+
+const isExpired =
+    !expiryDate ||
+    isNaN(
+        expiryDate.getTime()
+    ) ||
+    expiryDate <= new Date();
+
+
+const isActive =
+    statusIsPaid &&
+    !isExpired;
+
+
+/* =================================================
+   REPORT LIMIT
+================================================= */
+
+const limit =
+    REPORT_LIMITS[plan] ||
+    0;
+
+
+const generated =
+    Number(
+        subscription.reports_generated
+    ) || 0;
+
+
+const remaining =
+    limit
+        ? Math.max(
+            limit - generated,
+            0
         )
-            .toLowerCase() ===
-            "paid"
-
-    ) {
-
-        let expiryText =
-            "Unknown";
+        : 0;
 
 
-        if (
-            subscription.expires_at
-        ) {
+/* =================================================
+   ACTIVE SUBSCRIPTION
+================================================= */
 
-            expiryText =
-                new Date(
-                    subscription.expires_at
-                )
-                    .toLocaleDateString();
+if (isActive) {
 
+    subscriptionStatus.innerHTML = `
+
+        <strong>
+            Subscription Status:
+        </strong>
+
+        <span style="color:green;">
+            PAID / ACTIVE
+        </span>
+
+        <br>
+
+        <strong>
+            Plan:
+        </strong>
+
+        ${escapeHTML(
+            getPlanDisplayNameFromPlan(
+                plan
+            )
+        )}
+
+        <br>
+
+        <strong>
+            Account:
+        </strong>
+
+        ${escapeHTML(
+            user?.email || ""
+        )}
+
+        <br>
+
+        <strong>
+            Expires:
+        </strong>
+
+        ${escapeHTML(
+            expiryText
+        )}
+
+        ${
+            limit
+                ? `
+
+                    <br>
+
+                    <strong>
+                        Reports Generated:
+                    </strong>
+
+                    ${generated}
+                    /
+                    ${limit}
+
+                    <br>
+
+                    <strong>
+                        Reports Remaining:
+                    </strong>
+
+                    ${remaining}
+
+                `
+                : ""
         }
 
+    `;
 
-        const plan =
-            String(
+    return;
 
-                subscription.plan ||
+}
 
-                subscription.subscription_plan ||
 
-                subscription.package ||
+/* =================================================
+   EXPIRED
+================================================= */
 
-                ""
+if (
+    statusIsPaid &&
+    isExpired
+) {
 
+    subscriptionStatus.innerHTML = `
+
+        <strong>
+            Subscription Status:
+        </strong>
+
+        <span style="color:red;">
+            EXPIRED
+        </span>
+
+        <br>
+
+        <strong>
+            Plan:
+        </strong>
+
+        ${escapeHTML(
+            getPlanDisplayNameFromPlan(
+                plan
             )
-                .trim()
-                .toLowerCase();
+        )}
+
+        <br>
+
+        <strong>
+            Expired:
+        </strong>
+
+        ${escapeHTML(
+            expiryText
+        )}
+
+        <br><br>
+
+        Please renew your subscription
+        to continue using the system.
+
+    `;
+
+    return;
+
+}
 
 
-        const limit =
-            REPORT_LIMITS[plan] ||
-            0;
+/* =================================================
+   UNPAID / INVALID
+================================================= */
 
+subscriptionStatus.innerHTML = `
 
-        const generated =
-            Number(
-                subscription.reports_generated
-            ) || 0;
+    <strong>
+        Subscription Status:
+    </strong>
 
+    <span style="color:red;">
+        UNPAID
+    </span>
 
-        const remaining =
-            limit
-                ? Math.max(
-                    limit -
-                    generated,
-                    0
-                )
-                : 0;
+    <br>
 
+    Account:
+    ${escapeHTML(
+        user?.email || ""
+    )}
 
-        subscriptionStatus.innerHTML = `
+    <br><br>
 
-            <strong>
-                Subscription Status:
-            </strong>
+    Please choose a subscription plan.
 
-            <span style="color:green;">
-                PAID
-            </span>
-
-            <br>
-
-            <strong>
-                Plan:
-            </strong>
-
-            ${escapeHTML(
-                getPlanDisplayNameFromPlan(
-                    plan
-                )
-            )}
-
-            <br>
-
-            <strong>
-                Account:
-            </strong>
-
-            ${escapeHTML(
-                user.email
-            )}
-
-            <br>
-
-            <strong>
-                Expires:
-            </strong>
-
-            ${escapeHTML(
-                expiryText
-            )}
-
-            ${
-                limit
-                    ? `
-
-                        <br>
-
-                        <strong>
-                            Reports Generated:
-                        </strong>
-
-                        ${generated}
-                        /
-                        ${limit}
-
-                        <br>
-
-                        <strong>
-                            Reports Remaining:
-                        </strong>
-
-                        ${remaining}
-
-                    `
-                    : ""
-            }
-
-        `;
-
-
-    } else {
-
-        subscriptionStatus.innerHTML = `
-
-            <strong>
-                Subscription Status:
-            </strong>
-
-            <span style="color:red;">
-                UNPAID
-            </span>
-
-            <br>
-
-            Please choose a subscription plan.
-
-        `;
-
-    }
+`;
 
 }
 
