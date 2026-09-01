@@ -4969,15 +4969,15 @@ function attachBehaviorData(
                             ] ||
                             "",
 
-                        "Class Teacher's Comment/Sign":
+                        "Class Teacher's Comment":
                             row[
-                                "Class Teacher's Comment/Sign"
+                                "Class Teacher's Comment"
                             ] ||
                             "",
 
-                        "Principal's Comment/Sign":
+                        "Principal's Comment":
                             row[
-                                "Principal's Comment/Sign"
+                                "Principal's Comment"
                             ] ||
                             ""
 
