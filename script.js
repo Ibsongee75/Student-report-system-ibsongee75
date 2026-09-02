@@ -88,6 +88,210 @@ const REPORT_SETTINGS_STORAGE_KEY =
 const GENERATED_REPORTS_STORAGE_KEY =
     "studentReportGeneratorGeneratedReports";
 
+/* =========================================================
+   REPORT GENERATION LEDGER
+
+   Prevent the same report from consuming another allowance merely
+   because the page was refreshed or the user switched between
+   Generate Student and Generate All modes.
+
+   The ledger is stored locally and scoped to the active subscription.
+   A changed student report/settings produces a new fingerprint and can
+   therefore consume a new allowance normally.
+   ========================================================= */
+const REPORT_GENERATION_LEDGER_KEY =
+    "studentReportGeneratorGenerationLedger";
+
+function getGenerationLedger() {
+    try {
+        const raw = localStorage.getItem(REPORT_GENERATION_LEDGER_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (error) {
+        console.error("Unable to read report generation ledger:", error);
+        return {};
+    }
+}
+
+function saveGenerationLedger(ledger) {
+    try {
+        localStorage.setItem(
+            REPORT_GENERATION_LEDGER_KEY,
+            JSON.stringify(ledger)
+        );
+    } catch (error) {
+        console.error("Unable to save report generation ledger:", error);
+    }
+}
+
+function getCurrentSubscriptionScope() {
+    if (!currentSubscription) return "no-subscription";
+
+    /* A renewed subscription may update the same database row. Include
+       renewal-changing values so the renewed allowance gets a fresh scope. */
+    return [
+        currentSubscription.id ||
+            currentSubscription.created_at ||
+            currentUserId ||
+            "subscription",
+        currentSubscription.payment_reference || "",
+        currentSubscription.plan ||
+            currentSubscription.subscription_plan ||
+            currentSubscription.package ||
+            "",
+        currentSubscription.expires_at || "",
+        currentSubscription.website_id || WEBSITE_ID
+    ].join("|");
+}
+
+function stableValue(value) {
+    if (value === null || value === undefined) return "";
+    if (typeof value !== "object") return String(value);
+
+    if (Array.isArray(value)) {
+        return value.map(stableValue);
+    }
+
+    const output = {};
+
+    Object.keys(value)
+        .sort()
+        .forEach(function (key) {
+            if (key === "__generationFingerprint") return;
+            output[key] = stableValue(value[key]);
+        });
+
+    return output;
+}
+
+function simpleHash(text) {
+    let hash = 2166136261;
+
+    for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash +=
+            (hash << 1) +
+            (hash << 4) +
+            (hash << 7) +
+            (hash << 8) +
+            (hash << 24);
+    }
+
+    return (hash >>> 0).toString(16);
+}
+
+function getReportGenerationFingerprint(student) {
+    const payload = {
+        student: stableValue(student),
+        subjects: stableValue(schoolSubjects),
+        settings: stableValue(reportSettings),
+        website: WEBSITE_ID
+    };
+
+    return simpleHash(JSON.stringify(payload));
+}
+
+function hasReportBeenGenerated(fingerprint) {
+    const ledger = getGenerationLedger();
+    const scope = getCurrentSubscriptionScope();
+
+    return !!(
+        ledger[scope] &&
+        ledger[scope][fingerprint]
+    );
+}
+
+function markReportsAsGenerated(fingerprints) {
+    if (!Array.isArray(fingerprints) || fingerprints.length === 0) {
+        return;
+    }
+
+    const ledger = getGenerationLedger();
+    const scope = getCurrentSubscriptionScope();
+
+    if (!ledger[scope]) {
+        ledger[scope] = {};
+    }
+
+    fingerprints.forEach(function (fingerprint) {
+        if (fingerprint) {
+            ledger[scope][fingerprint] = Date.now();
+        }
+    });
+
+    /* Keep the local ledger small. */
+    const keys = Object.keys(ledger);
+
+    if (keys.length > 8) {
+        keys.sort(function (a, b) {
+            const aTime = Math.max.apply(
+                null,
+                Object.values(ledger[a] || {})
+                    .map(Number)
+                    .concat([0])
+            );
+
+            const bTime = Math.max.apply(
+                null,
+                Object.values(ledger[b] || {})
+                    .map(Number)
+                    .concat([0])
+            );
+
+            return bTime - aTime;
+        });
+
+        keys.slice(8).forEach(function (key) {
+            delete ledger[key];
+        });
+    }
+
+    saveGenerationLedger(ledger);
+}
+
+/* Recognise reports generated before this ledger was introduced when
+   those reports are still restored from localStorage. */
+function migrateLegacyGeneratedReportsToLedger() {
+    if (
+        !currentSubscription ||
+        !reportContainer ||
+        !students ||
+        students.length === 0
+    ) {
+        return;
+    }
+
+    const visibleText = reportContainer.textContent || "";
+    const fingerprints = [];
+
+    students.forEach(function (student) {
+        const name = String(
+            student["Student Name"] || ""
+        ).trim();
+
+        const admissionNo = String(
+            student["Admission No"] || ""
+        ).trim();
+
+        if (!name) return;
+
+        if (
+            visibleText.includes(name) &&
+            (!admissionNo || visibleText.includes(admissionNo))
+        ) {
+            fingerprints.push(
+                getReportGenerationFingerprint(student)
+            );
+        }
+    });
+
+    if (fingerprints.length > 0) {
+        markReportsAsGenerated(fingerprints);
+    }
+}
+
+
 
 /* =========================================================
    SAVE APP DATA
@@ -1817,6 +2021,10 @@ currentSubscription =
             Number(
                 subscription.reports_generated
             ) || 0;
+
+
+        /* Prevent legacy restored reports from being charged again. */
+        migrateLegacyGeneratedReportsToLedger();
 
 
         /* =================================================
@@ -3616,13 +3824,13 @@ function downloadExcelTemplate() {
 
         scoresSheet["!cols"] = [
 
-            { wch: 9 },
-            { wch: 14 },
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 10 },
-            { wch: 10 },
-            { wch: 12 }
+            { wch: 15 },
+            { wch: 30 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 20 }
 
         ];
 
@@ -3632,9 +3840,9 @@ function downloadExcelTemplate() {
 
                 scoresSheet["!cols"].push(
 
-                    { wch: 10 },
-                    { wch: 10 },
-                    { wch: 10 }
+                    { wch: 15 },
+                    { wch: 15 },
+                    { wch: 15 }
 
                 );
 
@@ -3644,16 +3852,16 @@ function downloadExcelTemplate() {
 
         scoresSheet["!cols"].push(
 
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 }
+            { wch: 18 },
+            { wch: 15 },
+            { wch: 12 }
 
         );
 
 
         scoresSheet["!freeze"] = {
 
-            xSplit: 3,
+            xSplit: 0,
 
             ySplit: 1
 
@@ -3749,8 +3957,8 @@ function downloadExcelTemplate() {
 
         settingsSheet["!cols"] = [
 
-            { wch: 13 },
-            { wch: 13 }
+            { wch: 25 },
+            { wch: 50 }
 
         ];
 
@@ -3832,18 +4040,18 @@ function downloadExcelTemplate() {
 
                 subjectSheet["!cols"] = [
 
-                    { wch: 5 },
-                    { wch: 14 },
-                    { wch: 5 },
-                    { wch: 5 },
-                    { wch: 5 }
+                    { wch: 15 },
+                    { wch: 30 },
+                    { wch: 15 },
+                    { wch: 15 },
+                    { wch: 15 }
 
                 ];
 
 
                 subjectSheet["!freeze"] = {
 
-                    xSplit: 3,
+                    xSplit: 0,
 
                     ySplit: 1
 
@@ -3936,24 +4144,24 @@ function downloadExcelTemplate() {
 
         behaviorSheet["!cols"] = [
 
-            { wch: 6 },
-            { wch: 14 },
+            { wch: 15 },
+            { wch: 30 },
 
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 22 },
+            { wch: 15 },
+            { wch: 15 },
 
-            { wch: 20 },
-            { wch: 20 }
+            { wch: 35 },
+            { wch: 35 }
 
         ];
 
 
         behaviorSheet["!freeze"] = {
 
-            xSplit: 3,
+            xSplit: 0,
 
             ySplit: 1
 
@@ -5598,93 +5806,69 @@ async function incrementReportCount(
 
 async function generateSingleReport() {
 
-    if (
-        !elementExists(
-            studentSelect
-        )
-    ) {
-
+    if (!elementExists(studentSelect)) {
         return;
-
     }
 
+    const index = studentSelect.value;
 
-    const index =
-        studentSelect.value;
-
-
-    if (
-        index === ""
-    ) {
-
-        alert(
-            "Please select a student."
-        );
-
+    if (index === "") {
+        alert("Please select a student.");
         return;
-
     }
 
-
-    const student =
-        students[
-            Number(index)
-        ];
-
+    const student = students[Number(index)];
 
     if (!student) {
-
         return;
-
     }
 
+    const fingerprint =
+        getReportGenerationFingerprint(student);
 
-    /* =========================
-       CHECK REPORT LIMIT
-       ========================= */
+    const alreadyGenerated =
+        hasReportBeenGenerated(fingerprint);
 
+    /* Only a genuinely new report version consumes allowance. */
     if (
+        !alreadyGenerated &&
         !canGenerateReports(1)
     ) {
-
         return;
-
     }
 
-
     const report =
-        createReport(
-            student
-        );
-
+        createReport(student);
 
     if (reportContainer) {
-
-        reportContainer.innerHTML =
-            report;
-
-
-        /* =========================
-           SAVE GENERATED REPORT
-           ========================= */
+        reportContainer.innerHTML = report;
 
         saveGeneratedReports();
 
-
         reportContainer.scrollIntoView({
-
-            behavior:
-                "smooth"
-
+            behavior: "smooth"
         });
-
     }
 
+    /* Same report after refresh/mode switch: display it, but do not debit. */
+    if (alreadyGenerated) {
+        updateReportStatus();
+        return;
+    }
 
-    await incrementReportCount(
-        1
-    );
+    const countUpdated =
+        await incrementReportCount(1);
 
+    if (countUpdated) {
+        markReportsAsGenerated([fingerprint]);
+        saveGeneratedReports();
+    } else {
+        alert(
+            "⚠️ The report was displayed, but the server could not update the usage count. Please refresh and check your subscription before generating another new report."
+        );
+    }
+
+    updateReportStatus();
 }
 
 
@@ -5700,46 +5884,81 @@ async function generateAllReports() {
     }
 
     const limit = getReportLimit();
+
     if (!limit) {
         alert("❌ Your subscription plan could not be determined.");
         return;
     }
 
-    /* INCLUDE CARRIED-OVER REPORTS */
-    const carriedOver = getCarriedOverReports();
-    const totalAvailable = limit + carriedOver;
+    const carriedOver =
+        getCarriedOverReports();
+
+    const totalAvailable =
+        limit + carriedOver;
+
     const remaining = Math.max(
         totalAvailable - reportsGenerated,
         0
     );
 
-    if (remaining <= 0) {
+    /* Generate All and Generate Student share the same ledger. */
+    const reportItems = students.map(function (student) {
+        const fingerprint =
+            getReportGenerationFingerprint(student);
+
+        return {
+            student: student,
+            fingerprint: fingerprint,
+            alreadyGenerated:
+                hasReportBeenGenerated(fingerprint)
+        };
+    });
+
+    const newItems =
+        reportItems.filter(function (item) {
+            return !item.alreadyGenerated;
+        });
+
+    if (
+        remaining <= 0 &&
+        newItems.length > 0
+    ) {
         alert(
             "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +
             "Subscription: " + getPlanDisplayName() + "\n" +
-            "Reports generated: " + reportsGenerated + " / " + totalAvailable +
+            "Reports generated: " + reportsGenerated +
+            " / " + totalAvailable +
             "\n\nPlease renew or upgrade your subscription to generate more reports."
         );
+
         updateReportStatus();
         return;
     }
 
-    const totalStudents = students.length;
-    const numberToGenerate = Math.min(totalStudents, remaining);
-    const stoppedByLimit = totalStudents > remaining;
+    const newItemsAllowed =
+        newItems.slice(0, remaining);
+
+    const blockedNewItems =
+        newItems.length > newItemsAllowed.length;
 
     const confirmation = confirm(
-        "Generate reports for " + numberToGenerate + " student(s)?\n\n" +
+        "Generate reports for " + students.length + " student(s)?\n\n" +
         "Subscription: " + getPlanDisplayName() + "\n" +
-        "Current reports generated: " + reportsGenerated + " / " + totalAvailable + "\n" +
+        "Current reports generated: " + reportsGenerated +
+        " / " + totalAvailable + "\n" +
         "Carried-over reports: " + carriedOver + "\n" +
         "Reports remaining: " + remaining +
-        (stoppedByLimit
-            ? "\n\n⚠️ Your available balance means only " + numberToGenerate + " report(s) can be generated."
-            : "")
+        "\n\nAlready-generated reports will not consume allowance again." +
+        (
+            blockedNewItems
+                ? "\n\n⚠️ Only " +
+                  newItemsAllowed.length +
+                  " new report(s) can consume the remaining allowance."
+                : ""
+        )
     );
 
-    if (!confirmation || !canGenerateReports(numberToGenerate)) {
+    if (!confirmation) {
         return;
     }
 
@@ -5747,23 +5966,49 @@ async function generateAllReports() {
         reportContainer.innerHTML = "";
     }
 
-    let generatedCount = 0;
+    const allowedNewFingerprints =
+        new Set(
+            newItemsAllowed.map(function (item) {
+                return item.fingerprint;
+            })
+        );
 
-    for (let i = 0; i < numberToGenerate; i++) {
-        const student = students[i];
-        if (!student) continue;
+    const fingerprintsToCharge = [];
+    let renderedCount = 0;
 
-        const report = createReport(student);
-        if (reportContainer) {
-            reportContainer.insertAdjacentHTML("beforeend", report);
+    for (let i = 0; i < reportItems.length; i++) {
+        const item = reportItems[i];
+
+        /* Existing reports are safe to render again without charging. */
+        if (
+            !item.alreadyGenerated &&
+            !allowedNewFingerprints.has(item.fingerprint)
+        ) {
+            continue;
         }
 
-        generatedCount++;
+        const report =
+            createReport(item.student);
 
-        if (generatedCount % 10 === 0) {
+        if (reportContainer) {
+            reportContainer.insertAdjacentHTML(
+                "beforeend",
+                report
+            );
+        }
+
+        renderedCount++;
+
+        if (!item.alreadyGenerated) {
+            fingerprintsToCharge.push(
+                item.fingerprint
+            );
+        }
+
+        if (renderedCount % 10 === 0) {
             updateTemporaryGenerationMessage(
-                generatedCount,
-                numberToGenerate
+                renderedCount,
+                students.length
             );
 
             await new Promise(function (resolve) {
@@ -5772,115 +6017,56 @@ async function generateAllReports() {
         }
     }
 
-    const generationProgress = document.getElementById("generationProgress");
-    if (generationProgress) generationProgress.remove();
+    const generationProgress =
+        document.getElementById("generationProgress");
 
-    if (generatedCount > 0) {
+    if (generationProgress) {
+        generationProgress.remove();
+    }
+
+    if (reportContainer) {
         saveGeneratedReports();
+    }
 
-        const countUpdated = await incrementReportCount(generatedCount);
-        if (!countUpdated) {
-            console.error(
-                "The reports were generated locally, but the server could not update the report count."
+    if (fingerprintsToCharge.length > 0) {
+        const countUpdated =
+            await incrementReportCount(
+                fingerprintsToCharge.length
             );
+
+        if (countUpdated) {
+            markReportsAsGenerated(
+                fingerprintsToCharge
+            );
+
+            saveGeneratedReports();
+        } else {
             alert(
-                "⚠️ Reports were generated, but the server could not update the usage count. Please refresh and check your subscription status before generating more reports."
+                "⚠️ Reports were displayed, but the server could not update the usage count. Please refresh and check your subscription before generating more reports."
             );
         }
     }
 
     updateReportStatus();
 
-    if (stoppedByLimit) {
+    if (blockedNewItems) {
         alert(
             "⚠️ Generation stopped at your available report limit.\n\n" +
-            "Subscription: " + getPlanDisplayName() + "\n" +
-            "Reports generated this operation: " + generatedCount + "\n" +
-            "Total reports generated: " + reportsGenerated + " / " + totalAvailable + "\n\n" +
-            "There were " + (totalStudents - numberToGenerate) + " student(s) remaining."
+            "New reports charged this operation: " +
+            fingerprintsToCharge.length + "\n" +
+            "Reports generated: " + reportsGenerated +
+            " / " + totalAvailable +
+            "\n\nRenew or upgrade to generate the remaining new reports."
         );
     } else {
         alert(
-            "✅ All reports generated successfully.\n\n" +
-            "Reports generated: " + generatedCount + "\n" +
-            "Total reports generated: " + reportsGenerated + " / " + totalAvailable
+            "✅ Reports generated successfully.\n\n" +
+            "Reports displayed: " + renderedCount + "\n" +
+            "New reports charged: " + fingerprintsToCharge.length + "\n" +
+            "Total reports generated: " + reportsGenerated +
+            " / " + totalAvailable
         );
     }
-}
-
-
-function updateTemporaryGenerationMessage(
-    generated,
-    total
-) {
-
-    if (!reportContainer) {
-
-        return;
-
-    }
-
-
-    const existing =
-        document.getElementById(
-            "generationProgress"
-        );
-
-
-    if (!existing) {
-
-        const progress =
-            document.createElement(
-                "div"
-            );
-
-
-        progress.id =
-            "generationProgress";
-
-
-        progress.style.padding =
-            "10px";
-
-
-        progress.style.marginBottom =
-            "10px";
-
-
-        progress.style.fontWeight =
-            "bold";
-
-
-        progress.innerHTML =
-
-            "⏳ Generating reports: " +
-
-            generated +
-
-            " / " +
-
-            total;
-
-
-        reportContainer.prepend(
-            progress
-        );
-
-
-    } else {
-
-        existing.innerHTML =
-
-            "⏳ Generating reports: " +
-
-            generated +
-
-            " / " +
-
-            total;
-
-    }
-
 }
 
 
@@ -7412,6 +7598,123 @@ function escapeHTML(
         );
 
 }
+
+
+
+/* =========================================================
+   REPORT-ONLY PRINT / SAVE-TO-PDF PROTECTION
+
+   Prints/saves ONLY the generated reports and forces each
+   student report to occupy its own PDF/print page.
+   ========================================================= */
+
+let reportPrintLayer = null;
+let reportPrintStyle = null;
+
+function prepareReportsForPrint() {
+    if (!reportContainer) return;
+
+    /* Prevent duplicate print layers/styles on mobile browsers. */
+    if (reportPrintLayer) {
+        reportPrintLayer.remove();
+        reportPrintLayer = null;
+    }
+
+    if (reportPrintStyle) {
+        reportPrintStyle.remove();
+        reportPrintStyle = null;
+    }
+
+    /* Copy the generated reports into a dedicated print-only layer. */
+    reportPrintLayer = document.createElement("div");
+    reportPrintLayer.id = "reportPrintLayer";
+    reportPrintLayer.innerHTML = reportContainer.innerHTML;
+    document.body.appendChild(reportPrintLayer);
+
+    /*
+       The print rules are injected here so this works even if the
+       main stylesheet does not already contain the required rules.
+       Each .report starts on a fresh A4 page and cannot be split
+       between two pages where the browser supports these rules.
+    */
+    reportPrintStyle = document.createElement("style");
+    reportPrintStyle.id = "reportPrintStyle";
+    reportPrintStyle.textContent = `
+        @page {
+            size: A4 portrait;
+            margin: 5mm;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 210mm !important;
+                min-width: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            body > * {
+                display: none !important;
+            }
+
+            body > #reportPrintLayer {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            #reportPrintLayer .report {
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                break-before: auto;
+                break-after: page;
+                break-inside: avoid;
+                page-break-before: auto;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+
+            #reportPrintLayer .report:last-child {
+                break-after: auto;
+                page-break-after: auto;
+            }
+        }
+    `;
+
+    document.head.appendChild(reportPrintStyle);
+    document.documentElement.classList.add("printing-reports");
+}
+
+function restoreReportsAfterPrint() {
+    document.documentElement.classList.remove("printing-reports");
+
+    if (reportPrintLayer) {
+        reportPrintLayer.remove();
+        reportPrintLayer = null;
+    }
+
+    if (reportPrintStyle) {
+        reportPrintStyle.remove();
+        reportPrintStyle = null;
+    }
+}
+
+window.addEventListener("beforeprint", prepareReportsForPrint);
+window.addEventListener("afterprint", restoreReportsAfterPrint);
+
+/* Mobile browsers are not always consistent with afterprint. */
+window.addEventListener("focus", function () {
+    if (document.documentElement.classList.contains("printing-reports")) {
+        setTimeout(restoreReportsAfterPrint, 500);
+    }
+});
 
 
 /* =========================================================
