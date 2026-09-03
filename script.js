@@ -589,9 +589,18 @@ const REPORT_LIMITS = {
 
     standard: 500,
 
-    premium: 1000
+    premium: 1000,
+
+    /* One-time allowance for brand-new accounts. */
+    free_trial: 10
 
 };
+
+const FREE_TRIAL_PLAN = "free_trial";
+const FREE_TRIAL_STATUS = "trial";
+const FREE_TRIAL_REPORTS = 10;
+const FREE_TRIAL_DURATION_DAYS = 7;
+let freeTrialExpiryTimer = null;
 
 
 /* =========================================================
@@ -1477,6 +1486,7 @@ function attachAuthenticationEvents() {
             async function () {
 
                 try {
+                    clearFreeTrialExpiryTimer();
 
                     const {
                         error
@@ -1860,6 +1870,8 @@ async function checkLogin() {
 
         if (!data.session) {
 
+            clearFreeTrialExpiryTimer();
+
             currentSubscriptionPlan =
                 "";
 
@@ -1901,6 +1913,42 @@ async function checkLogin() {
 
 }
 
+
+/* =========================================================
+   FREE 7-DAY / 10-REPORT TRIAL
+   ========================================================= */
+
+function clearFreeTrialExpiryTimer() {
+    if (freeTrialExpiryTimer) {
+        clearTimeout(freeTrialExpiryTimer);
+        freeTrialExpiryTimer = null;
+    }
+}
+
+function isFreeTrial(subscription = currentSubscription) {
+    return String(
+        subscription?.plan ||
+        subscription?.subscription_plan ||
+        subscription?.package ||
+        ""
+    ).trim().toLowerCase() === FREE_TRIAL_PLAN;
+}
+
+function scheduleFreeTrialExpiryCheck(subscription) {
+    clearFreeTrialExpiryTimer();
+
+    if (!subscription || !isFreeTrial(subscription)) return;
+
+    const expiryTime = new Date(subscription.expires_at).getTime();
+    if (!Number.isFinite(expiryTime)) return;
+
+    const delay = Math.max(expiryTime - Date.now() + 1000, 1000);
+
+    freeTrialExpiryTimer = setTimeout(function () {
+        freeTrialExpiryTimer = null;
+        checkLogin();
+    }, Math.min(delay, 2147483647));
+}
 
 /* =========================================================
    CHECK SUBSCRIPTION
@@ -1976,6 +2024,16 @@ async function checkSubscription(user) {
 
         if (!subscription) {
 
+            /*
+               Brand-new users receive their free trial automatically from
+               the Supabase auth.users trigger. The browser only READS the
+               subscription here; it never inserts a subscription row.
+
+               Existing accounts without a subscription remain behind the
+               normal paid-subscription gate.
+            */
+            clearFreeTrialExpiryTimer();
+
             console.log(
                 "No subscription found for website:",
                 WEBSITE_ID
@@ -1987,7 +2045,6 @@ async function checkSubscription(user) {
             );
 
             showSubscription();
-
             return;
 
         }
@@ -2018,6 +2075,12 @@ currentSubscription =
             )
                 .trim()
                 .toLowerCase();
+
+        if (currentSubscriptionPlan === FREE_TRIAL_PLAN) {
+            scheduleFreeTrialExpiryCheck(subscription);
+        } else {
+            clearFreeTrialExpiryTimer();
+        }
 
 
         /* =================================================
@@ -2105,6 +2168,13 @@ currentSubscription =
                 subscriptionStatusValue
             );
 
+        const trialStatusIsValid =
+            currentSubscriptionPlan === FREE_TRIAL_PLAN &&
+            subscriptionStatusValue === FREE_TRIAL_STATUS;
+
+        const subscriptionStatusIsValid =
+            paymentStatusIsValid || trialStatusIsValid;
+
 
         /* =================================================
            DISPLAY STATUS
@@ -2122,7 +2192,7 @@ currentSubscription =
 
         if (
 
-            paymentStatusIsValid &&
+            subscriptionStatusIsValid &&
 
             subscriptionIsActive &&
 
@@ -2428,6 +2498,13 @@ function displaySubscriptionStatus(
             status
         );
 
+    const statusIsTrial =
+        plan === FREE_TRIAL_PLAN &&
+        status === FREE_TRIAL_STATUS;
+
+    const statusIsValid =
+        statusIsPaid || statusIsTrial;
+
 
     const isExpired =
         !expiryDate ||
@@ -2438,7 +2515,7 @@ function displaySubscriptionStatus(
 
 
     const isActive =
-        statusIsPaid &&
+        statusIsValid &&
         !isExpired;
 
 
@@ -2494,6 +2571,19 @@ function displaySubscriptionStatus(
 
     if (isActive) {
 
+        const trialRemaining = isFreeTrial(subscription)
+            ? Math.max(totalAvailable - generated, 0)
+            : 0;
+
+        const trialNotice = isFreeTrial(subscription)
+            ? `
+                <br>
+                <strong>Free Trial:</strong> 10 reports for 7 days
+                <br>
+                <strong>Trial Reports Remaining:</strong> ${trialRemaining}
+              `
+            : "";
+
         subscriptionStatus.innerHTML = `
 
             <strong>
@@ -2501,7 +2591,7 @@ function displaySubscriptionStatus(
             </strong>
 
             <span style="color:green;">
-                PAID / ACTIVE
+                ${isFreeTrial(subscription) ? "FREE TRIAL / ACTIVE" : "PAID / ACTIVE"}
             </span>
 
             <br>
@@ -2535,6 +2625,8 @@ function displaySubscriptionStatus(
             ${escapeHTML(
                 expiryText
             )}
+
+            ${trialNotice}
 
             ${
                 limit
@@ -2594,6 +2686,27 @@ function displaySubscriptionStatus(
 
     }
 
+
+    /* =================================================
+       EXPIRED FREE TRIAL
+    ================================================= */
+
+    if (statusIsTrial && isExpired) {
+        subscriptionStatus.innerHTML = `
+            <strong>Subscription Status:</strong>
+            <span style="color:red;">FREE TRIAL EXPIRED</span>
+            <br>
+            <strong>Trial allowance:</strong>
+            ${generated} / ${FREE_TRIAL_REPORTS} reports used
+            <br>
+            <strong>Expired:</strong> ${escapeHTML(expiryText)}
+            <br><br>
+            Your free 7-day trial has ended. Please renew or choose a paid
+            subscription to continue using the system.
+        `;
+        showSubscription();
+        return;
+    }
 
     /* =================================================
        EXPIRED
@@ -2723,6 +2836,16 @@ function getPlanDisplayNameFromPlan(
     ) {
 
         return "PREMIUM";
+
+    }
+
+
+    if (
+        cleanPlan ===
+        FREE_TRIAL_PLAN
+    ) {
+
+        return "FREE 7-DAY TRIAL";
 
     }
 
@@ -5551,6 +5674,24 @@ function updateReportStatus() {
         );
 
 
+    /* A free trial stops access when its time or its 10-report allowance
+       is exhausted. Paid subscriptions retain their existing behavior. */
+    if (isFreeTrial()) {
+        const trialExpiry = new Date(
+            currentSubscription?.expires_at || ""
+        );
+
+        const trialExpired =
+            isNaN(trialExpiry.getTime()) ||
+            trialExpiry <= new Date();
+
+        if (trialExpired || remaining <= 0) {
+            showSubscription();
+            return;
+        }
+    }
+
+
     /* =====================================================
        DISPLAY
        ===================================================== */
@@ -7401,8 +7542,12 @@ async function startPaystackPayment(
             "";
 
         /* CAPTURE THE UNUSED OLD BALANCE BEFORE RENEWAL */
+        /* Never carry unused free-trial reports into a paid plan.
+           Existing paid-subscription carry-over behavior is unchanged. */
         const renewalCarryOver = currentSubscription
-            ? getReportsRemaining(currentSubscription)
+            ? (isFreeTrial(currentSubscription)
+                ? 0
+                : getReportsRemaining(currentSubscription))
             : 0;
 
 
