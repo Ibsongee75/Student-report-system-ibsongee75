@@ -3824,13 +3824,13 @@ function downloadExcelTemplate() {
 
         scoresSheet["!cols"] = [
 
-            { wch: 15 },
-            { wch: 30 },
-            { wch: 12 },
-            { wch: 12 },
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 20 }
+            { wch: 8 },
+            { wch: 14 },
+            { wch: 9 },
+            { wch: 9 },
+            { wch: 9 },
+            { wch: 10 },
+            { wch: 11 }
 
         ];
 
@@ -3840,9 +3840,9 @@ function downloadExcelTemplate() {
 
                 scoresSheet["!cols"].push(
 
-                    { wch: 15 },
-                    { wch: 15 },
-                    { wch: 15 }
+                    { wch: 9 },
+                    { wch: 9 },
+                    { wch: 9 }
 
                 );
 
@@ -3852,16 +3852,16 @@ function downloadExcelTemplate() {
 
         scoresSheet["!cols"].push(
 
-            { wch: 18 },
-            { wch: 15 },
-            { wch: 12 }
+            { wch: 9 },
+            { wch: 9 },
+            { wch: 9 }
 
         );
 
 
         scoresSheet["!freeze"] = {
 
-            xSplit: 0,
+            xSplit: 3,
 
             ySplit: 1
 
@@ -3957,8 +3957,8 @@ function downloadExcelTemplate() {
 
         settingsSheet["!cols"] = [
 
-            { wch: 25 },
-            { wch: 50 }
+            { wch: 15 },
+            { wch: 15 }
 
         ];
 
@@ -4040,18 +4040,18 @@ function downloadExcelTemplate() {
 
                 subjectSheet["!cols"] = [
 
-                    { wch: 15 },
-                    { wch: 30 },
-                    { wch: 15 },
-                    { wch: 15 },
-                    { wch: 15 }
+                    { wch: 5 },
+                    { wch: 14 },
+                    { wch: 5 },
+                    { wch: 5 },
+                    { wch: 5 }
 
                 ];
 
 
                 subjectSheet["!freeze"] = {
 
-                    xSplit: 0,
+                    xSplit: 3,
 
                     ySplit: 1
 
@@ -4144,24 +4144,24 @@ function downloadExcelTemplate() {
 
         behaviorSheet["!cols"] = [
 
-            { wch: 15 },
-            { wch: 30 },
+            { wch: 6 },
+            { wch: 14 },
 
-            { wch: 15 },
-            { wch: 15 },
-            { wch: 22 },
-            { wch: 15 },
-            { wch: 15 },
+            { wch: 10 },
+            { wch: 9 },
+            { wch: 9 },
+            { wch: 9 },
+            { wch: 9 },
 
-            { wch: 35 },
-            { wch: 35 }
+            { wch: 17 },
+            { wch: 17 }
 
         ];
 
 
         behaviorSheet["!freeze"] = {
 
-            xSplit: 0,
+            xSplit: 3,
 
             ySplit: 1
 
