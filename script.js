@@ -126,22 +126,25 @@ function saveGenerationLedger(ledger) {
 }
 
 function getCurrentSubscriptionScope() {
-    if (!currentSubscription) return "no-subscription";
+    if (!currentSubscription || !currentUserId) {
+        return "no-subscription";
+    }
 
-    /* A renewed subscription may update the same database row. Include
-       renewal-changing values so the renewed allowance gets a fresh scope. */
+    /* Keep the ledger stable across page refreshes and mode switches.
+       A renewal must create a fresh scope, so include the subscription
+       identity plus the renewal-changing values. */
     return [
-        currentSubscription.id ||
-            currentSubscription.created_at ||
-            currentUserId ||
-            "subscription",
-        currentSubscription.payment_reference || "",
-        currentSubscription.plan ||
+        String(currentUserId),
+        String(currentSubscription.website_id || WEBSITE_ID),
+        String(currentSubscription.id || currentSubscription.created_at || "subscription"),
+        String(currentSubscription.payment_reference || ""),
+        String(
+            currentSubscription.plan ||
             currentSubscription.subscription_plan ||
             currentSubscription.package ||
-            "",
-        currentSubscription.expires_at || "",
-        currentSubscription.website_id || WEBSITE_ID
+            ""
+        ),
+        String(currentSubscription.expires_at || "")
     ].join("|");
 }
 
@@ -843,6 +846,10 @@ function initializeElements() {
         document.getElementById(
             "generateAll"
         );
+
+    if (generateAllButton) {
+        generateAllButton.type = "button";
+    }
 
     reportContainer =
         document.getElementById(
@@ -3096,18 +3103,55 @@ function attachApplicationEvents() {
     }
 
 
-    if (
-        elementExists(
-            generateAllButton
-        )
-    ) {
+    /* =====================================================
+       GENERATE ALL BUTTON
 
-        generateAllButton.addEventListener(
-            "click",
-            generateAllReports
-        );
+       Use delegated click handling so the button still works if
+       the application UI recreates or inserts it after startup.
+       Prevent the default form action so a button inside a form
+       cannot silently submit/reload the page instead of generating.
+       ===================================================== */
+    document.addEventListener(
+        "click",
+        function (event) {
+            const target = event.target &&
+                event.target.closest
+                    ? event.target.closest("#generateAll")
+                    : null;
 
-    }
+            if (!target) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (target.disabled) {
+                return;
+            }
+
+            target.disabled = true;
+
+            Promise.resolve(
+                generateAllReports()
+            ).catch(function (error) {
+                console.error(
+                    "Generate All error:",
+                    error
+                );
+
+                alert(
+                    "❌ Generate All could not be completed.\n\n" +
+                    (error && error.message
+                        ? error.message
+                        : String(error))
+                );
+            }).finally(function () {
+                target.disabled = false;
+            });
+        },
+        true
+    );
 
 
     /* =====================================================
@@ -3824,7 +3868,7 @@ function downloadExcelTemplate() {
 
         scoresSheet["!cols"] = [
 
-            { wch: 8 },
+            { wch: 7 },
             { wch: 14 },
             { wch: 9 },
             { wch: 9 },
@@ -3957,8 +4001,8 @@ function downloadExcelTemplate() {
 
         settingsSheet["!cols"] = [
 
-            { wch: 15 },
-            { wch: 15 }
+            { wch: 14 },
+            { wch: 14 }
 
         ];
 
@@ -4040,7 +4084,7 @@ function downloadExcelTemplate() {
 
                 subjectSheet["!cols"] = [
 
-                    { wch: 5 },
+                    { wch: 6 },
                     { wch: 14 },
                     { wch: 5 },
                     { wch: 5 },
@@ -4144,17 +4188,17 @@ function downloadExcelTemplate() {
 
         behaviorSheet["!cols"] = [
 
-            { wch: 6 },
+            { wch: 7 },
             { wch: 14 },
 
-            { wch: 10 },
+            { wch: 9 },
             { wch: 9 },
             { wch: 9 },
             { wch: 9 },
             { wch: 9 },
 
-            { wch: 17 },
-            { wch: 17 }
+            { wch: 18 },
+            { wch: 18 }
 
         ];
 
@@ -4375,7 +4419,7 @@ function downloadExcelTemplate() {
                 t: "n",
 
                 f:
-                    `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/${schoolSubjects.length},0))`
+                    `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/SUM(${schoolSubjects.map(function(subject) { const sheetName = actualSubjectSheetNames[subject]; const safeSheetName = sheetName.replace(/'/g, "''"); return "COUNTIF('" + safeSheetName + "'!$B:$B,$B" + row + ")"; }).join(",")}),0))`
 
             };
 
@@ -5707,98 +5751,74 @@ async function incrementReportCount(
 ) {
 
     if (!currentUserId) {
-
-        console.error(
-            "No authenticated user found."
-        );
-
+        console.error("No authenticated user found.");
         return false;
-
     }
 
+    const reportAmount = Number(amount);
 
-    const reportAmount =
-        Number(amount);
-
-
-    if (
-
-        !Number.isInteger(
-            reportAmount
-        ) ||
-
-        reportAmount <=
-        0
-
-    ) {
-
-        console.error(
-            "Invalid report count:",
-            amount
-        );
-
+    if (!Number.isInteger(reportAmount) || reportAmount <= 0) {
+        console.error("Invalid report count:", amount);
         return false;
-
     }
-
 
     try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-                .rpc(
-    "increment_reports_generated_for_website",
-    {
-
-        p_website_id:
-            WEBSITE_ID,
-
-        p_amount:
-            reportAmount
-
-    }
-);
-
-        if (error) {
-
-            console.error(
-                "Unable to increment report count:",
-                error
+        /*
+           SERVER-AUTHORITATIVE ALLOWANCE CLAIM
+           ------------------------------------
+           This is deliberately NOT an increment-only RPC. The database
+           checks the user's current subscription, carried-over allowance
+           and remaining balance, then returns the authoritative count.
+        */
+        const { data, error } =
+            await supabaseClient.rpc(
+                "claim_report_allowance",
+                {
+                    p_user_id: currentUserId,
+                    p_website_id: WEBSITE_ID,
+                    p_amount: reportAmount
+                }
             );
 
+        if (error) {
+            console.error("Unable to claim report allowance:", error);
             return false;
-
         }
 
+        const result =
+            Array.isArray(data) ? data[0] : data;
 
+        if (!result || result.success !== true) {
+            console.error(
+                "Report allowance claim was rejected:",
+                result
+            );
+            return false;
+        }
+
+        const claimedAmount =
+            Number(result.claimed_amount);
+
+        if (claimedAmount !== reportAmount) {
+            console.error(
+                "Server did not claim the requested number of reports:",
+                { requested: reportAmount, result: result }
+            );
+            return false;
+        }
+
+        /* Always trust the server's authoritative generated count. */
         reportsGenerated =
-            Number(data) ||
-            reportsGenerated +
-            reportAmount;
-
+            Number(result.reports_generated) || 0;
 
         updateReportStatus();
-
-
         return true;
 
-
     } catch (error) {
-
-        console.error(
-            "Report count error:",
-            error
-        );
-
+        console.error("Report allowance error:", error);
         return false;
-
     }
-
 }
-
 
 /* =========================================================
    GENERATE SINGLE REPORT
@@ -5826,49 +5846,94 @@ async function generateSingleReport() {
     const fingerprint =
         getReportGenerationFingerprint(student);
 
+    /*
+       IMPORTANT: The ledger check happens BEFORE the allowance RPC.
+       Therefore clicking Generate again for the same report cannot debit
+       another report, including after refresh or mode switching.
+    */
     const alreadyGenerated =
         hasReportBeenGenerated(fingerprint);
 
-    /* Only a genuinely new report version consumes allowance. */
-    if (
-        !alreadyGenerated &&
-        !canGenerateReports(1)
-    ) {
+    if (alreadyGenerated) {
+        const report = createReport(student);
+
+        if (reportContainer) {
+            reportContainer.innerHTML = report;
+            saveGeneratedReports();
+            reportContainer.scrollIntoView({
+                behavior: "smooth"
+            });
+        }
+
+        updateReportStatus();
         return;
     }
 
-    const report =
-        createReport(student);
+    /* Local check is only a friendly pre-check. The server is authoritative. */
+    if (!canGenerateReports(1)) {
+        return;
+    }
+
+    /* Build the report before claiming so the normal report creation path
+       is completed before allowance is consumed. */
+    const report = createReport(student);
+
+    /* Claim exactly one new report on the server. */
+    const countUpdated =
+        await incrementReportCount(1);
+
+    if (!countUpdated) {
+        alert(
+            "⚠️ This report was not charged because the server could not confirm the allowance claim. Please refresh and try again."
+        );
+        updateReportStatus();
+        return;
+    }
+
+    /* Mark only after the server has successfully charged the report. */
+    markReportsAsGenerated([fingerprint]);
 
     if (reportContainer) {
         reportContainer.innerHTML = report;
-
         saveGeneratedReports();
-
         reportContainer.scrollIntoView({
             behavior: "smooth"
         });
     }
 
-    /* Same report after refresh/mode switch: display it, but do not debit. */
-    if (alreadyGenerated) {
-        updateReportStatus();
-        return;
-    }
-
-    const countUpdated =
-        await incrementReportCount(1);
-
-    if (countUpdated) {
-        markReportsAsGenerated([fingerprint]);
-        saveGeneratedReports();
-    } else {
-        alert(
-            "⚠️ The report was displayed, but the server could not update the usage count. Please refresh and check your subscription before generating another new report."
-        );
-    }
-
     updateReportStatus();
+}
+
+/* =========================================================
+   GENERATE ALL PROGRESS MESSAGE
+   ========================================================= */
+
+function updateTemporaryGenerationMessage(current, total) {
+
+    let progress =
+        document.getElementById("generationProgress");
+
+    if (!progress) {
+        progress = document.createElement("div");
+        progress.id = "generationProgress";
+        progress.style.position = "fixed";
+        progress.style.top = "20px";
+        progress.style.left = "50%";
+        progress.style.transform = "translateX(-50%)";
+        progress.style.zIndex = "99999";
+        progress.style.padding = "12px 18px";
+        progress.style.borderRadius = "8px";
+        progress.style.background = "#1f2937";
+        progress.style.color = "#fff";
+        progress.style.fontSize = "14px";
+        progress.style.fontWeight = "600";
+        progress.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
+        progress.style.textAlign = "center";
+        document.body.appendChild(progress);
+    }
+
+    progress.textContent =
+        "Generating reports... " + current + " / " + total;
 }
 
 
@@ -5890,18 +5955,14 @@ async function generateAllReports() {
         return;
     }
 
-    const carriedOver =
-        getCarriedOverReports();
-
-    const totalAvailable =
-        limit + carriedOver;
-
+    const carriedOver = getCarriedOverReports();
+    const totalAvailable = limit + carriedOver;
     const remaining = Math.max(
         totalAvailable - reportsGenerated,
         0
     );
 
-    /* Generate All and Generate Student share the same ledger. */
+    /* Generate All and Generate Student use the same fingerprint ledger. */
     const reportItems = students.map(function (student) {
         const fingerprint =
             getReportGenerationFingerprint(student);
@@ -5909,20 +5970,40 @@ async function generateAllReports() {
         return {
             student: student,
             fingerprint: fingerprint,
-            alreadyGenerated:
-                hasReportBeenGenerated(fingerprint)
+            alreadyGenerated: hasReportBeenGenerated(fingerprint)
         };
     });
 
-    const newItems =
-        reportItems.filter(function (item) {
-            return !item.alreadyGenerated;
-        });
+    const newItems = reportItems.filter(function (item) {
+        return !item.alreadyGenerated;
+    });
 
-    if (
-        remaining <= 0 &&
-        newItems.length > 0
-    ) {
+    if (newItems.length === 0) {
+        /* Everything has already consumed its allowance in this subscription. */
+        if (reportContainer) {
+            reportContainer.innerHTML = "";
+
+            reportItems.forEach(function (item) {
+                reportContainer.insertAdjacentHTML(
+                    "beforeend",
+                    createReport(item.student)
+                );
+            });
+
+            saveGeneratedReports();
+            reportContainer.scrollIntoView({
+                behavior: "smooth"
+            });
+        }
+
+        updateReportStatus();
+        alert(
+            "ℹ️ All selected student reports have already been generated for this subscription.\n\nNo allowance was deducted."
+        );
+        return;
+    }
+
+    if (remaining <= 0) {
         alert(
             "⚠️ REPORT GENERATION LIMIT REACHED\n\n" +
             "Subscription: " + getPlanDisplayName() + "\n" +
@@ -5930,7 +6011,6 @@ async function generateAllReports() {
             " / " + totalAvailable +
             "\n\nPlease renew or upgrade your subscription to generate more reports."
         );
-
         updateReportStatus();
         return;
     }
@@ -5949,37 +6029,32 @@ async function generateAllReports() {
         "Carried-over reports: " + carriedOver + "\n" +
         "Reports remaining: " + remaining +
         "\n\nAlready-generated reports will not consume allowance again." +
-        (
-            blockedNewItems
-                ? "\n\n⚠️ Only " +
-                  newItemsAllowed.length +
-                  " new report(s) can consume the remaining allowance."
-                : ""
-        )
+        (blockedNewItems
+            ? "\n\n⚠️ Only " + newItemsAllowed.length +
+              " new report(s) can consume the remaining allowance."
+            : "")
     );
 
     if (!confirmation) {
         return;
     }
 
-    if (reportContainer) {
-        reportContainer.innerHTML = "";
-    }
+    const allowedNewFingerprints = new Set(
+        newItemsAllowed.map(function (item) {
+            return item.fingerprint;
+        })
+    );
 
-    const allowedNewFingerprints =
-        new Set(
-            newItemsAllowed.map(function (item) {
-                return item.fingerprint;
-            })
-        );
-
+    /*
+       Prepare HTML first. Nothing is put into the report container until
+       the server has successfully claimed the new allowance.
+    */
+    const reportsToRender = [];
     const fingerprintsToCharge = [];
-    let renderedCount = 0;
 
     for (let i = 0; i < reportItems.length; i++) {
         const item = reportItems[i];
 
-        /* Existing reports are safe to render again without charging. */
         if (
             !item.alreadyGenerated &&
             !allowedNewFingerprints.has(item.fingerprint)
@@ -5987,17 +6062,9 @@ async function generateAllReports() {
             continue;
         }
 
-        const report =
-            createReport(item.student);
-
-        if (reportContainer) {
-            reportContainer.insertAdjacentHTML(
-                "beforeend",
-                report
-            );
-        }
-
-        renderedCount++;
+        reportsToRender.push(
+            createReport(item.student)
+        );
 
         if (!item.alreadyGenerated) {
             fingerprintsToCharge.push(
@@ -6005,9 +6072,9 @@ async function generateAllReports() {
             );
         }
 
-        if (renderedCount % 10 === 0) {
+        if (reportsToRender.length % 10 === 0) {
             updateTemporaryGenerationMessage(
-                renderedCount,
+                reportsToRender.length,
                 students.length
             );
 
@@ -6024,27 +6091,44 @@ async function generateAllReports() {
         generationProgress.remove();
     }
 
-    if (reportContainer) {
-        saveGeneratedReports();
-    }
-
+    /* Charge only genuinely new reports. Existing reports cost zero. */
     if (fingerprintsToCharge.length > 0) {
         const countUpdated =
             await incrementReportCount(
                 fingerprintsToCharge.length
             );
 
-        if (countUpdated) {
-            markReportsAsGenerated(
-                fingerprintsToCharge
-            );
-
-            saveGeneratedReports();
-        } else {
+        if (!countUpdated) {
             alert(
-                "⚠️ Reports were displayed, but the server could not update the usage count. Please refresh and check your subscription before generating more reports."
+                "⚠️ No new reports were charged because the server could not confirm the allowance claim.\n\nPlease refresh and try again."
             );
+            updateReportStatus();
+            return;
         }
+    }
+
+    /* Server claim succeeded. Now render and commit the ledger entries. */
+    if (reportContainer) {
+        reportContainer.innerHTML = "";
+
+        reportsToRender.forEach(function (html) {
+            reportContainer.insertAdjacentHTML(
+                "beforeend",
+                html
+            );
+        });
+
+        saveGeneratedReports();
+        reportContainer.scrollIntoView({
+            behavior: "smooth"
+        });
+    }
+
+    if (fingerprintsToCharge.length > 0) {
+        markReportsAsGenerated(
+            fingerprintsToCharge
+        );
+        saveGeneratedReports();
     }
 
     updateReportStatus();
@@ -6061,7 +6145,7 @@ async function generateAllReports() {
     } else {
         alert(
             "✅ Reports generated successfully.\n\n" +
-            "Reports displayed: " + renderedCount + "\n" +
+            "Reports displayed: " + reportsToRender.length + "\n" +
             "New reports charged: " + fingerprintsToCharge.length + "\n" +
             "Total reports generated: " + reportsGenerated +
             " / " + totalAvailable
@@ -6156,25 +6240,41 @@ function createReport(student) {
                 exams;
 
 
+            const isFilledIn =
+                function (value) {
+
+                    return (
+                        value !== undefined &&
+                        value !== null &&
+                        String(value).trim() !== ""
+                    );
+
+                };
+
+
+            /* A subject only "counts" for a student if they actually
+               have a score recorded for it. A column merely existing
+               in the data (e.g. blank because the student didn't
+               offer that subject) must not be treated as offered. */
             const hasSubject =
 
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
+                isFilledIn(
+                    student[
                         firstCAKey
-                    ) ||
+                    ]
+                ) ||
 
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
+                isFilledIn(
+                    student[
                         secondCAKey
-                    ) ||
+                    ]
+                ) ||
 
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
+                isFilledIn(
+                    student[
                         examsKey
-                    );
+                    ]
+                );
 
 
             if (hasSubject) {
@@ -7047,28 +7147,43 @@ function calculateStudentAverage(
                 ) || 0;
 
 
+            const isFilledIn =
+                function (value) {
+
+                    return (
+                        value !== undefined &&
+                        value !== null &&
+                        String(value).trim() !== ""
+                    );
+
+                };
+
+
+            /* A subject only counts if the student actually has a
+               score recorded for it, not merely because the column
+               exists (which can be blank when not offered). */
             const hasSubject =
 
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
+                isFilledIn(
+                    student[
                         subject +
                         " 1st CA"
-                    ) ||
+                    ]
+                ) ||
 
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
+                isFilledIn(
+                    student[
                         subject +
                         " 2nd CA"
-                    ) ||
+                    ]
+                ) ||
 
-                Object.prototype
-                    .hasOwnProperty.call(
-                        student,
+                isFilledIn(
+                    student[
                         subject +
                         " Exams"
-                    );
+                    ]
+                );
 
 
             if (hasSubject) {
