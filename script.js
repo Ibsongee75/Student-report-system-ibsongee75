@@ -5903,14 +5903,70 @@ async function incrementReportCount(
         return false;
     }
 
-    try {
-        /*
-           SERVER-AUTHORITATIVE ALLOWANCE CLAIM
-           ------------------------------------
-           This is deliberately NOT an increment-only RPC. The database
-           checks the user's current subscription, carried-over allowance
-           and remaining balance, then returns the authoritative count.
-        */
+    /*
+       IMPORTANT:
+       The browser must NEVER directly increment reports_generated.
+       The database RPC remains the final authority for both paid
+       subscriptions and the free trial.
+
+       This function refreshes the authenticated user and the current
+       subscription immediately before claiming. That prevents a newly
+       created/updated trial row from being stale in the browser.
+    */
+    async function refreshAllowanceState() {
+        const sessionResult =
+            await supabaseClient.auth.getSession();
+
+        if (
+            sessionResult.error ||
+            !sessionResult.data ||
+            !sessionResult.data.session ||
+            !sessionResult.data.session.user
+        ) {
+            throw new Error("Authenticated session could not be confirmed.");
+        }
+
+        const user = sessionResult.data.session.user;
+        currentUserId = user.id;
+
+        const subscriptionResult =
+            await supabaseClient
+                .from("subscriptions")
+                .select("*")
+                .eq("user_id", user.id)
+                .eq("website_id", WEBSITE_ID)
+                .order("created_at", {
+                    ascending: false
+                })
+                .limit(1)
+                .maybeSingle();
+
+        if (subscriptionResult.error) {
+            throw subscriptionResult.error;
+        }
+
+        if (!subscriptionResult.data) {
+            throw new Error(
+                "No subscription record was found for this website."
+            );
+        }
+
+        currentSubscription = subscriptionResult.data;
+
+        currentSubscriptionPlan = String(
+            currentSubscription.plan ||
+            currentSubscription.subscription_plan ||
+            currentSubscription.package ||
+            ""
+        ).trim().toLowerCase();
+
+        reportsGenerated =
+            Number(currentSubscription.reports_generated) || 0;
+
+        return currentSubscription;
+    }
+
+    async function claimOnce() {
         const { data, error } =
             await supabaseClient.rpc(
                 "claim_report_allowance",
@@ -5922,19 +5978,38 @@ async function incrementReportCount(
             );
 
         if (error) {
-            console.error("Unable to claim report allowance:", error);
-            return false;
+            console.error(
+                "Unable to claim report allowance:",
+                error
+            );
+
+            return {
+                ok: false,
+                error: error
+            };
         }
 
         const result =
             Array.isArray(data) ? data[0] : data;
 
-        if (!result || result.success !== true) {
+        /* Accept a normal boolean as well as a stringified boolean. */
+        const success =
+            result &&
+            (
+                result.success === true ||
+                String(result.success).toLowerCase() === "true"
+            );
+
+        if (!success) {
             console.error(
-                "Report allowance claim was rejected:",
+                "Report allowance claim was rejected by the server:",
                 result
             );
-            return false;
+
+            return {
+                ok: false,
+                result: result
+            };
         }
 
         const claimedAmount =
@@ -5943,20 +6018,140 @@ async function incrementReportCount(
         if (claimedAmount !== reportAmount) {
             console.error(
                 "Server did not claim the requested number of reports:",
-                { requested: reportAmount, result: result }
+                {
+                    requested: reportAmount,
+                    result: result
+                }
             );
+
+            return {
+                ok: false,
+                result: result
+            };
+        }
+
+        /* The server's count is authoritative. */
+        const authoritativeCount =
+            Number(result.reports_generated);
+
+        if (Number.isFinite(authoritativeCount)) {
+            reportsGenerated = authoritativeCount;
+        } else {
+            reportsGenerated += reportAmount;
+        }
+
+        /* Keep the local subscription object synchronized. */
+        if (currentSubscription) {
+            currentSubscription = {
+                ...currentSubscription,
+                reports_generated: reportsGenerated
+            };
+        }
+
+        updateReportStatus();
+
+        return {
+            ok: true,
+            result: result
+        };
+    }
+
+    try {
+        /*
+           Refresh first. This is especially important for the free trial,
+           because the trial subscription can be created by the Supabase
+           auth trigger after account creation.
+        */
+        await refreshAllowanceState();
+
+        /*
+           Confirm that the locally visible subscription is actually usable.
+           This is only a pre-check; the RPC remains authoritative.
+        */
+        const plan = String(
+            currentSubscription?.plan ||
+            currentSubscription?.subscription_plan ||
+            currentSubscription?.package ||
+            ""
+        ).trim().toLowerCase();
+
+        const status = String(
+            currentSubscription?.status ||
+            ""
+        ).trim().toLowerCase();
+
+        const expiry = new Date(
+            currentSubscription?.expires_at || ""
+        );
+
+        const active =
+            Number.isFinite(expiry.getTime()) &&
+            expiry > new Date();
+
+        const validPaidStatuses = [
+            "paid",
+            "active",
+            "success",
+            "successful",
+            "completed"
+        ];
+
+        const valid =
+            (
+                validPaidStatuses.includes(status) ||
+                (plan === FREE_TRIAL_PLAN && status === FREE_TRIAL_STATUS)
+            ) &&
+            active;
+
+        if (!valid) {
+            console.error(
+                "Allowance claim stopped because the subscription is not active:",
+                {
+                    plan: plan,
+                    status: status,
+                    expires_at: currentSubscription?.expires_at
+                }
+            );
+            updateReportStatus();
             return false;
         }
 
-        /* Always trust the server's authoritative generated count. */
-        reportsGenerated =
-            Number(result.reports_generated) || 0;
+        /* First server-authoritative claim. */
+        let claimResult = await claimOnce();
 
-        updateReportStatus();
-        return true;
+        if (claimResult.ok) {
+            return true;
+        }
+
+        /*
+           One controlled retry after a fresh subscription/session read.
+           This handles timing races immediately after a trial row is created
+           or after the subscription state changes. It cannot over-charge:
+           the RPC itself decides whether the requested amount is claimable.
+        */
+        await new Promise(function (resolve) {
+            setTimeout(resolve, 350);
+        });
+
+        await refreshAllowanceState();
+        claimResult = await claimOnce();
+
+        if (claimResult.ok) {
+            return true;
+        }
+
+        console.error(
+            "Final report allowance claim failure:",
+            claimResult.error || claimResult.result || claimResult
+        );
+
+        return false;
 
     } catch (error) {
-        console.error("Report allowance error:", error);
+        console.error(
+            "Report allowance error:",
+            error
+        );
         return false;
     }
 }
