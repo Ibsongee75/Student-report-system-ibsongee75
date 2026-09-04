@@ -3224,6 +3224,14 @@ function attachApplicationEvents() {
         );
 
     }
+   const backToAppButton = document.getElementById("backToAppButton");
+
+if (backToAppButton) {
+    backToAppButton.addEventListener("click", () => {
+        document.getElementById("subscriptionPlans").style.display = "none";
+        document.getElementById("appSection").style.display = "block";
+    });
+}
 
 
     /* =====================================================
