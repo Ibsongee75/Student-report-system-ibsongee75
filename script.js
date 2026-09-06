@@ -3812,69 +3812,41 @@ function getSubjectSheetName(
    ========================================================= */
 
 function downloadExcelTemplate() {
-
     try {
-
-        if (
-            typeof XLSX ===
-            "undefined"
-        ) {
-
-            alert(
-                "Excel library has not loaded. Please refresh the page."
-            );
-
+        if (typeof XLSX === "undefined") {
+            alert("Excel library has not loaded. Please refresh the page.");
             return;
-
         }
 
+        schoolSubjects = schoolSubjects
+            .map(function (subject) { return String(subject).trim(); })
+            .filter(function (subject) { return subject !== ""; });
 
-        schoolSubjects =
-            schoolSubjects
-                .map(
-                    function (subject) {
-
-                        return String(
-                            subject
-                        ).trim();
-
-                    }
-                )
-                .filter(
-                    function (subject) {
-
-                        return (
-                            subject !== ""
-                        );
-
-                    }
-                );
-
-
-        if (
-            schoolSubjects.length ===
-            0
-        ) {
-
-            alert(
-                "Please add at least one subject."
-            );
-
+        if (schoolSubjects.length === 0) {
+            alert("Please add at least one subject.");
             return;
-
         }
 
-
-        const workbook =
-            XLSX.utils.book_new();
-
+        const workbook = XLSX.utils.book_new();
 
         /* =================================================
            SCORES SHEET
+
+           Behavioral traits and comments are now entered directly
+           on the Scores sheet, immediately after Position:
+
+           Position
+           Class Teacher's Comment
+           Principal's Comment
+           Attendance
+           Punctuality
+           Class Participation
+           Neatness
+           Honesty
+
+           A separate Behavioral Traits sheet is no longer created.
            ================================================= */
-
         const scoresHeaders = [
-
             "Admission No",
             "Student Name",
             "Gender",
@@ -3882,812 +3854,284 @@ function downloadExcelTemplate() {
             "Term",
             "Session",
             "House"
-
         ];
 
+        schoolSubjects.forEach(function (subject) {
+            scoresHeaders.push(subject + " 1st CA");
+            scoresHeaders.push(subject + " 2nd CA");
+            scoresHeaders.push(subject + " Exams");
+        });
 
-        schoolSubjects.forEach(
-            function (subject) {
+        scoresHeaders.push("Overall Total");
+        scoresHeaders.push("Average");
+        scoresHeaders.push("Position");
+        scoresHeaders.push("Class Teacher's Comment");
+        scoresHeaders.push("Principal's Comment");
 
-                scoresHeaders.push(
-                    subject +
-                    " 1st CA"
-                );
+        behavioralTraits.forEach(function (trait) {
+            scoresHeaders.push(trait);
+        });
 
-                scoresHeaders.push(
-                    subject +
-                    " 2nd CA"
-                );
+        const scoresData = [scoresHeaders];
 
-                scoresHeaders.push(
-                    subject +
-                    " Exams"
-                );
-
-            }
-        );
-
-
-        scoresHeaders.push(
-            "Overall Total"
-        );
-
-        scoresHeaders.push(
-            "Average"
-        );
-
-        scoresHeaders.push(
-            "Position"
-        );
-
-
-        const scoresData = [
-            scoresHeaders
-        ];
-
-
-        for (
-            let i = 1;
-            i <= TEMPLATE_STUDENT_ROWS;
-            i++
-        ) {
-
+        for (let i = 1; i <= TEMPLATE_STUDENT_ROWS; i++) {
             const row = [
-
-                i === 1
-                    ? "001"
-                    : "",
-
-                i === 1
-                    ? "Example Student"
-                    : "",
-
-                i === 1
-                    ? "Male"
-                    : "",
-
-                i === 1
-                    ? "SS2"
-                    : "",
-
-                i === 1
-                    ? "First Term"
-                    : "",
-
-                i === 1
-                    ? "2025/2026"
-                    : "",
-
-                i === 1
-                    ? "Example House"
-                    : ""
-
+                i === 1 ? "001" : "",
+                i === 1 ? "Example Student" : "",
+                i === 1 ? "Male" : "",
+                i === 1 ? "SS2" : "",
+                i === 1 ? "First Term" : "",
+                i === 1 ? "2025/2026" : "",
+                i === 1 ? "Example House" : ""
             ];
 
+            schoolSubjects.forEach(function () {
+                row.push("");
+                row.push("");
+                row.push("");
+            });
 
-            schoolSubjects.forEach(
-                function () {
-
-                    row.push("");
-
-                    row.push("");
-
-                    row.push("");
-
-                }
-            );
-
-
+            /* Overall Total, Average and Position. */
+            row.push("");
+            row.push("");
             row.push("");
 
+            /* Comments. */
+            row.push("");
             row.push("");
 
-            row.push("");
+            /* Behavioral traits. */
+            behavioralTraits.forEach(function () {
+                row.push("");
+            });
 
-
-            scoresData.push(
-                row
-            );
-
+            scoresData.push(row);
         }
 
+        const scoresSheet = XLSX.utils.aoa_to_sheet(scoresData);
 
-        const scoresSheet =
-            XLSX.utils.aoa_to_sheet(
-                scoresData
-            );
-
-
+        /* =================================================
+           COLUMN WIDTHS
+           ================================================= */
         scoresSheet["!cols"] = [
-
             { wch: 7 },
-            { wch: 14 },
+            { wch: 18 },
             { wch: 9 },
             { wch: 9 },
-            { wch: 9 },
-            { wch: 10 },
-            { wch: 11 }
-
+            { wch: 11 },
+            { wch: 11 },
+            { wch: 12 }
         ];
 
-
-        schoolSubjects.forEach(
-            function () {
-
-                scoresSheet["!cols"].push(
-
-                    { wch: 9 },
-                    { wch: 9 },
-                    { wch: 9 }
-
-                );
-
-            }
-        );
-
+        schoolSubjects.forEach(function () {
+            scoresSheet["!cols"].push(
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 }
+            );
+        });
 
         scoresSheet["!cols"].push(
-
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 }
-
+            { wch: 12 },
+            { wch: 10 },
+            { wch: 10 }
         );
 
+        scoresSheet["!cols"].push(
+            { wch: 18 },
+            { wch: 18 }
+        );
+
+        behavioralTraits.forEach(function () {
+            scoresSheet["!cols"].push({ wch: 10 });
+        });
 
         scoresSheet["!freeze"] = {
-
             xSplit: 3,
-
             ySplit: 1
-
         };
 
-
-        XLSX.utils.book_append_sheet(
-            workbook,
-            scoresSheet,
-            "Scores"
-        );
-
+        XLSX.utils.book_append_sheet(workbook, scoresSheet, "Scores");
 
         /* =================================================
            SETTINGS SHEET
            ================================================= */
-
         const settingsData = [
-
-            [
-                "SETTING",
-                "VALUE"
-            ],
-
-            [
-                "School Name",
-                reportSettings.schoolName
-            ],
-
-            [
-                "School Address",
-                reportSettings.schoolAddress
-            ],
-
-            [
-                "1st CA Maximum",
-                reportSettings.firstCAMaximum
-            ],
-
-            [
-                "2nd CA Maximum",
-                reportSettings.secondCAMaximum
-            ],
-
-            [
-                "Exams Maximum",
-                reportSettings.examsMaximum
-            ],
-
-            [
-                "Grade A Minimum",
-                reportSettings.gradeA
-            ],
-
-            [
-                "Grade B Minimum",
-                reportSettings.gradeB
-            ],
-
-            [
-                "Grade C Minimum",
-                reportSettings.gradeC
-            ],
-
-            [
-                "Grade D Minimum",
-                reportSettings.gradeD
-            ],
-
-            [
-                "Grade E Minimum",
-                reportSettings.gradeE
-            ],
-
-            [
-                "Grade F Minimum",
-                reportSettings.gradeF
-            ],
-
-            [
-                "Subjects",
-                schoolSubjects.join(", ")
-            ]
-
+            ["SETTING", "VALUE"],
+            ["School Name", reportSettings.schoolName],
+            ["School Address", reportSettings.schoolAddress],
+            ["1st CA Maximum", reportSettings.firstCAMaximum],
+            ["2nd CA Maximum", reportSettings.secondCAMaximum],
+            ["Exams Maximum", reportSettings.examsMaximum],
+            ["Grade A Minimum", reportSettings.gradeA],
+            ["Grade B Minimum", reportSettings.gradeB],
+            ["Grade C Minimum", reportSettings.gradeC],
+            ["Grade D Minimum", reportSettings.gradeD],
+            ["Grade E Minimum", reportSettings.gradeE],
+            ["Grade F Minimum", reportSettings.gradeF],
+            ["Subjects", schoolSubjects.join(", ")]
         ];
 
-
-        const settingsSheet =
-            XLSX.utils.aoa_to_sheet(
-                settingsData
-            );
-
-
+        const settingsSheet = XLSX.utils.aoa_to_sheet(settingsData);
         settingsSheet["!cols"] = [
-
             { wch: 14 },
             { wch: 14 }
-
         ];
-
-
-        XLSX.utils.book_append_sheet(
-            workbook,
-            settingsSheet,
-            "Settings"
-        );
-
+        XLSX.utils.book_append_sheet(workbook, settingsSheet, "Settings");
 
         /* =================================================
            SUBJECT SHEETS
            ================================================= */
+        const actualSubjectSheetNames = {};
 
-        const actualSubjectSheetNames =
-            {};
+        schoolSubjects.forEach(function (subject) {
+            const sheetName = getSubjectSheetName(subject, workbook);
+            actualSubjectSheetNames[subject] = sheetName;
 
+            const subjectData = [[
+                "Adm No",
+                "Student Name",
+                "1st CA",
+                "2nd CA",
+                "Exams"
+            ]];
 
-        schoolSubjects.forEach(
-            function (subject) {
-
-                const sheetName =
-                    getSubjectSheetName(
-                        subject,
-                        workbook
-                    );
-
-
-                actualSubjectSheetNames[
-                    subject
-                ] =
-                    sheetName;
-
-
-                const subjectData = [
-
-                    [
-                        "Adm No",
-                        "Student Name",
-                        "1st CA",
-                        "2nd CA",
-                        "Exams"
-                    ]
-
-                ];
-
-
-                for (
-                    let i = 1;
-                    i <= TEMPLATE_STUDENT_ROWS;
-                    i++
-                ) {
-
-                    subjectData.push([
-
-                        i === 1
-                            ? "001"
-                            : "",
-
-                        i === 1
-                            ? "Example Student"
-                            : "",
-
-                        "",
-                        "",
-                        ""
-
-                    ]);
-
-                }
-
-
-                const subjectSheet =
-                    XLSX.utils.aoa_to_sheet(
-                        subjectData
-                    );
-
-
-                subjectSheet["!cols"] = [
-
-                    { wch: 6 },
-                    { wch: 14 },
-                    { wch: 5 },
-                    { wch: 5 },
-                    { wch: 5 }
-
-                ];
-
-
-                subjectSheet["!freeze"] = {
-
-                    xSplit: 3,
-
-                    ySplit: 1
-
-                };
-
-
-                XLSX.utils.book_append_sheet(
-                    workbook,
-                    subjectSheet,
-                    sheetName
-                );
-
+            for (let i = 1; i <= TEMPLATE_STUDENT_ROWS; i++) {
+                subjectData.push([
+                    i === 1 ? "001" : "",
+                    i === 1 ? "Example Student" : "",
+                    "",
+                    "",
+                    ""
+                ]);
             }
-        );
 
-
-        /* =================================================
-           BEHAVIORAL TRAITS SHEET
-           ================================================= */
-
-        const behaviorHeaders = [
-
-            "Adm No",
-            "Student Name"
-
-        ];
-
-
-        behavioralTraits.forEach(
-            function (trait) {
-
-                behaviorHeaders.push(
-                    trait
-                );
-
-            }
-        );
-
-
-        behaviorHeaders.push(
-            "Class Teacher's Comment"
-        );
-
-        behaviorHeaders.push(
-            "Principal's Comment"
-        );
-
-
-        const behaviorData = [
-            behaviorHeaders
-        ];
-
-
-        for (
-            let i = 1;
-            i <= TEMPLATE_STUDENT_ROWS;
-            i++
-        ) {
-
-            behaviorData.push([
-
-                i === 1
-                    ? "001"
-                    : "",
-
-                i === 1
-                    ? "Example Student"
-                    : "",
-
-                "",
-                "",
-                "",
-                "",
-                "",
-
-                "",
-
-                ""
-
-            ]);
-
-        }
-
-
-        const behaviorSheet =
-            XLSX.utils.aoa_to_sheet(
-                behaviorData
-            );
-
-
-        behaviorSheet["!cols"] = [
-
-            { wch: 7 },
-            { wch: 14 },
-
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 },
-            { wch: 9 },
-
-            { wch: 18 },
-            { wch: 18 }
-
-        ];
-
-
-        behaviorSheet["!freeze"] = {
-
-            xSplit: 3,
-
-            ySplit: 1
-
-        };
-
-
-        XLSX.utils.book_append_sheet(
-            workbook,
-            behaviorSheet,
-            "Behavioral Traits"
-        );
-
+            const subjectSheet = XLSX.utils.aoa_to_sheet(subjectData);
+            subjectSheet["!cols"] = [
+                { wch: 6 },
+                { wch: 14 },
+                { wch: 5 },
+                { wch: 5 },
+                { wch: 5 }
+            ];
+            subjectSheet["!freeze"] = {
+                xSplit: 3,
+                ySplit: 1
+            };
+            XLSX.utils.book_append_sheet(workbook, subjectSheet, sheetName);
+        });
 
         /* =================================================
            VLOOKUP FORMULAS
            ================================================= */
+        schoolSubjects.forEach(function (subject, subjectIndex) {
+            const sheetName = actualSubjectSheetNames[subject];
+            const safeSheetName = sheetName.replace(/'/g, "''");
 
-        schoolSubjects.forEach(
-            function (
-                subject,
-                subjectIndex
-            ) {
+            const firstCAColumn = 8 + (subjectIndex * 3);
+            const secondCAColumn = firstCAColumn + 1;
+            const examsColumn = firstCAColumn + 2;
 
-                const sheetName =
-                    actualSubjectSheetNames[
-                        subject
-                    ];
+            const firstCALetter = XLSX.utils.encode_col(firstCAColumn - 1);
+            const secondCALetter = XLSX.utils.encode_col(secondCAColumn - 1);
+            const examsLetter = XLSX.utils.encode_col(examsColumn - 1);
 
+            for (let row = 2; row <= TEMPLATE_STUDENT_ROWS + 1; row++) {
+                scoresSheet[firstCALetter + row] = {
+                    t: "n",
+                    f: `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,2,FALSE),""))`
+                };
 
-                const safeSheetName =
-                    sheetName.replace(
-                        /'/g,
-                        "''"
-                    );
+                scoresSheet[secondCALetter + row] = {
+                    t: "n",
+                    f: `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,3,FALSE),""))`
+                };
 
-
-                const firstCAColumn =
-                    8 +
-                    (
-                        subjectIndex *
-                        3
-                    );
-
-
-                const secondCAColumn =
-                    firstCAColumn +
-                    1;
-
-
-                const examsColumn =
-                    firstCAColumn +
-                    2;
-
-
-                const firstCALetter =
-                    XLSX.utils.encode_col(
-                        firstCAColumn - 1
-                    );
-
-
-                const secondCALetter =
-                    XLSX.utils.encode_col(
-                        secondCAColumn - 1
-                    );
-
-
-                const examsLetter =
-                    XLSX.utils.encode_col(
-                        examsColumn - 1
-                    );
-
-
-                for (
-                    let row = 2;
-                    row <=
-                    TEMPLATE_STUDENT_ROWS + 1;
-                    row++
-                ) {
-
-                    scoresSheet[
-                        firstCALetter +
-                        row
-                    ] = {
-
-                        t: "n",
-
-                        f:
-                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,2,FALSE),""))`
-
-                    };
-
-
-                    scoresSheet[
-                        secondCALetter +
-                        row
-                    ] = {
-
-                        t: "n",
-
-                        f:
-                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,3,FALSE),""))`
-
-                    };
-
-
-                    scoresSheet[
-                        examsLetter +
-                        row
-                    ] = {
-
-                        t: "n",
-
-                        f:
-                            `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,4,FALSE),""))`
-
-                    };
-
-                }
-
+                scoresSheet[examsLetter + row] = {
+                    t: "n",
+                    f: `IF($B${row}="","",IFERROR(VLOOKUP($B${row},'${safeSheetName}'!$B:$E,4,FALSE),""))`
+                };
             }
-        );
-
+        });
 
         /* =================================================
            OVERALL TOTAL / AVERAGE / POSITION
            ================================================= */
-
-        const firstSubjectColumn =
-            8;
-
-
+        const firstSubjectColumn = 8;
         const lastSubjectColumn =
-            firstSubjectColumn +
-            (
-                schoolSubjects.length *
-                3
-            ) -
-            1;
+            firstSubjectColumn + (schoolSubjects.length * 3) - 1;
+        const overallTotalColumn = lastSubjectColumn + 1;
+        const averageColumn = overallTotalColumn + 1;
+        const positionColumn = averageColumn + 1;
 
+        const firstSubjectLetter = XLSX.utils.encode_col(firstSubjectColumn - 1);
+        const lastSubjectLetter = XLSX.utils.encode_col(lastSubjectColumn - 1);
+        const overallTotalLetter = XLSX.utils.encode_col(overallTotalColumn - 1);
+        const averageLetter = XLSX.utils.encode_col(averageColumn - 1);
+        const positionLetter = XLSX.utils.encode_col(positionColumn - 1);
 
-        const overallTotalColumn =
-            lastSubjectColumn +
-            1;
-
-
-        const averageColumn =
-            overallTotalColumn +
-            1;
-
-
-        const positionColumn =
-            averageColumn +
-            1;
-
-
-        const firstSubjectLetter =
-            XLSX.utils.encode_col(
-                firstSubjectColumn - 1
-            );
-
-
-        const lastSubjectLetter =
-            XLSX.utils.encode_col(
-                lastSubjectColumn - 1
-            );
-
-
-        const overallTotalLetter =
-            XLSX.utils.encode_col(
-                overallTotalColumn - 1
-            );
-
-
-        const averageLetter =
-            XLSX.utils.encode_col(
-                averageColumn - 1
-            );
-
-
-        const positionLetter =
-            XLSX.utils.encode_col(
-                positionColumn - 1
-            );
-
-
-        for (
-            let row = 2;
-            row <=
-            TEMPLATE_STUDENT_ROWS + 1;
-            row++
-        ) {
-
-            scoresSheet[
-                overallTotalLetter +
-                row
-            ] = {
-
+        for (let row = 2; row <= TEMPLATE_STUDENT_ROWS + 1; row++) {
+            scoresSheet[overallTotalLetter + row] = {
                 t: "n",
-
-                f:
-                    `IF($B${row}="","",SUM(${firstSubjectLetter}${row}:${lastSubjectLetter}${row}))`
-
+                f: `IF($B${row}="","",SUM(${firstSubjectLetter}${row}:${lastSubjectLetter}${row}))`
             };
 
-
-            scoresSheet[
-                averageLetter +
-                row
-            ] = {
-
+            scoresSheet[averageLetter + row] = {
                 t: "n",
-
-                f:
-                    `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/SUM(${schoolSubjects.map(function(subject) { const sheetName = actualSubjectSheetNames[subject]; const safeSheetName = sheetName.replace(/'/g, "''"); return "COUNTIF('" + safeSheetName + "'!$B:$B,$B" + row + ")"; }).join(",")}),0))`
-
+                f: `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/SUM(${schoolSubjects.map(function(subject) { const sheetName = actualSubjectSheetNames[subject]; const safeSheetName = sheetName.replace(/'/g, "''"); return "COUNTIF('" + safeSheetName + "'!$B:$B,$B" + row + ")"; }).join(",")}),0))`
             };
 
-
-            scoresSheet[
-                positionLetter +
-                row
-            ] = {
-
+            scoresSheet[positionLetter + row] = {
                 t: "n",
-
-                f:
-                    `IF($B${row}="","",RANK(${averageLetter}${row},$${averageLetter}$2:$${averageLetter}$${TEMPLATE_STUDENT_ROWS + 1},0))`
-
+                f: `IF($B${row}="","",RANK(${averageLetter}${row},$${averageLetter}$2:$${averageLetter}$${TEMPLATE_STUDENT_ROWS + 1},0))`
             };
-
         }
-
 
         /* =================================================
            WRITE FILE
            ================================================= */
+        const excelData = XLSX.write(workbook, {
+            bookType: "xlsx",
+            type: "array"
+        });
 
-        const excelData =
-            XLSX.write(
-                workbook,
-                {
+        const blob = new Blob([excelData], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
 
-                    bookType:
-                        "xlsx",
-
-                    type:
-                        "array"
-
-                }
-            );
-
-
-        const blob =
-            new Blob(
-                [excelData],
-                {
-
-                    type:
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-
-                }
-            );
-
-
-        const url =
-            URL.createObjectURL(
-                blob
-            );
-
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-
-        link.href =
-            url;
-
-
-        link.download =
-            "Student_Report_Template.xlsx";
-
-
-        document.body.appendChild(
-            link
-        );
-
-
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "Student_Report_Template.xlsx";
+        document.body.appendChild(link);
         link.click();
 
-
-        setTimeout(
-            function () {
-
-                URL.revokeObjectURL(
-                    url
-                );
-
-
-                if (
-                    link.parentNode
-                ) {
-
-                    link.parentNode.removeChild(
-                        link
-                    );
-
-                }
-
-            },
-            5000
-        );
-
+        setTimeout(function () {
+            URL.revokeObjectURL(url);
+            if (link.parentNode) {
+                link.parentNode.removeChild(link);
+            }
+        }, 5000);
 
         setFileStatus(
-
             "✅ Template created successfully with " +
-
             schoolSubjects.length +
-
-            " subject sheet(s), House, 1st CA, 2nd CA, Exams, Overall Total, Average, Position, Behavioral Traits and Comments."
-
+            " subject sheet(s). Comments and all Behavioral Traits are now on the Scores sheet after Position."
         );
-
 
     } catch (error) {
-
-        console.error(
-            "Excel template error:",
-            error
-        );
-
+        console.error("Excel template error:", error);
 
         alert(
-
             "❌ Excel template could not be created.\n\n" +
             error.message
-
         );
-
 
         setFileStatus(
             "❌ Excel template generation failed."
         );
-
     }
-
 }
-
 
 /* =========================================================
    HANDLE EXCEL UPLOAD
@@ -4912,33 +4356,49 @@ function handleExcelUpload(event) {
 
 
                 /* =========================
-                   BEHAVIOR
+                   BEHAVIOR / COMMENTS FROM SCORES SHEET
+
+                   New templates store these fields directly in Scores.
+                   Keep the old Behavioral Traits sheet as a fallback so
+                   older templates already downloaded by users still work.
                    ========================= */
 
-                const behaviorSheet =
-                    workbook.Sheets[
-                        "Behavioral Traits"
-                    ];
+                const behaviorColumns = [
+                    "Class Teacher's Comment",
+                    "Principal's Comment"
+                ].concat(behavioralTraits);
 
+                const scoresContainBehaviorColumns =
+                    behaviorColumns.some(function (column) {
+                        return Object.prototype.hasOwnProperty.call(
+                            actualRows[0] || {},
+                            column
+                        );
+                    });
 
-                if (behaviorSheet) {
+                if (scoresContainBehaviorColumns) {
+                    actualRows.forEach(function (student) {
+                        student.__behavior = {};
 
-                    attachBehaviorData(
-                        actualRows,
-                        behaviorSheet
-                    );
-
+                        behaviorColumns.forEach(function (column) {
+                            student.__behavior[column] =
+                                student[column] ?? "";
+                        });
+                    });
                 } else {
+                    const behaviorSheet =
+                        workbook.Sheets["Behavioral Traits"];
 
-                    actualRows.forEach(
-                        function (student) {
-
-                            student.__behavior =
-                                {};
-
-                        }
-                    );
-
+                    if (behaviorSheet) {
+                        attachBehaviorData(
+                            actualRows,
+                            behaviorSheet
+                        );
+                    } else {
+                        actualRows.forEach(function (student) {
+                            student.__behavior = {};
+                        });
+                    }
                 }
 
 
