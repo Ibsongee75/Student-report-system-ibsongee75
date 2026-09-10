@@ -7714,6 +7714,88 @@ function escapeHTML(
 let reportPrintLayer = null;
 let reportPrintStyle = null;
 
+/* =========================================================
+   SHRINK-TO-FIT: force every report onto exactly one printed
+   page, no matter how much content it holds. Instead of
+   letting overflowing content spill onto a second page, the
+   report's content is measured against the real printable
+   page area and scaled down (uniformly, so nothing looks
+   stretched) just enough to fit.
+
+   This site has two @page margin rules in play (5mm from the
+   injected print style below, 8mm from style.css) plus a
+   print padding of 5mm vs. an on-screen padding of 10mm, so
+   the more conservative (larger margin / larger padding,
+   smaller usable area) numbers are used here on purpose: that
+   guarantees no overflow no matter which existing rule wins.
+   ========================================================= */
+
+const MM_TO_PX = 96 / 25.4;          // CSS-spec fixed conversion (96px = 1in = 25.4mm)
+const PAGE_CONTENT_HEIGHT_MM = 281;  // A4 height (297mm) minus the larger 8mm top+bottom @page margin
+const REPORT_WIDTH_MM = 194;         // A4 width (210mm) minus the larger 8mm left+right @page margin
+const REPORT_PAD_TOP_MM = 10;
+const REPORT_PAD_BOTTOM_MM = 10;
+
+function fitReportsToSinglePage() {
+    if (!reportPrintLayer) return;
+
+    const reports = reportPrintLayer.querySelectorAll(".report");
+    if (!reports.length) return;
+
+    const maxInnerHeightPx =
+        (PAGE_CONTENT_HEIGHT_MM - REPORT_PAD_TOP_MM - REPORT_PAD_BOTTOM_MM) * MM_TO_PX;
+
+    /* Lay the layer out for measurement without letting it flash on screen. */
+    reportPrintLayer.style.display = "block";
+    reportPrintLayer.style.visibility = "hidden";
+    reportPrintLayer.style.position = "fixed";
+    reportPrintLayer.style.top = "0";
+    reportPrintLayer.style.left = "-99999px";
+
+    reports.forEach(function (report) {
+        /* Match the exact box the printed page will give this report. */
+        report.style.setProperty("width", REPORT_WIDTH_MM + "mm", "important");
+        report.style.setProperty("max-width", "none", "important");
+        report.style.setProperty("min-height", "0", "important");
+        report.style.setProperty(
+            "padding",
+            REPORT_PAD_TOP_MM + "mm " + REPORT_PAD_TOP_MM + "mm " + REPORT_PAD_BOTTOM_MM + "mm",
+            "important"
+        );
+        report.style.setProperty("border", "0", "important");
+        report.style.setProperty("overflow", "hidden", "important");
+
+        /* Move the report's existing content into a scalable wrapper. */
+        const inner = document.createElement("div");
+        inner.className = "report-scale-wrap";
+        while (report.firstChild) {
+            inner.appendChild(report.firstChild);
+        }
+        report.appendChild(inner);
+
+        const naturalHeightPx = inner.scrollHeight;
+
+        if (naturalHeightPx > maxInnerHeightPx && naturalHeightPx > 0) {
+            const scale = maxInnerHeightPx / naturalHeightPx;
+            inner.style.transformOrigin = "top left";
+            inner.style.transform = "scale(" + scale + ")";
+            /* Widen before scaling so the shrink is vertical-only visually,
+               keeping the report's full page width after the transform. */
+            inner.style.width = (100 / scale) + "%";
+            report.style.setProperty("height", PAGE_CONTENT_HEIGHT_MM + "mm", "important");
+        } else {
+            report.style.setProperty("height", "auto", "important");
+        }
+    });
+
+    /* Hand back to the existing print styling. */
+    reportPrintLayer.style.display = "";
+    reportPrintLayer.style.visibility = "";
+    reportPrintLayer.style.position = "";
+    reportPrintLayer.style.top = "";
+    reportPrintLayer.style.left = "";
+}
+
 function prepareReportsForPrint() {
     if (!reportContainer) return;
 
@@ -7733,6 +7815,8 @@ function prepareReportsForPrint() {
     reportPrintLayer.id = "reportPrintLayer";
     reportPrintLayer.innerHTML = reportContainer.innerHTML;
     document.body.appendChild(reportPrintLayer);
+
+    fitReportsToSinglePage();
 
     /*
        The print rules are injected here so this works even if the
