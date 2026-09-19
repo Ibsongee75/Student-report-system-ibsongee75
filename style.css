@@ -113,11 +113,11 @@ button:hover {
   display: block;
   margin-top: 15px;
   text-align: center;
-  color: #12355b;
+  color: #0c21e2;
   text-decoration: underline;
   cursor: pointer;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .forgot-button:hover {
