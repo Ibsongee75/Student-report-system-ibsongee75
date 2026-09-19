@@ -109,6 +109,21 @@ button:hover {
     opacity: 0.9;
 }
 
+.forgot-button {
+  display: block;
+  margin-top: 15px;
+  text-align: center;
+  color: #12355b;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.forgot-button:hover {
+  color: #0b263f;
+}
+
 
 /* =========================================================
    INPUTS
