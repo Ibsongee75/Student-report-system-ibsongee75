@@ -65,8 +65,8 @@ main {
 
 .card h2 {
     margin-top: 0;
-    color: #21391e;
-    font-size: 21px;
+    color: #131786;
+    font-size: 22px;
 }
 
 
@@ -117,7 +117,7 @@ button:hover {
   text-decoration: underline;
   cursor: pointer;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .forgot-button:hover {
