@@ -5277,6 +5277,102 @@ function getReportsRemaining(subscription = currentSubscription) {
     UPDATE REPORT STATUS
     ========================================================= */
 
+/*
+   Re-reads reports_generated / the subscription row from the server
+   and updates the local counters + on-screen status. Used after
+   publishing, since the allowance claim for a publish now happens
+   inside the publish_student_result SQL function itself rather than
+   via a separate client-side call.
+*/
+async function refreshReportsGeneratedFromServer() {
+
+    try {
+
+        if (!currentUserId) {
+            return;
+        }
+
+        const subscriptionResult =
+            await supabaseClient
+                .from("subscriptions")
+                .select("*")
+                .eq("user_id", currentUserId)
+                .eq("website_id", WEBSITE_ID)
+                .order("created_at", {
+                    ascending: false
+                })
+                .limit(1)
+                .maybeSingle();
+
+        if (subscriptionResult.error || !subscriptionResult.data) {
+            return;
+        }
+
+        currentSubscription =
+            subscriptionResult.data;
+
+        reportsGenerated =
+            Number(currentSubscription.reports_generated) || 0;
+
+        updateReportStatus();
+
+    } catch (error) {
+
+        console.error(
+            "Unable to refresh report count after publishing:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+   Tells the server this student's report was just generated (and
+   charged). publish_student_result checks this log before deciding
+   whether to charge for publishing the same (student, session, term)
+   again. Best-effort: if this call fails, the report was still
+   generated and charged correctly — the only side effect is that a
+   later publish of the same result would also be charged, which is
+   the safe direction to fail in.
+*/
+async function logReportGenerated(student) {
+
+    try {
+
+        if (!currentUserId || !student) {
+            return;
+        }
+
+        await supabaseClient.rpc(
+            "log_report_generated",
+            {
+                p_user_id: currentUserId,
+                p_website_id: WEBSITE_ID,
+                p_admission_no:
+                    String(student["Admission No"] || "").trim(),
+                p_student_name:
+                    String(student["Student Name"] || "").trim(),
+                p_session:
+                    String(student["Session"] || "").trim(),
+                p_term:
+                    String(student["Term"] || "").trim()
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Unable to log report generation:",
+            error
+        );
+
+    }
+
+}
+
+
 function updateReportStatus() {
 
     const limit =
@@ -6162,6 +6258,15 @@ async function publishOneStudentResult(student) {
         };
     }
 
+    /*
+       NOTE: The report allowance claim used to happen here on the
+       client. It has moved into the publish_student_result SQL
+       function itself (it now calls claim_report_allowance
+       server-side before doing any work), so it cannot be bypassed
+       by calling the RPC directly. Do NOT re-add a client-side
+       claim here or every publish will be double-charged.
+    */
+
     const resultData =
         getPublishResultData(student);
 
@@ -6236,6 +6341,13 @@ async function publishOneStudentResult(student) {
                     "The result was not published."
             };
         }
+
+        /*
+           The RPC claimed one report allowance server-side. Refresh
+           the local counters so the on-screen "reports remaining"
+           display stays accurate without waiting for a page reload.
+        */
+        await refreshReportsGeneratedFromServer();
 
         return {
             ok: true,
@@ -6552,11 +6664,25 @@ async function publishAllResults() {
         return;
     }
 
+    /*
+       Friendly pre-check only: publishing consumes the same report
+       allowance as report generation, one unit per student. This just
+       warns up front if there obviously isn't enough left; the actual
+       per-student claim below (inside publishOneStudentResult) remains
+       the authoritative check.
+    */
+    if (!canGenerateReports(students.length)) {
+        return;
+    }
+
     const confirmation =
         confirm(
             "Publish results for " +
             students.length +
             " student(s) online?\n\n" +
+            "Each published result will use one report from your " +
+            "subscription's report allowance, the same allowance used " +
+            "for report generation.\n\n" +
             "Each student will receive a separate result PIN."
         );
 
@@ -6774,6 +6900,7 @@ async function generateSingleReport() {
 
     /* Mark only after the server has successfully charged the report. */
     markReportsAsGenerated([fingerprint]);
+    await logReportGenerated(student);
 
     if (reportContainer) {
         reportContainer.innerHTML = report;
@@ -7011,6 +7138,12 @@ async function generateAllReports() {
             fingerprintsToCharge
         );
         saveGeneratedReports();
+
+        for (let i = 0; i < newItemsAllowed.length; i++) {
+            await logReportGenerated(
+                newItemsAllowed[i].student
+            );
+        }
     }
 
     updateReportStatus();
