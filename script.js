@@ -724,6 +724,18 @@ let reportContainer;
 
 let printReportButton;
 
+let publishResultsSection;
+
+let publishStudentSelect;
+
+let publishSingleResultButton;
+
+let publishAllResultsButton;
+
+let publishResultsStatus;
+
+let publishedResultInfo;
+
 let schoolNameInput;
 
 let schoolAddressInput;
@@ -865,6 +877,36 @@ function initializeElements() {
     reportContainer =
         document.getElementById(
             "reportContainer"
+        );
+
+    publishResultsSection =
+        document.getElementById(
+            "publishResultsSection"
+        );
+
+    publishStudentSelect =
+        document.getElementById(
+            "publishStudentSelect"
+        );
+
+    publishSingleResultButton =
+        document.getElementById(
+            "publishSingleResult"
+        );
+
+    publishAllResultsButton =
+        document.getElementById(
+            "publishAllResults"
+        );
+
+    publishResultsStatus =
+        document.getElementById(
+            "publishResultsStatus"
+        );
+
+    publishedResultInfo =
+        document.getElementById(
+            "publishedResultInfo"
         );
 
   printReportButton =
@@ -3241,6 +3283,20 @@ function attachApplicationEvents() {
 
     }
 
+    if (elementExists(publishSingleResultButton)) {
+        publishSingleResultButton.addEventListener(
+            "click",
+            publishSelectedResult
+        );
+    }
+
+    if (elementExists(publishAllResultsButton)) {
+        publishAllResultsButton.addEventListener(
+            "click",
+            publishAllResults
+        );
+    }
+
   const backToAppButton = document.getElementById("backToAppButton");
 
 if (backToAppButton) {
@@ -5136,6 +5192,8 @@ function loadStudents() {
         }
     );
 
+    loadPublishStudents();
+
 }
 
 
@@ -5802,6 +5860,643 @@ async function incrementReportCount(
         );
         return false;
     }
+}
+
+/* =========================================================
+   ONLINE RESULT PUBLISHING
+
+   These functions work with the Publish Results section added to
+   index.html and the public result-checker.html page.
+
+   Publishing is deliberately separate from report-generation allowance:
+   generating a report consumes the normal report allowance, while
+   publishing stores a copy of the already-loaded result online and lets
+   the server generate/control the result PIN.
+   ========================================================= */
+
+function setPublishStatus(message, isError) {
+
+    if (!publishResultsStatus) {
+        return;
+    }
+
+    publishResultsStatus.textContent =
+        message || "";
+
+    publishResultsStatus.style.color =
+        isError ? "#b00020" : "#0b6b62";
+
+}
+
+
+function loadPublishStudents() {
+
+    if (!publishStudentSelect) {
+        return;
+    }
+
+    publishStudentSelect.innerHTML =
+        '<option value="">-- Select Student --</option>';
+
+    students.forEach(function (student, index) {
+
+        const option =
+            document.createElement("option");
+
+        option.value = String(index);
+
+        option.textContent =
+            (student["Admission No"] || "") +
+            " - " +
+            (student["Student Name"] || "");
+
+        publishStudentSelect.appendChild(option);
+
+    });
+
+}
+
+
+function getPublishResultData(student) {
+
+    const subjects = [];
+    let overallTotal = 0;
+
+    let subjectsToUse = schoolSubjects;
+
+    const detectedSubjects =
+        detectSubjectsFromRows([student]);
+
+    if (detectedSubjects.length > 0) {
+        subjectsToUse = detectedSubjects;
+    }
+
+    function isFilledIn(value) {
+        return (
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+        );
+    }
+
+    subjectsToUse.forEach(function (subjectName) {
+
+        const firstCAKey =
+            subjectName + " 1st CA";
+
+        const secondCAKey =
+            subjectName + " 2nd CA";
+
+        const examsKey =
+            subjectName + " Exams";
+
+        const hasSubject =
+            isFilledIn(student[firstCAKey]) ||
+            isFilledIn(student[secondCAKey]) ||
+            isFilledIn(student[examsKey]);
+
+        if (!hasSubject) {
+            return;
+        }
+
+        const firstCA =
+            Number(student[firstCAKey]) || 0;
+
+        const secondCA =
+            Number(student[secondCAKey]) || 0;
+
+        const exams =
+            Number(student[examsKey]) || 0;
+
+        const total =
+            firstCA + secondCA + exams;
+
+        const subjectPosition =
+            student[subjectName + " Position"] ??
+            student[subjectName + " position"] ??
+            "";
+
+        subjects.push({
+            subject_name: subjectName,
+            ca1: firstCA,
+            ca2: secondCA,
+            exam: exams,
+            total: total,
+            grade: getGrade(total),
+            subject_position: subjectPosition
+        });
+
+        overallTotal += total;
+
+    });
+
+    const average =
+        subjects.length > 0
+            ? overallTotal / subjects.length
+            : 0;
+
+    const positionValue =
+        student["Position"];
+
+    const position =
+        String(positionValue ?? "").trim() !== ""
+            ? (isNaN(Number(positionValue))
+                ? positionValue
+                : Number(positionValue))
+            : "";
+
+    const behavior =
+        student.__behavior || {};
+
+    return {
+
+        school: {
+            name: reportSettings.schoolName || "",
+            address: reportSettings.schoolAddress || "",
+            logo_url: reportSettings.schoolLogo || ""
+        },
+
+        student: {
+            name: cleanStudentName(
+                student["Student Name"] || ""
+            ),
+            admission_no:
+                student["Admission No"] || "",
+            gender:
+                student["Gender"] || "",
+            class_name:
+                student["Class"] || ""
+        },
+
+        result: {
+            session:
+                student["Session"] || "",
+            term:
+                student["Term"] || "",
+            average: Number(average.toFixed(2)),
+            position: position,
+            attendance:
+                behavior["Attendance"] || "",
+            teacher_comment:
+                behavior["Class Teacher's Comment"] || "",
+            principal_comment:
+                behavior["Principal's Comment"] || ""
+        },
+
+        subjects: subjects
+
+    };
+
+}
+
+
+function extractPublishResponse(data) {
+
+    let response = data;
+
+    if (Array.isArray(response)) {
+        response = response[0] || {};
+    }
+
+    if (response && response.data && typeof response.data === "object") {
+        response = response.data;
+    }
+
+    return response || {};
+
+}
+
+
+function extractPublishedPin(data) {
+
+    const response = extractPublishResponse(data);
+
+    return String(
+        response.pin ||
+        response.result_pin ||
+        response.generated_pin ||
+        response.access_pin ||
+        ""
+    ).trim();
+
+}
+
+
+function showPublishedResultInfo(items) {
+
+    if (!publishedResultInfo) {
+        return;
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+        publishedResultInfo.style.display = "none";
+        publishedResultInfo.innerHTML = "";
+        return;
+    }
+
+    let html =
+        "<strong>Published Result PIN(s)</strong>" +
+        "<div style=\"margin-top:10px;\">";
+
+    items.forEach(function (item) {
+
+        html +=
+            "<div style=\"padding:8px 0; border-bottom:1px solid #ddd;\">" +
+            "<strong>" +
+            escapeHTML(item.studentName) +
+            "</strong> — PIN: <strong>" +
+            escapeHTML(item.pin || "Not returned") +
+            "</strong>" +
+            "</div>";
+
+    });
+
+    html += "</div>";
+
+    publishedResultInfo.innerHTML = html;
+    publishedResultInfo.style.display = "block";
+
+}
+
+
+async function publishOneStudentResult(student) {
+
+    if (!student) {
+        return {
+            ok: false,
+            message: "Student record was not found."
+        };
+    }
+
+    const studentName =
+        cleanStudentName(
+            student["Student Name"] || ""
+        );
+
+    const session =
+        String(student["Session"] || "").trim();
+
+    const term =
+        String(student["Term"] || "").trim();
+
+    if (!studentName) {
+        return {
+            ok: false,
+            message: "The selected student has no name."
+        };
+    }
+
+    if (!session) {
+        return {
+            ok: false,
+            message:
+                "The selected student has no session."
+        };
+    }
+
+    if (!term) {
+        return {
+            ok: false,
+            message:
+                "The selected student has no term."
+        };
+    }
+
+    const resultData =
+        getPublishResultData(student);
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.rpc(
+                "publish_student_result",
+                {
+                    p_website_id: WEBSITE_ID,
+                    p_school_name: resultData.school.name || null,
+                    p_school_address: resultData.school.address || null,
+                    p_school_logo_url: resultData.school.logo_url || null,
+                    p_admission_no:
+                        String(resultData.student.admission_no || "").trim() ,
+                    p_student_name: studentName,
+                    p_gender: resultData.student.gender || null,
+                    p_class_name: resultData.student.class_name || null,
+                    p_session: session,
+                    p_term: term,
+                    p_average: Number(resultData.result.average) || 0,
+                    p_position:
+                        String(resultData.result.position ?? "").trim() === ""
+                            ? null
+                            : (isNaN(Number(resultData.result.position))
+                                ? null
+                                : Number(resultData.result.position)),
+                    p_attendance: resultData.result.attendance || null,
+                    p_teacher_comment: resultData.result.teacher_comment || null,
+                    p_principal_comment: resultData.result.principal_comment || null,
+                    p_subjects: (resultData.subjects || []).map(function (subject) {
+                        return {
+                            subject_name: subject.subject_name || "",
+                            ca1: subject.ca1 ?? "",
+                            ca2: subject.ca2 ?? "",
+                            exam: subject.exam ?? "",
+                            total: subject.total ?? "",
+                            grade: subject.grade || "",
+                            subject_position: subject.position ?? ""
+                        };
+                    })
+                }
+            );
+
+        if (error) {
+            console.error(
+                "Publish result RPC error:",
+                error
+            );
+
+            return {
+                ok: false,
+                message:
+                    error.message ||
+                    "The server could not publish this result."
+            };
+        }
+
+        const response =
+            extractPublishResponse(data);
+
+        const success =
+            response.success === true ||
+            String(response.success).toLowerCase() === "true";
+
+        if (!success) {
+            return {
+                ok: false,
+                message:
+                    response.message ||
+                    response.error ||
+                    "The result was not published."
+            };
+        }
+
+        return {
+            ok: true,
+            pin: extractPublishedPin(data),
+            maxUses:
+                Number(response.max_uses) || 5,
+            usesRemaining:
+                Number.isFinite(Number(response.uses_remaining))
+                    ? Number(response.uses_remaining)
+                    : 5,
+            studentName: studentName,
+            message:
+                response.message ||
+                "Result published successfully."
+        };
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected publish error:",
+            error
+        );
+
+        return {
+            ok: false,
+            message:
+                "An unexpected error occurred while publishing the result."
+        };
+
+    }
+
+}
+
+async function publishSelectedResult() {
+
+    if (!publishStudentSelect) {
+        return;
+    }
+
+    const index =
+        publishStudentSelect.value;
+
+    if (index === "") {
+        setPublishStatus(
+            "Please select a student to publish.",
+            true
+        );
+        return;
+    }
+
+    const student =
+        students[Number(index)];
+
+    if (!student) {
+        setPublishStatus(
+            "The selected student could not be found.",
+            true
+        );
+        return;
+    }
+
+    if (publishSingleResultButton) {
+        publishSingleResultButton.disabled = true;
+    }
+
+    setPublishStatus(
+        "Publishing result...",
+        false
+    );
+
+    showPublishedResultInfo([]);
+
+    const result =
+        await publishOneStudentResult(student);
+
+    if (publishSingleResultButton) {
+        publishSingleResultButton.disabled = false;
+    }
+
+    if (!result.ok) {
+        setPublishStatus(
+            "❌ " + result.message,
+            true
+        );
+        return;
+    }
+
+    setPublishStatus(
+        "✅ Result published successfully for " +
+        result.studentName +
+        ". PIN uses allowed: " +
+        result.maxUses +
+        ".",
+        false
+    );
+
+    showPublishedResultInfo([
+        result
+    ]);
+
+}
+
+
+async function publishAllResults() {
+
+    if (!students || students.length === 0) {
+        setPublishStatus(
+            "Please upload an Excel file containing student records first.",
+            true
+        );
+        return;
+    }
+
+    const confirmation =
+        confirm(
+            "Publish results for " +
+            students.length +
+            " student(s) online?\n\n" +
+            "Each student will receive a separate result PIN."
+        );
+
+    if (!confirmation) {
+        return;
+    }
+
+    if (publishAllResultsButton) {
+        publishAllResultsButton.disabled = true;
+    }
+
+    if (publishSingleResultButton) {
+        publishSingleResultButton.disabled = true;
+    }
+
+    setPublishStatus(
+        "Publishing results... 0 / " + students.length,
+        false
+    );
+
+    showPublishedResultInfo([]);
+
+    const successful = [];
+    const failed = [];
+
+    for (let i = 0; i < students.length; i++) {
+
+        const student = students[i];
+
+        const studentName =
+            cleanStudentName(
+                student["Student Name"] || ""
+            );
+
+        try {
+
+            const result =
+                await publishOneStudentResult(student);
+
+            if (result && result.ok) {
+
+                successful.push(result);
+
+            } else {
+
+                failed.push({
+                    studentName: studentName || "(Unnamed student)",
+                    message:
+                        result && result.message
+                            ? result.message
+                            : "Unknown publishing error."
+                });
+            }
+
+        } catch (error) {
+
+            failed.push({
+                studentName: studentName || "(Unnamed student)",
+                message:
+                    error && error.message
+                        ? error.message
+                        : String(error)
+            });
+        }
+
+        setPublishStatus(
+            "Publishing results... " +
+            (i + 1) +
+            " / " +
+            students.length,
+            false
+        );
+    }
+
+    if (publishAllResultsButton) {
+        publishAllResultsButton.disabled = false;
+    }
+
+    if (publishSingleResultButton) {
+        publishSingleResultButton.disabled = false;
+    }
+
+    showPublishedResultInfo(successful);
+
+    let status =
+        "✅ Published " +
+        successful.length +
+        " of " +
+        students.length +
+        " result(s).";
+
+    if (successful.length > 0) {
+        status +=
+            " Each generated PIN allows up to 5 result checks.";
+    }
+
+    if (failed.length > 0) {
+        status +=
+            " " +
+            failed.length +
+            " result(s) failed to publish.";
+
+        console.error(
+            "===== RESULT PUBLISHING ERRORS ====="
+        );
+
+        console.error(failed);
+
+        /*
+         * Display the first few actual errors in the page.
+         */
+        const errorText =
+            failed
+                .slice(0, 10)
+                .map(function (item, index) {
+                    return (
+                        (index + 1) +
+                        ". " +
+                        item.studentName +
+                        " — " +
+                        item.message
+                    );
+                })
+                .join("\n");
+
+        alert(
+            "Some results failed to publish.\n\n" +
+            "Here are the errors:\n\n" +
+            errorText +
+            (
+                failed.length > 10
+                    ? "\n\n...and " +
+                      (failed.length - 10) +
+                      " more."
+                    : ""
+            )
+        );
+    }
+
+    setPublishStatus(
+        status,
+        failed.length > 0 && successful.length === 0
+    );
 }
 
 /* =========================================================
