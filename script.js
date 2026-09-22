@@ -6269,9 +6269,202 @@ async function publishOneStudentResult(student) {
 
 }
 
+/* =========================================================
+   VERIFY SUBSCRIPTION ACCESS FOR PUBLISHING
+
+   Publishing must be restricted to users who currently have the
+   same active subscription that is required to generate reports
+   (paid plan in good standing, or an active free trial). This
+   re-checks against the server every time, so a subscription that
+   lapses after the app was first opened is caught immediately,
+   instead of only being caught once at initial login.
+
+   The publish buttons themselves are intentionally left visible
+   and enabled at all times; this check runs on click and, if it
+   fails, prompts the user to subscribe/renew instead of silently
+   blocking or hiding anything.
+   ========================================================= */
+
+async function verifyActiveSubscriptionForPublishing() {
+
+    try {
+
+        const sessionResult =
+            await supabaseClient.auth.getSession();
+
+        if (
+            sessionResult.error ||
+            !sessionResult.data ||
+            !sessionResult.data.session ||
+            !sessionResult.data.session.user
+        ) {
+            return {
+                valid: false,
+                reason:
+                    "Your session could not be confirmed. Please log in again."
+            };
+        }
+
+        const user = sessionResult.data.session.user;
+        currentUserId = user.id;
+
+        const subscriptionResult =
+            await supabaseClient
+                .from("subscriptions")
+                .select("*")
+                .eq("user_id", user.id)
+                .eq("website_id", WEBSITE_ID)
+                .order("created_at", {
+                    ascending: false
+                })
+                .limit(1)
+                .maybeSingle();
+
+        if (subscriptionResult.error) {
+            console.error(
+                "Subscription check failed while verifying publish access:",
+                subscriptionResult.error
+            );
+
+            return {
+                valid: false,
+                reason:
+                    "Could not confirm your subscription status. Please try again."
+            };
+        }
+
+        if (!subscriptionResult.data) {
+            return {
+                valid: false,
+                reason:
+                    "No subscription was found on your account. Please subscribe to publish results."
+            };
+        }
+
+        const subscription = subscriptionResult.data;
+
+        /* Keep the shared subscription state synchronized with this fresh read. */
+        currentSubscription = subscription;
+
+        const plan = String(
+            subscription.plan ||
+            subscription.subscription_plan ||
+            subscription.package ||
+            ""
+        ).trim().toLowerCase();
+
+        currentSubscriptionPlan = plan;
+
+        const status = String(
+            subscription.status ||
+            ""
+        ).trim().toLowerCase();
+
+        const expiry = new Date(
+            subscription.expires_at || ""
+        );
+
+        const notExpired =
+            Number.isFinite(expiry.getTime()) &&
+            expiry > new Date();
+
+        const validPaidStatuses = [
+            "paid",
+            "active",
+            "success",
+            "successful",
+            "completed"
+        ];
+
+        const statusIsValid =
+            validPaidStatuses.includes(status) ||
+            (plan === FREE_TRIAL_PLAN && status === FREE_TRIAL_STATUS);
+
+        if (!statusIsValid || !notExpired) {
+            return {
+                valid: false,
+                reason:
+                    "Your subscription is not active. Please subscribe or renew to publish results."
+            };
+        }
+
+        return {
+            valid: true,
+            subscription: subscription
+        };
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected error while verifying publish access:",
+            error
+        );
+
+        return {
+            valid: false,
+            reason:
+                "Could not confirm your subscription status. Please try again."
+        };
+
+    }
+
+}
+
+
+function promptSubscriptionRequiredForPublishing(reason) {
+
+    const message =
+        reason ||
+        "An active subscription is required to publish results.";
+
+    setPublishStatus(
+        "❌ " + message,
+        true
+    );
+
+    const shouldGoToPlans =
+        confirm(
+            message +
+            "\n\nGo to subscription plans now?"
+        );
+
+    if (!shouldGoToPlans) {
+        return;
+    }
+
+    /*
+       Deliberately does NOT hide appSection here: the rest of the app
+       (including the renew/upgrade button) must stay visible and
+       usable. This only reveals the subscription plans and scrolls
+       to them.
+    */
+    if (elementExists(subscriptionPlans)) {
+
+        subscriptionPlans.style.display = "block";
+
+        subscriptionPlans.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    }
+
+}
+
+
 async function publishSelectedResult() {
 
     if (!publishStudentSelect) {
+        return;
+    }
+
+    const accessCheck =
+        await verifyActiveSubscriptionForPublishing();
+
+    if (!accessCheck.valid) {
+        promptSubscriptionRequiredForPublishing(
+            accessCheck.reason
+        );
         return;
     }
 
@@ -6340,6 +6533,16 @@ async function publishSelectedResult() {
 
 
 async function publishAllResults() {
+
+    const accessCheck =
+        await verifyActiveSubscriptionForPublishing();
+
+    if (!accessCheck.valid) {
+        promptSubscriptionRequiredForPublishing(
+            accessCheck.reason
+        );
+        return;
+    }
 
     if (!students || students.length === 0) {
         setPublishStatus(
