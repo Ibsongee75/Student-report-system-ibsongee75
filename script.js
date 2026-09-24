@@ -3932,6 +3932,7 @@ function downloadExcelTemplate() {
             scoresHeaders.push(subject + " 1st CA");
             scoresHeaders.push(subject + " 2nd CA");
             scoresHeaders.push(subject + " Exams");
+            scoresHeaders.push(subject + " Total");
         });
 
         scoresHeaders.push("Overall Total");
@@ -3958,6 +3959,7 @@ function downloadExcelTemplate() {
             ];
 
             schoolSubjects.forEach(function () {
+                row.push("");
                 row.push("");
                 row.push("");
                 row.push("");
@@ -3997,6 +3999,7 @@ function downloadExcelTemplate() {
 
         schoolSubjects.forEach(function () {
             scoresSheet["!cols"].push(
+                { wch: 9 },
                 { wch: 9 },
                 { wch: 9 },
                 { wch: 9 }
@@ -4111,17 +4114,23 @@ function downloadExcelTemplate() {
         /* =================================================
            VLOOKUP FORMULAS
            ================================================= */
+        const subjectTotalLetters = [];
+
         schoolSubjects.forEach(function (subject, subjectIndex) {
             const sheetName = actualSubjectSheetNames[subject];
             const safeSheetName = sheetName.replace(/'/g, "''");
 
-            const firstCAColumn = 8 + (subjectIndex * 3);
+            const firstCAColumn = 8 + (subjectIndex * 4);
             const secondCAColumn = firstCAColumn + 1;
             const examsColumn = firstCAColumn + 2;
+            const totalColumn = firstCAColumn + 3;
 
             const firstCALetter = XLSX.utils.encode_col(firstCAColumn - 1);
             const secondCALetter = XLSX.utils.encode_col(secondCAColumn - 1);
             const examsLetter = XLSX.utils.encode_col(examsColumn - 1);
+            const totalLetter = XLSX.utils.encode_col(totalColumn - 1);
+
+            subjectTotalLetters.push(totalLetter);
 
             for (let row = 2; row <= TEMPLATE_STUDENT_ROWS + 1; row++) {
                 scoresSheet[firstCALetter + row] = {
@@ -4138,6 +4147,14 @@ function downloadExcelTemplate() {
                     t: "n",
                     f: `IF($B${row}="","",IFERROR(INDEX('${safeSheetName}'!$E:$E,MATCH(TRIM(CLEAN(SUBSTITUTE($B${row},CHAR(160)," "))),'${safeSheetName}'!$F:$F,0)),""))`
                 };
+
+                /* Per-subject Total: sum of 1st CA, 2nd CA and Exams
+                   for this subject/row. Blank (not "0") when the
+                   subject isn't offered, i.e. all three are blank. */
+                scoresSheet[totalLetter + row] = {
+                    t: "n",
+                    f: `IF(AND(${firstCALetter}${row}="",${secondCALetter}${row}="",${examsLetter}${row}=""),"",SUM(${firstCALetter}${row}:${examsLetter}${row}))`
+                };
             }
         });
 
@@ -4146,7 +4163,7 @@ function downloadExcelTemplate() {
            ================================================= */
         const firstSubjectColumn = 8;
         const lastSubjectColumn =
-            firstSubjectColumn + (schoolSubjects.length * 3) - 1;
+            firstSubjectColumn + (schoolSubjects.length * 4) - 1;
         const overallTotalColumn = lastSubjectColumn + 1;
         const averageColumn = overallTotalColumn + 1;
         const positionColumn = averageColumn + 1;
@@ -4158,9 +4175,17 @@ function downloadExcelTemplate() {
         const positionLetter = XLSX.utils.encode_col(positionColumn - 1);
 
         for (let row = 2; row <= TEMPLATE_STUDENT_ROWS + 1; row++) {
+            /* Sum only each subject's Total column — the raw CA/Exams
+               columns are already folded into each subject's Total,
+               so summing the whole firstSubjectLetter:lastSubjectLetter
+               range here would double-count every score. */
+            const overallTotalFormula = subjectTotalLetters
+                .map(function (letter) { return letter + row; })
+                .join(",");
+
             scoresSheet[overallTotalLetter + row] = {
                 t: "n",
-                f: `IF($B${row}="","",SUM(${firstSubjectLetter}${row}:${lastSubjectLetter}${row}))`
+                f: `IF($B${row}="","",SUM(${overallTotalFormula}))`
             };
 
             scoresSheet[averageLetter + row] = {
