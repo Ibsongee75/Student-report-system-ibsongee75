@@ -777,6 +777,51 @@ select {
     }
 }
 
+@media print {
+  .master-sheet-table-scroll {
+    overflow: visible !important;
+  }
+
+  .master-sheet-table {
+    width: 100% !important;
+    table-layout: fixed;
+    font-size: 9px;
+  }
+
+  .master-sheet-table th,
+  .master-sheet-table td {
+    padding: 2px 3px;
+    word-break: break-word;
+  }
+
+  .master-sheet-class {
+    page-break-inside: auto;
+  }
+
+  .master-sheet-class-title {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .master-sheet-table thead {
+    display: table-header-group;
+  }
+
+  .master-sheet-table tr {
+    page-break-inside: avoid;
+  }
+
+  .master-sheet-title {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+}
+
 /* =========================================================
    MOBILE SCREEN
    ========================================================= */
