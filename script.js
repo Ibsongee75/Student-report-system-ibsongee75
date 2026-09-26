@@ -4162,7 +4162,7 @@ function downloadExcelTemplate() {
             for (let row = 2; row <= TEMPLATE_STUDENT_ROWS + 1; row++) {
                 subjectSheet["F" + row] = {
                     t: "str",
-                    f: `TRIM(CLEAN(SUBSTITUTE(B${row},CHAR(160)," ")))`
+                    f: `TRIM(A${row})&"|"&TRIM(CLEAN(SUBSTITUTE(B${row},CHAR(160)," ")))`
                 };
             }
 
@@ -4193,17 +4193,17 @@ function downloadExcelTemplate() {
             for (let row = 2; row <= TEMPLATE_STUDENT_ROWS + 1; row++) {
                 scoresSheet[firstCALetter + row] = {
                     t: "n",
-                    f: `IF($B${row}="","",IFERROR(INDEX('${safeSheetName}'!$C:$C,MATCH(TRIM(CLEAN(SUBSTITUTE($B${row},CHAR(160)," "))),'${safeSheetName}'!$F:$F,0)),""))`
+                    f: `IF($B${row}="","",IFERROR(INDEX('${safeSheetName}'!$C:$C,MATCH(TRIM($A${row})&"|"&TRIM(CLEAN(SUBSTITUTE($B${row},CHAR(160)," "))),'${safeSheetName}'!$F:$F,0)),""))`
                 };
 
                 scoresSheet[secondCALetter + row] = {
                     t: "n",
-                    f: `IF($B${row}="","",IFERROR(INDEX('${safeSheetName}'!$D:$D,MATCH(TRIM(CLEAN(SUBSTITUTE($B${row},CHAR(160)," "))),'${safeSheetName}'!$F:$F,0)),""))`
+                    f: `IF($B${row}="","",IFERROR(INDEX('${safeSheetName}'!$D:$D,MATCH(TRIM($A${row})&"|"&TRIM(CLEAN(SUBSTITUTE($B${row},CHAR(160)," "))),'${safeSheetName}'!$F:$F,0)),""))`
                 };
 
                 scoresSheet[examsLetter + row] = {
                     t: "n",
-                    f: `IF($B${row}="","",IFERROR(INDEX('${safeSheetName}'!$E:$E,MATCH(TRIM(CLEAN(SUBSTITUTE($B${row},CHAR(160)," "))),'${safeSheetName}'!$F:$F,0)),""))`
+                    f: `IF($B${row}="","",IFERROR(INDEX('${safeSheetName}'!$E:$E,MATCH(TRIM($A${row})&"|"&TRIM(CLEAN(SUBSTITUTE($B${row},CHAR(160)," "))),'${safeSheetName}'!$F:$F,0)),""))`
                 };
 
                 /* Per-subject Total: sum of 1st CA, 2nd CA and Exams
@@ -4248,7 +4248,7 @@ function downloadExcelTemplate() {
 
             scoresSheet[averageLetter + row] = {
                 t: "n",
-                f: `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/SUM(${schoolSubjects.map(function(subject) { const sheetName = actualSubjectSheetNames[subject]; const safeSheetName = sheetName.replace(/'/g, "''"); return "COUNTIF('" + safeSheetName + "'!$F:$F,TRIM(CLEAN(SUBSTITUTE($B" + row + ",CHAR(160),\" \"))))"; }).join(",")}),0))`
+                f: `IF($B${row}="","",IFERROR(${overallTotalLetter}${row}/SUM(${schoolSubjects.map(function(subject) { const sheetName = actualSubjectSheetNames[subject]; const safeSheetName = sheetName.replace(/'/g, "''"); return "COUNTIF('" + safeSheetName + "'!$F:$F,TRIM($A" + row + ")&\"|\"&TRIM(CLEAN(SUBSTITUTE($B" + row + ",CHAR(160),\" \"))))"; }).join(",")}),0))`
             };
 
             scoresSheet[positionLetter + row] = {
