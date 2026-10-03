@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>This site has moved</title>
+
+    <meta name="robots" content="noindex">
+
+    <script>
+        /* Any other old link, for example
+           .../Student-report-system-ibsongee75/result-checker.html
+           goes to the same page on the new address. */
+        (function () {
+
+            var oldPrefix = "/Student-report-system-ibsongee75/";
+            var newBase = "https://ibsongee75.github.io/student_report/";
+            var path = window.location.pathname;
+            var rest = "";
+
+            if (path.indexOf(oldPrefix) === 0) {
+                rest = path.slice(oldPrefix.length);
+            }
+
+            window.location.replace(
+                newBase + rest + window.location.search + window.location.hash
+            );
+
+        })();
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 60px 20px;
+            color: #1b2a4a;
+        }
+        a { color: #b3261e; font-weight: bold; }
+    </style>
+
+</head>
+<body>
+
+    <h1>This website has moved</h1>
+
+    <p>
+        <a href="https://ibsongee75.github.io/student_report/">Open the new address</a>
+    </p>
+
+</body>
+</html>
